@@ -3,7 +3,6 @@ package redball.engine.renderer;
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
 
-import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
