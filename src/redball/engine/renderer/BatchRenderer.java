@@ -1,4 +1,120 @@
 package redball.engine.renderer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import redball.engine.entity.GameObject;
+
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
+import static org.lwjgl.opengl.GL11.glDrawElements;
+import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
+import static org.lwjgl.opengl.GL15.glBindBuffer;
+import static org.lwjgl.opengl.GL15.glBufferData;
+import static org.lwjgl.opengl.GL15.glGenBuffers;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
+import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+
 public class BatchRenderer {
+    private static final int MAX_ENTITIES = 100;
+    private static final int POS_SIZE = 3;
+    private static final int COLOR_SIZE = 4;
+    private static final int TEXTURE_COORDS_SIZE = 2;
+    private static final int TEXTURE_ID_SIZE = 1;
+    private static final int OVERALL_SIZE = POS_SIZE * COLOR_SIZE + TEXTURE_COORDS_SIZE + TEXTURE_ID_SIZE;
+    private static final int OVERALL_STRIDE = OVERALL_SIZE * Float.BYTES;
+
+    private int entityCount = 0;
+    private int verticesAdded = 0;
+    private List<GameObject> entities;
+    private List<float[]> vertexData;
+    private List<int[]> vertexIndices;
+    private float[] verticesData = new float[OVERALL_SIZE];
+    private int[] vertexIndex = new int[OVERALL_SIZE];
+    private int hightest = 0;
+
+    BatchRenderer() {
+        entities = new ArrayList<>();
+        vertexData = new ArrayList<>();
+        vertexIndices = new ArrayList<>();
+    }
+
+    public int add(GameObject entity) {
+        entities.add(entity);
+        return entityCount++;
+    }
+
+    public void remove(GameObject entity) {
+        entities.remove(entity);
+    }
+
+    public void removeAll(Collection<GameObject> enitites) {}
+
+    public int updateAllVertices() {
+        int offset = 0;
+        int h = hightest;
+
+        for (GameObject entity : entities) {
+            int off = offset * 9;
+            updateComponentVertices(off, -0.5f, 0.5f, 1, 1);
+            updateComponentVertices(off, -0.5f, -0.5f, 0, 0);
+            updateComponentVertices(off, 0.5f, -0.5f, 1, 0);
+            updateComponentVertices(off, 0.5f, 0.5f, 0, 1);
+            for (int i : new int[] { 0, 1, 2, 2, 3, 0 }) {
+                int eboVal = hightest + i;
+                vertexIndex[verticesAdded++] = eboVal;
+                h = Math.max(h, eboVal);
+            }
+            offset++;
+            hightest = h + 1;
+        }
+
+        System.out.println(Arrays.toString(verticesData));
+        System.out.println(Arrays.toString(vertexIndex));
+
+        int vao = glGenVertexArrays();
+        int vbo = glGenBuffers();
+        int EBO = glGenBuffers();
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, verticesData, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexIndex, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, OVERALL_STRIDE, 0);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 4, GL_FLOAT, false, OVERALL_STRIDE, 3 * Float.BYTES);
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribPointer(2, 2, GL_FLOAT, false, OVERALL_STRIDE, 7 * Float.BYTES);
+        glEnableVertexAttribArray(2);
+
+        glVertexAttribPointer(3, 1, GL_FLOAT, false, OVERALL_STRIDE, 9 * Float.BYTES);
+        glEnableVertexAttribArray(3);
+
+        glDrawElements(GL_TRIANGLES, verticesAdded, GL_UNSIGNED_INT, 0);
+
+        return vao;
+    }
+
+    private void updateComponentVertices(int off, float x, float y, int tx, int ty) {
+        verticesData[off] = x;
+        verticesData[off + 1] = y;
+        verticesData[off + 2] = 0;
+        verticesData[off + 3] = 1;
+        verticesData[off + 4] = 0;
+        verticesData[off + 5] = 0;
+        verticesData[off + 6] = 0;
+        verticesData[off + 7] = tx;
+        verticesData[off + 8] = ty;
+    }
 }

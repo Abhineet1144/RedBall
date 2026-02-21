@@ -5,9 +5,16 @@ import java.nio.IntBuffer;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.stb.STBImage;
 
 public class Texture {
+    private static int usedTexSlots = 0;
+    private static int[] texSlots = new int[] {
+            GL13.GL_TEXTURE0, GL13.GL_TEXTURE1, GL13.GL_TEXTURE2, GL13.GL_TEXTURE3, GL13.GL_TEXTURE4, GL13.GL_TEXTURE5
+    };
+
+    private int texSlot;
     private int texId;
     private int width;
     private int height;
@@ -15,6 +22,8 @@ public class Texture {
 
     Texture(String filePath) {
         texId = GL11.glGenTextures();
+        texSlot = texSlots[usedTexSlots++];
+        GL13.glActiveTexture(texSlot);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texId);
 
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
@@ -31,7 +40,9 @@ public class Texture {
             this.width = width.get(0);
             this.height = height.get(0);
             int format = channels.get(0) == 4 ? GL11.GL_RGBA : GL11.GL_RGB;
+            STBImage.stbi_set_flip_vertically_on_load(true);
             GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, format, this.width, this.height, 0, format, GL11.GL_UNSIGNED_BYTE, textureImg);
+//            GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
             STBImage.stbi_image_free(textureImg);
         } else {
             System.err.println("Failed to load texture: " + filePath);
