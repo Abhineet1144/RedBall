@@ -6,14 +6,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameObject {
+    // Name of the gameobject
     private String name;
+    // List of all components
     private List<Component> components;
 
+    /**
+     * @description Creates new gameobject of given name.
+     * @param name of the object.
+     */
     public GameObject(String name) {
         this.name = name;
         components = new ArrayList<>();
     }
 
+    /**
+     * @description gets a component from a gameobject.
+     * @param componentClass type of component.
+     * @return the component.
+     */
     public <T extends Component> T getComponent(Class<T> componentClass) {
         for (Component c : components) {
             try {
@@ -28,6 +39,11 @@ public class GameObject {
         return null;
     }
 
+    /**
+     * @description removes a component from a gameobject
+     * @param componentClass type of component.
+     * @return true if success else false
+     */
     public <T extends Component> boolean removeComponent(Class<T> componentClass) {
         for (Component c : components) {
             if (componentClass.isInstance(c)) {
@@ -38,20 +54,39 @@ public class GameObject {
         return false;
     }
 
+    /**
+     * @description adds a component to a gameobject
+     * @param c type of component
+     */
     public void addComponent(Component c) {
         this.components.add(c);
         c.gameObject = this;
     }
 
+    /**
+     * @description updates the gameobject (called every frame)
+     * @param dt delta time
+     */
     public void update(float dt) {
         for (Component c : components) {
             c.update(dt);
         }
     }
 
+    /**
+     * @description initializes the gameobjects (called once, in first frame)
+     * @param dt delta time
+     */
     public void start(float dt) {
         for (Component c : components) {
             c.start(dt);
         }
+    }
+
+    /**
+     * @return the name of a gameobject
+     */
+    public String getName() {
+        return name;
     }
 }
