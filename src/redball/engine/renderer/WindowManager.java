@@ -19,30 +19,27 @@ import static org.lwjgl.glfw.GLFW.glfwSetWindowTitle;
 import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
 import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_ONE;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
-import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glViewport;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
 
 public class WindowManager {
     private static long window;
-    private int width;
-    private int height;
-
+    private int width = 1920;
+    private int height = 1080;
+    int vao;
     public void init() {
-        GLFWErrorCallback.createPrint(System.err);
+        GLFWErrorCallback.createPrint(System.err).set();
 
         if (!GLFW.glfwInit()) {
             throw new IllegalArgumentException("Can't create window");
         }
 
-        window = GLFW.glfwCreateWindow(1920, 1080, "Red Ball", MemoryUtil.NULL, MemoryUtil.NULL);
+        glfwDefaultWindowHints();
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+
+        window = GLFW.glfwCreateWindow(width, height, "Red Ball", MemoryUtil.NULL, MemoryUtil.NULL);
         if (window == MemoryUtil.NULL) {
             throw new RuntimeException("Can't create window");
         }
@@ -53,10 +50,6 @@ public class WindowManager {
         glfwSwapInterval(0);
         glEnable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
-        glfwDefaultWindowHints();
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
         glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
@@ -65,9 +58,13 @@ public class WindowManager {
             width = w;
             height = h;
         });
+
+        BatchRenderer batchRenderer = new BatchRenderer();
+        batchRenderer.add(null);
+        vao = batchRenderer.updateAllVertices();
     }
 
-    public void loop() {
+    public void loop(Shader shader) {
         double lastTime = 0;
         double delatTime = 0;
 
@@ -75,6 +72,10 @@ public class WindowManager {
             // CLEAR PREVIOUS
             GL11.glClearColor(0, 0, 0, 0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            shader.use();
+            glBindVertexArray(vao);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0L);
 
             // PREPARE FOR NEXT
             glfwSwapBuffers(window);
@@ -88,7 +89,7 @@ public class WindowManager {
     }
 
     public void setVSync(int val) {
-        glfwSwapBuffers(val);
+        glfwSwapInterval(val);
     }
 
     public void setTitle(String name) {

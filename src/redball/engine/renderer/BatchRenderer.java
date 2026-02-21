@@ -19,8 +19,7 @@ import static org.lwjgl.opengl.GL15.glBufferData;
 import static org.lwjgl.opengl.GL15.glGenBuffers;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+import static org.lwjgl.opengl.GL30.*;
 
 public class BatchRenderer {
     private static final int MAX_ENTITIES = 100;
@@ -28,7 +27,7 @@ public class BatchRenderer {
     private static final int COLOR_SIZE = 4;
     private static final int TEXTURE_COORDS_SIZE = 2;
     private static final int TEXTURE_ID_SIZE = 1;
-    private static final int OVERALL_SIZE = POS_SIZE * COLOR_SIZE + TEXTURE_COORDS_SIZE + TEXTURE_ID_SIZE;
+    private static final int OVERALL_SIZE = POS_SIZE + COLOR_SIZE + TEXTURE_COORDS_SIZE + TEXTURE_ID_SIZE;
     private static final int OVERALL_STRIDE = OVERALL_SIZE * Float.BYTES;
 
     private int entityCount = 0;
@@ -36,8 +35,8 @@ public class BatchRenderer {
     private List<GameObject> entities;
     private List<float[]> vertexData;
     private List<int[]> vertexIndices;
-    private float[] verticesData = new float[OVERALL_SIZE];
-    private int[] vertexIndex = new int[OVERALL_SIZE];
+    private float[] verticesData = new float[OVERALL_SIZE * MAX_ENTITIES * 4];
+    private int[] vertexIndex = new int[OVERALL_SIZE * 6];
     private int hightest = 0;
 
     BatchRenderer() {
@@ -55,19 +54,20 @@ public class BatchRenderer {
         entities.remove(entity);
     }
 
-    public void removeAll(Collection<GameObject> enitites) {}
+    public void removeAll(Collection<GameObject> enitites) {
+    }
 
     public int updateAllVertices() {
         int offset = 0;
         int h = hightest;
 
         for (GameObject entity : entities) {
-            int off = offset * 9;
-            updateComponentVertices(off, -0.5f, 0.5f, 1, 1);
-            updateComponentVertices(off, -0.5f, -0.5f, 0, 0);
-            updateComponentVertices(off, 0.5f, -0.5f, 1, 0);
-            updateComponentVertices(off, 0.5f, 0.5f, 0, 1);
-            for (int i : new int[] { 0, 1, 2, 2, 3, 0 }) {
+            int quadOffset = offset * 4 * OVERALL_SIZE;
+            updateComponentVertices(quadOffset + 0 * OVERALL_SIZE, -0.5f, 0.5f, 0, 1);
+            updateComponentVertices(quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0);
+            updateComponentVertices(quadOffset + 2 * OVERALL_SIZE, 0.5f, -0.5f, 1, 0);
+            updateComponentVertices(quadOffset + 3 * OVERALL_SIZE, 0.5f, 0.5f, 1, 1);
+            for (int i : new int[]{0, 1, 2, 2, 3, 0}) {
                 int eboVal = hightest + i;
                 vertexIndex[verticesAdded++] = eboVal;
                 h = Math.max(h, eboVal);
@@ -98,7 +98,7 @@ public class BatchRenderer {
         glVertexAttribPointer(2, 2, GL_FLOAT, false, OVERALL_STRIDE, 7 * Float.BYTES);
         glEnableVertexAttribArray(2);
 
-        glVertexAttribPointer(3, 1, GL_FLOAT, false, OVERALL_STRIDE, 9 * Float.BYTES);
+        glVertexAttribIPointer(3, 1, GL_INT, OVERALL_STRIDE, 9 * Float.BYTES);
         glEnableVertexAttribArray(3);
 
         glDrawElements(GL_TRIANGLES, verticesAdded, GL_UNSIGNED_INT, 0);
@@ -113,8 +113,9 @@ public class BatchRenderer {
         verticesData[off + 3] = 1;
         verticesData[off + 4] = 0;
         verticesData[off + 5] = 0;
-        verticesData[off + 6] = 0;
+        verticesData[off + 6] = 1;
         verticesData[off + 7] = tx;
         verticesData[off + 8] = ty;
+        verticesData[off + 9] = 0;
     }
 }
