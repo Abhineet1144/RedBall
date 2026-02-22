@@ -25,7 +25,7 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.*;
 
 public class BatchRenderer {
-    public static final int MAX_ENTITIES = 2;
+    public static final int MAX_ENTITIES = 1000;
     private static final int POS_SIZE = 3;
     private static final int COLOR_SIZE = 4;
     private static final int TEXTURE_COORDS_SIZE = 2;
@@ -70,9 +70,6 @@ public class BatchRenderer {
             offset++;
             hightest = h + 1;
         }
-
-        System.out.println(Arrays.toString(verticesData));
-        System.out.println(Arrays.toString(vertexIndex));
 
         int vao = glGenVertexArrays();
         vbo = glGenBuffers();
