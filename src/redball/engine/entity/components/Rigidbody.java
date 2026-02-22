@@ -19,7 +19,8 @@ public class Rigidbody extends Component {
 
         body.getTransform().setTranslation(transform.position.x / PPM, transform.position.y / PPM);
         body.getTransform().setRotation(transform.rotation);
-        body.addFixture(Geometry.createRectangle(transform.scale.x / PPM, transform.scale.y / PPM));
+//        body.addFixture(Geometry.createRectangle(transform.scale.x / PPM, transform.scale.y / PPM));
+        this.body.addFixture(Geometry.createCircle((transform.scale.x / PPM) / 2));
         body.setMass(MassType.NORMAL);
         PhysicsSystem.getWorld().addBody(body);
         super.markAsDirty();
@@ -31,7 +32,7 @@ public class Rigidbody extends Component {
 
     public void setFixture() {
         Transform transform = this.gameObject.getComponent(Transform.class);
-        this.body.addFixture(Geometry.createCircle(transform.scale.x / PPM));
+        this.body.addFixture(Geometry.createCircle((transform.scale.x / PPM) / 2));
     }
 
     @Override

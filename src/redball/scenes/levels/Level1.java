@@ -27,7 +27,7 @@ public class Level1 extends AbstractScene {
         camera.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
         camera.addComponent(new CameraComponent(1920, 1080));
 
-        bg.addComponent(new Transform(new Vector3f(400f, 400f, -1f), 0f, new Vector3f(200, 200, 1)));
+        bg.addComponent(new Transform(new Vector3f(1920f / 2, 1080f / 2, -1f), 0f, new Vector3f(1920, 1080, 1)));
         bg.addComponent(new Rigidbody());
         bg.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
 
@@ -39,8 +39,6 @@ public class Level1 extends AbstractScene {
     public void update(float deltaTime) {
         RenderManager.render(camera);
         bg.update(deltaTime);
-        bg.getComponent(Transform.class).setXPosition(900);
-        Transform t = bg.getComponent(Transform.class);
-        t.setXPosition(x += (float) (deltaTime) * 100);
+        bg.getComponent(Transform.class).setXPosition(1920f / 2);
     }
 }

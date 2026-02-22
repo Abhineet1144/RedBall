@@ -29,10 +29,10 @@ public class TestScene extends AbstractScene {
         obj = ECSWorld.createGameObject("1");
         obj.addComponent(new Transform(new Vector3f(400.0f, 400.0f, -1.0f), 90.0f, new Vector3f(200.0f, 200.0f, 1.0f)));
         obj.addComponent(new Rigidbody());
-        obj.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
+        obj.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BALL)));
 
-        obj1 = ECSWorld.createGameObject("1");
-        obj1.addComponent(new Transform(new Vector3f(100.0f, 100.0f, -1.0f), 0.0f, new Vector3f(1080.0f, 20.0f, 1.0f)));
+        obj1 = ECSWorld.createGameObject("2");
+        obj1.addComponent(new Transform(new Vector3f(100.0f, 100.0f, -1.0f), 0.0f, new Vector3f(1920.0f, 20.0f, 1.0f)));
         obj1.addComponent(new Rigidbody());
         obj1.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
 
@@ -41,7 +41,7 @@ public class TestScene extends AbstractScene {
         obj1.start();
 
         obj1.getComponent(Rigidbody.class).setBodyType(MassType.INFINITE);
-
+//        obj.getComponent(Rigidbody.class).setFixture();
     }
 
     @Override
