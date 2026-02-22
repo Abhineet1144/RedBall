@@ -8,6 +8,10 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.stb.STBImage;
 
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
+
 public class Texture {
     private static int usedTexSlots = 1;
     private static int[] texSlots = new int[] {
@@ -53,6 +57,10 @@ public class Texture {
         }
     }
 
+    public void bindTexture() {
+        glActiveTexture(getTexID());
+        glBindTexture(GL_TEXTURE_2D, getTexID());
+    }
 
     public int getWidth() {
         return width;

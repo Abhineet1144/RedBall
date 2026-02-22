@@ -26,8 +26,7 @@ public class TextureManager {
 
     public static void bindTextures() {
         for (Texture texture : textureMap.values()) {
-            glActiveTexture(texture.getTexID());
-            glBindTexture(GL_TEXTURE_2D, texture.getTexID());
+            texture.bindTexture();
         }
     }
 }
