@@ -14,6 +14,42 @@ public class Transform extends Component {
         this.rotation = rotation;
         this.scale = scale;
         this.matrix = new Matrix4f();
+        super.markAsDirty();
+    }
+
+    public void setXPosition(float xPos) {
+        this.position.x = xPos;
+        super.markAsDirty();
+    }
+
+    public void setYPosition(float yPos) {
+        this.position.y = yPos;
+        super.markAsDirty();
+    }
+
+    public void setZPosition(float zPos) {
+        this.position.z = zPos;
+        super.markAsDirty();
+    }
+
+    public void setRotation(float rotation) {
+        this.rotation = rotation;
+        super.markAsDirty();
+    }
+
+    public void setXScale(float xPos) {
+        this.scale.x = xPos;
+        super.markAsDirty();
+    }
+
+    public void setYScale(float yPos) {
+        this.scale.y = yPos;
+        super.markAsDirty();
+    }
+
+    public void setZScale(float zPos) {
+        this.scale.z = zPos;
+        super.markAsDirty();
     }
 
     public Matrix4f getMatrix() {

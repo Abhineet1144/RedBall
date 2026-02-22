@@ -16,7 +16,7 @@ import static org.lwjgl.opengl.GL11.glDrawElements;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
 
 public class TestScene extends AbstractScene {
-
+    float x = 0;
     GameObject obj;
 
     @Override
@@ -33,6 +33,6 @@ public class TestScene extends AbstractScene {
         RenderManager.render();
         obj.update((float) deltaTime);
         Transform t = obj.getComponent(Transform.class);
-        t.position.x += (float)(100 * deltaTime);
+        t.setXPosition(x += (float) (deltaTime) * 100);
     }
 }

@@ -107,6 +107,11 @@ public class BatchRenderer {
         int h = hightest;
 
         for (GameObject entity : entities) {
+            if (!entity.getComponent(Transform.class).isDirty()) {
+                continue;
+            }
+
+            entity.getComponent(Transform.class).markAsClean();
             int quadOffset = offset * 4 * OVERALL_SIZE;
             Texture texture = entity.getComponent(SpriteRenderer.class).getTexture();
             int textureSlot = 0;
