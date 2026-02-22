@@ -26,7 +26,7 @@ public class TestScene extends AbstractScene {
 
         obj = ECSWorld.createGameObject("1");
         obj.addComponent(new Transform(new Vector3f(400.0f, 400.0f, -1.0f), 90.0f, new Vector3f(200.0f, 200.0f, 1.0f)));
-        obj.addComponent(new Rigidbody());
+        // obj.addComponent(new Rigidbody());
         obj.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
 
         RenderManager.prepare();
@@ -36,8 +36,9 @@ public class TestScene extends AbstractScene {
     @Override
     public void update(float deltaTime) {
         RenderManager.render(camera);
+        PhysicsSystem.getWorld().update(deltaTime);
+
         obj.update(deltaTime);
-        Transform t = obj.getComponent(Transform.class);
-        t.setXPosition(x += (float) (deltaTime) * 100);
+        obj.getComponent(Transform.class).setXPosition(x += deltaTime * 100);
     }
 }

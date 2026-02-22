@@ -32,7 +32,6 @@ public class RenderManager {
     public static void render(GameObject camera) {
         Engine.getShader().setMat4f ("projection", camera.getComponent(CameraComponent.class).getProjectionMatrix());
         Engine.getShader().setMat4f("view", camera.getComponent(CameraComponent.class).getViewMatrix());
-
         for (BatchRenderer batchRenderer : batches) {
             batchRenderer.updateVertices();
             batchRenderer.render();

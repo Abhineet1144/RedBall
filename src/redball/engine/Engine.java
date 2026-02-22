@@ -22,8 +22,8 @@ public class Engine {
 
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
 
-        windowManager.useActiveScene(new Level1());
-//        windowManager.useActiveScene(new TestScene());
+//        windowManager.useActiveScene(new Level1());
+        windowManager.useActiveScene(new TestScene());
         windowManager.loop(shader);
     }
 

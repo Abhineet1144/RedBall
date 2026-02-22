@@ -43,6 +43,7 @@ public class BatchRenderer {
     private int hightest = 0;
     private int vao;
     int vbo;
+    private int indexCount = 0;
 
     BatchRenderer(List<GameObject> go) {
         entities = new ArrayList<>(go);
@@ -95,43 +96,53 @@ public class BatchRenderer {
         glVertexAttribPointer(3, 1, GL_FLOAT, false, OVERALL_STRIDE, 9 * Float.BYTES);
         glEnableVertexAttribArray(3);
 
-        glDrawElements(GL_TRIANGLES, verticesAdded, GL_UNSIGNED_INT, 0);
-
+        indexCount = verticesAdded;
         return vao;
     }
 
     private void rebuildVertices() {
         int offset = 0;
-        verticesAdded = 0;
-        int h = hightest;
-
+        int h = 0;
+        System.out.println("ss");
         for (GameObject entity : entities) {
-            if (!entity.getComponent(Transform.class).isDirty()) {
-                continue;
-            }
-
-            entity.getComponent(Transform.class).markAsClean();
             int quadOffset = offset * 4 * OVERALL_SIZE;
-            Texture texture = entity.getComponent(SpriteRenderer.class).getTexture();
-            int textureSlot = 0;
-            if (texture != null) {
-                textureSlot = texture.getUsedTexSlot();
+            Transform t = entity.getComponent(Transform.class);
+            Rigidbody rb = entity.getComponent(Rigidbody.class);
+
+            boolean needsRebuild = t.isDirty();
+
+            if (rb != null) {
+                needsRebuild = true;
             }
 
-            updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f, 0.5f, 0, 1, textureSlot);
-            updateComponentVertices(entity, quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0, textureSlot);
-            updateComponentVertices(entity, quadOffset + 2 * OVERALL_SIZE, 0.5f, -0.5f, 1, 0, textureSlot);
-            updateComponentVertices(entity, quadOffset + 3 * OVERALL_SIZE, 0.5f, 0.5f, 1, 1, textureSlot);
+            if (needsRebuild) {
+                t.markAsClean();
+                Texture texture = entity.getComponent(SpriteRenderer.class).getTexture();
+                int textureSlot = texture != null ? texture.getUsedTexSlot() : 0;
 
-            for (int i : new int[]{0, 1, 2, 2, 3, 0}) {
-                vertexIndex[verticesAdded++] = h + i;
+                updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f,  0.5f, 0, 1, textureSlot);
+                updateComponentVertices(entity, quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0, textureSlot);
+                updateComponentVertices(entity, quadOffset + 2 * OVERALL_SIZE,  0.5f, -0.5f, 1, 0, textureSlot);
+                updateComponentVertices(entity, quadOffset + 3 * OVERALL_SIZE,  0.5f,  0.5f, 1, 1, textureSlot);
             }
+
             h += 4;
             offset++;
         }
     }
 
     public void updateVertices() {
+        boolean anyDirty = false;
+
+        for (GameObject entity : entities) {
+            if (entity.getComponent(Rigidbody.class) != null || entity.getComponent(Transform.class).isDirty()) {
+                anyDirty = true;
+                break;
+            }
+        }
+
+        if (!anyDirty) return;
+
         rebuildVertices();
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, verticesData);
@@ -170,6 +181,6 @@ public class BatchRenderer {
 
     public void render() {
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, verticesAdded, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
     }
 }

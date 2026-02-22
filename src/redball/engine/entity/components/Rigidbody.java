@@ -8,6 +8,7 @@ import redball.engine.core.physics.PhysicsSystem;
 public class Rigidbody extends Component {
     private Body body;
     public static final float PPM = 32.0f;
+    private float lastX, lastY;
 
     public Rigidbody() {
         body = new Body();
@@ -22,6 +23,7 @@ public class Rigidbody extends Component {
         body.addFixture(Geometry.createRectangle(transform.scale.x / PPM, transform.scale.y / PPM));
         body.setMass(MassType.NORMAL);
         PhysicsSystem.getWorld().addBody(body);
+        super.markAsDirty();
     }
 
     @Override
