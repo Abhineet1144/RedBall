@@ -32,16 +32,16 @@ public class TestScene extends AbstractScene {
         obj.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BALL)));
 
         obj1 = ECSWorld.createGameObject("2");
-        obj1.addComponent(new Transform(new Vector3f(100.0f, 100.0f, -1.0f), 0.0f, new Vector3f(1920.0f, 20.0f, 1.0f)));
+        obj1.addComponent(new Transform(new Vector3f(150.0f, 150.0f, -1.0f), 5.0f, new Vector3f(1920.0f, 20.0f, 1.0f)));
         obj1.addComponent(new Rigidbody());
         obj1.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
 
         RenderManager.prepare();
         obj.start();
-        obj1.start();
+        obj.getComponent(Rigidbody.class).setFixture();
 
+        obj1.start();
         obj1.getComponent(Rigidbody.class).setBodyType(MassType.INFINITE);
-//        obj.getComponent(Rigidbody.class).setFixture();
     }
 
     @Override
@@ -50,6 +50,7 @@ public class TestScene extends AbstractScene {
         PhysicsSystem.getWorld().update(deltaTime);
 
         obj.update(deltaTime);
+//        obj.getComponent(Rigidbody.class).getBody().applyTorque(50);
 //        obj.getComponent(Transform.class).setXPosition(x += deltaTime * 100);
     }
 }

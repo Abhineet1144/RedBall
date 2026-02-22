@@ -9,6 +9,8 @@ import redball.engine.entity.components.CameraComponent;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.lwjgl.opengl.GL20.glGetUniformLocation;
+import static org.lwjgl.opengl.GL20.glUniform1iv;
 import static redball.engine.renderer.BatchRenderer.MAX_ENTITIES;
 
 
@@ -30,9 +32,13 @@ public class RenderManager {
     }
 
     public static void render(GameObject camera) {
-        Engine.getShader().setMat4f ("projection", camera.getComponent(CameraComponent.class).getProjectionMatrix());
+        Engine.getShader().setMat4f("projection", camera.getComponent(CameraComponent.class).getProjectionMatrix());
         Engine.getShader().setMat4f("view", camera.getComponent(CameraComponent.class).getViewMatrix());
+
+        Engine.getShader().initTextureSamplers();
+
         for (BatchRenderer batchRenderer : batches) {
+            batchRenderer.bindTextures();
             batchRenderer.updateVertices();
             batchRenderer.render();
         }

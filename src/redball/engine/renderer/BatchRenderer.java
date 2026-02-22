@@ -175,6 +175,13 @@ public class BatchRenderer {
         verticesData[off + 9] = tId;
     }
 
+    public void bindTextures() {
+        for (GameObject entity : entities) {
+            SpriteRenderer sr = entity.getComponent(SpriteRenderer.class);
+            sr.getTexture().bindTexture();
+        }
+    }
+
     public void prepare() {
         vao = updateAllVertices();
     }
