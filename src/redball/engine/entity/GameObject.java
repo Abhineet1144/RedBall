@@ -75,11 +75,10 @@ public class GameObject {
 
     /**
      * @description initializes the gameobjects (called once, in first frame)
-     * @param dt delta time
      */
-    public void start(float dt) {
+    public void start() {
         for (Component c : components) {
-            c.start(dt);
+            c.start();
         }
     }
 
