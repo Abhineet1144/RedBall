@@ -1,7 +1,6 @@
 package redball.engine.renderer;
 
-import redball.engine.Engine;
-import redball.engine.core.physics.PhysicsSystem;
+import redball.engine.core.Engine;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.CameraComponent;
@@ -9,8 +8,6 @@ import redball.engine.entity.components.CameraComponent;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL20.glGetUniformLocation;
-import static org.lwjgl.opengl.GL20.glUniform1iv;
 import static redball.engine.renderer.BatchRenderer.MAX_ENTITIES;
 
 
@@ -29,6 +26,7 @@ public class RenderManager {
             System.out.println("Entity count: " + batch.entityCount);
             System.out.println("Total entity count: " + gos.size());
         }
+        ECSWorld.start();
     }
 
     public static void render(GameObject camera) {
@@ -42,5 +40,9 @@ public class RenderManager {
             batchRenderer.updateVertices();
             batchRenderer.render();
         }
+    }
+
+    public static void clear() {
+        batches.clear();
     }
 }

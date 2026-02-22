@@ -2,7 +2,7 @@ package redball.scenes.levels;
 
 import org.joml.Vector3f;
 
-import redball.engine.core.physics.PhysicsSystem;
+import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.CameraComponent;
@@ -28,11 +28,9 @@ public class Level1 extends AbstractScene {
         camera.addComponent(new CameraComponent(1920, 1080));
 
         bg.addComponent(new Transform(new Vector3f(1920f / 2, 1080f / 2, -1f), 0f, new Vector3f(1920, 1080, 1)));
-        bg.addComponent(new Rigidbody());
         bg.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
 
         RenderManager.prepare();
-        bg.start();
     }
 
     @Override

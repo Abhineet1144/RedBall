@@ -1,4 +1,4 @@
-package redball.engine;
+package redball.engine.core;
 
 import redball.engine.renderer.Shader;
 import redball.engine.renderer.WindowManager;

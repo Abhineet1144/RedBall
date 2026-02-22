@@ -1,4 +1,4 @@
-package redball.engine.core.physics;
+package redball.engine.core;
 
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.geometry.Vector2;
@@ -6,6 +6,7 @@ import org.dyn4j.world.World;
 
 public class PhysicsSystem {
     private static World<Body> world = new World<>();
+    public static final float PPM = 32.0f;
 
     public static void init() {
         world.setGravity(new Vector2(0, -9.8));

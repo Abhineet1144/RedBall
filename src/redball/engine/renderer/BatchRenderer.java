@@ -2,6 +2,7 @@ package redball.engine.renderer;
 
 import java.util.*;
 
+import org.dyn4j.geometry.MassType;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -24,6 +25,7 @@ import static org.lwjgl.opengl.GL15.glGenBuffers;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.*;
+import static redball.engine.core.PhysicsSystem.PPM;
 
 public class BatchRenderer {
     public static final int MAX_ENTITIES = 1000;
@@ -33,7 +35,6 @@ public class BatchRenderer {
     private static final int TEXTURE_ID_SIZE = 1;
     private static final int OVERALL_SIZE = POS_SIZE + COLOR_SIZE + TEXTURE_COORDS_SIZE + TEXTURE_ID_SIZE;
     private static final int OVERALL_STRIDE = OVERALL_SIZE * Float.BYTES;
-    public static final float PPM = 32.0f;
 
     public int entityCount = 0;
     private int verticesAdded = 0;
@@ -110,7 +111,7 @@ public class BatchRenderer {
 
             boolean needsRebuild = t.isDirty();
 
-            if (rb != null) {
+            if (rb != null && rb.getBodyType() == MassType.NORMAL) {
                 needsRebuild = true;
             }
 
@@ -134,7 +135,7 @@ public class BatchRenderer {
         boolean anyDirty = false;
 
         for (GameObject entity : entities) {
-            if (entity.getComponent(Rigidbody.class) != null || entity.getComponent(Transform.class).isDirty()) {
+            if (entity.getComponent(Rigidbody.class) != null && entity.getComponent(Rigidbody.class).getBodyType() == MassType.NORMAL || entity.getComponent(Transform.class).isDirty()) {
                 anyDirty = true;
                 break;
             }

@@ -3,12 +3,13 @@ package redball.engine.entity.components;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+import static redball.engine.core.PhysicsSystem.PPM;
+
 public class Transform extends Component {
     public Vector3f position;
     public float rotation;
     public Vector3f scale;
     private Matrix4f matrix;
-    public static final float PPM = 32.0f;
 
     public Transform(Vector3f position, float rotation, Vector3f scale) {
         this.position = position;
