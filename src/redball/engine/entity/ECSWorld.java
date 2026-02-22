@@ -64,6 +64,10 @@ public class ECSWorld {
         return false;
     }
 
+    public static void clearGameObjects() {
+        gameObjects = new ArrayList<>();
+    }
+
     /**
      * @description removes gameobject by given name
      * @param name of gameobject
