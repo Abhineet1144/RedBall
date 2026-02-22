@@ -10,11 +10,10 @@ flat out int ourTId;
 
 uniform mat4 view;
 uniform mat4 projection;
-uniform mat4 transform;
 
 void main()
 {
-    gl_Position = vec4(aPos, 1.0);
+    gl_Position = projection * view * vec4(aPos, 1.0);
     ourColor = aColor;
     TexCoord = aTexCoord;
     ourTId = int(tId);

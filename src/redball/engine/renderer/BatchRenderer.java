@@ -1,12 +1,13 @@
 package redball.engine.renderer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.SpriteRenderer;
+import redball.engine.entity.components.Transform;
 import redball.engine.renderer.texture.Texture;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
@@ -24,7 +25,7 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.*;
 
 public class BatchRenderer {
-    private static final int MAX_ENTITIES = 2;
+    public static final int MAX_ENTITIES = 2;
     private static final int POS_SIZE = 3;
     private static final int COLOR_SIZE = 4;
     private static final int TEXTURE_COORDS_SIZE = 2;
@@ -32,7 +33,7 @@ public class BatchRenderer {
     private static final int OVERALL_SIZE = POS_SIZE + COLOR_SIZE + TEXTURE_COORDS_SIZE + TEXTURE_ID_SIZE;
     private static final int OVERALL_STRIDE = OVERALL_SIZE * Float.BYTES;
 
-    private int entityCount = 0;
+    public int entityCount = 0;
     private int verticesAdded = 0;
     private List<GameObject> entities;
     private List<float[]> vertexData;
@@ -40,23 +41,13 @@ public class BatchRenderer {
     private float[] verticesData = new float[OVERALL_SIZE * MAX_ENTITIES * 4];
     private int[] vertexIndex = new int[OVERALL_SIZE * 6];
     private int hightest = 0;
+    private int vao;
 
-    BatchRenderer() {
-        entities = new ArrayList<>();
+    BatchRenderer(List<GameObject> go) {
+        entities = new ArrayList<>(go);
+        entityCount = entities.size();
         vertexData = new ArrayList<>();
         vertexIndices = new ArrayList<>();
-    }
-
-    public int add(GameObject entity) {
-        entities.add(entity);
-        return entityCount++;
-    }
-
-    public void remove(GameObject entity) {
-        entities.remove(entity);
-    }
-
-    public void removeAll(Collection<GameObject> enitites) {
     }
 
     public int updateAllVertices() {
@@ -70,11 +61,11 @@ public class BatchRenderer {
             if (texture != null) {
                 textureSlot = texture.getUsedTexSlot();
             }
-            updateComponentVertices(quadOffset + 0 * OVERALL_SIZE, -0.5f,  0.5f, 0, 1, textureSlot);
-            updateComponentVertices(quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0, textureSlot);
-            updateComponentVertices(quadOffset + 2 * OVERALL_SIZE,  0.5f, -0.5f, 1, 0, textureSlot);
-            updateComponentVertices(quadOffset + 3 * OVERALL_SIZE,  0.5f,  0.5f, 1, 1, textureSlot);
-            for (int i : new int[] { 0, 1, 2, 2, 3, 0 }) {
+            updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f, 0.5f, 0, 1, textureSlot);
+            updateComponentVertices(entity, quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0, textureSlot);
+            updateComponentVertices(entity, quadOffset + 2 * OVERALL_SIZE, 0.5f, -0.5f, 1, 0, textureSlot);
+            updateComponentVertices(entity, quadOffset + 3 * OVERALL_SIZE, 0.5f, 0.5f, 1, 1, textureSlot);
+            for (int i : new int[]{0, 1, 2, 2, 3, 0}) {
                 int eboVal = hightest + i;
                 vertexIndex[verticesAdded++] = eboVal;
                 h = Math.max(h, eboVal);
@@ -113,10 +104,13 @@ public class BatchRenderer {
         return vao;
     }
 
-    private void updateComponentVertices(int off, float x, float y, int tx, int ty, int tId) {
-        verticesData[off] = x;
-        verticesData[off + 1] = y;
-        verticesData[off + 2] = 0;
+    private void updateComponentVertices(GameObject go, int off, float x, float y, int tx, int ty, int tId) {
+        Matrix4f transform = go.getComponent(Transform.class).getMatrix();
+        Vector4f pos = transform.transform(new Vector4f(x, y, 0, 1));
+
+        verticesData[off] = pos.x;
+        verticesData[off + 1] = pos.y;
+        verticesData[off + 2] = pos.z;
         verticesData[off + 3] = 1;
         verticesData[off + 4] = 1;
         verticesData[off + 5] = 1;
@@ -124,5 +118,14 @@ public class BatchRenderer {
         verticesData[off + 7] = tx;
         verticesData[off + 8] = ty;
         verticesData[off + 9] = tId;
+    }
+
+    public void prepare() {
+        vao = updateAllVertices();
+    }
+
+    public void render() {
+        glBindVertexArray(vao);
+        glDrawElements(GL_TRIANGLES, verticesAdded, GL_UNSIGNED_INT, 0);
     }
 }

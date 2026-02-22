@@ -5,11 +5,11 @@ import org.joml.Vector3f;
 
 public class Transform extends Component {
     public Vector3f position;
-    public Vector3f rotation;
+    public float rotation;
     public Vector3f scale;
     private Matrix4f matrix;
 
-    public Transform(Vector3f position, Vector3f rotation, Vector3f scale) {
+    public Transform(Vector3f position, float rotation, Vector3f scale) {
         this.position = position;
         this.rotation = rotation;
         this.scale = scale;
@@ -17,10 +17,15 @@ public class Transform extends Component {
     }
 
     public Matrix4f getMatrix() {
-        matrix.identity().translate(position).rotateXYZ(rotation).scale(scale);
+        matrix.identity().translate(position).rotateZ(rotation).scale(scale);
         return matrix;
     }
 
+    @Override
     public void update(float dt) {
+    }
+
+    public Vector3f getPosition() {
+        return position;
     }
 }

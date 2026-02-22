@@ -1,12 +1,16 @@
 package redball.engine.renderer;
 
+import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryUtil;
+import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
+import redball.engine.entity.components.CameraComponent;
 import redball.engine.entity.components.SpriteRenderer;
+import redball.engine.entity.components.Transform;
 import redball.engine.renderer.texture.TextureManager;
 import redball.scenes.main.AbstractScene;
 import redball.scenes.main.EmptyScene;
@@ -32,6 +36,8 @@ public class WindowManager {
     private int height = 1080;
     private int fpsCap = Integer.MAX_VALUE;
     private AbstractScene scene = new EmptyScene();
+
+    GameObject camera = new GameObject("Camera");
 
     public void init() {
         if (window != 0L) {
@@ -65,18 +71,20 @@ public class WindowManager {
 
         glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
             glViewport(0, 0, w, h);
-
             width = w;
             height = h;
         });
+
+        camera.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
+        camera.addComponent(new CameraComponent(1920, 1080));
     }
 
     public void loop(Shader shader) {
-        shader.use();
-
         double lastTime = glfwGetTime();
         double lastSecond = lastTime;
         int fps = 0;
+        shader.use();
+
 
         while (!GLFW.glfwWindowShouldClose(window)) {
 
@@ -87,6 +95,11 @@ public class WindowManager {
             // CLEAR
             glClearColor(0, 0, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            shader.setMat4f ("projection", camera.getComponent(CameraComponent.class).getProjectionMatrix());
+            shader.setMat4f("view", camera.getComponent(CameraComponent.class).getViewMatrix());
+            camera.update((float) deltaTime);
+
 
             // RENDER
             scene.update(deltaTime);

@@ -1,24 +1,26 @@
 package redball.engine.entity;
 
 import redball.engine.entity.components.Tag;
+import redball.engine.renderer.BatchRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ECSWorld {
     // List of all gameobjects
-    private List<GameObject> gameObjects;
+    private static List<GameObject> gameObjects = new ArrayList<>();
 
-    public ECSWorld() {
-        this.gameObjects = new ArrayList<>();
-    }
+    public ECSWorld() {}
 
     /**
      * @description Creates new gameobject of given name.
      * @param name of the object.
+     * @return the created gameobject
      */
-    public void createGameObject(String name) {
-        gameObjects.add(new GameObject(name));
+    public static GameObject createGameObject(String name) {
+        GameObject go = new GameObject(name);
+        gameObjects.add(go);
+        return go;
     }
 
     /**
@@ -26,7 +28,7 @@ public class ECSWorld {
      * @param name of the object
      * @return gameobject if found else null
      */
-    public GameObject findGameObjectByName(String name) {
+    public static GameObject findGameObjectByName(String name) {
         for (GameObject g : gameObjects) {
             if (g.getName().equals(name)) return g;
         }
@@ -38,7 +40,7 @@ public class ECSWorld {
      * @param tag of the object
      * @return gameobject if found else null
      */
-    public GameObject findGameObjectByTag(String tag) {
+    public static GameObject findGameObjectByTag(String tag) {
         for (GameObject g : gameObjects) {
             if (g.getComponent(Tag.class).getTag().equals(tag)) return g;
         }
@@ -50,7 +52,7 @@ public class ECSWorld {
      * @param gameObject we want to remove
      * @return true if found else false
      */
-    public boolean removeGameObject(GameObject gameObject) {
+    public static boolean removeGameObject(GameObject gameObject) {
         for (GameObject g : gameObjects) {
             if (g.equals(gameObject)) {
                 gameObjects.remove(g);
@@ -67,7 +69,7 @@ public class ECSWorld {
      * @param name of gameobject
      * @return true if found else false
      */
-    public boolean removeGameObject(String name) {
+    public static boolean removeGameObject(String name) {
         GameObject go = findGameObjectByName(name);
         if (go == null) {
             assert false : "FAILED: TO REMOVE GAMEOBJECT, IS NULL";
@@ -81,7 +83,7 @@ public class ECSWorld {
      * @param tag of gameobject
      * @return true if found else false
      */
-    public boolean removeGameObjectByTag(String tag) {
+    public static boolean removeGameObjectByTag(String tag) {
         GameObject go = findGameObjectByTag(tag);
         if (go == null) {
             assert false : "FAILED: TO REMOVE GAMEOBJECT, IS NULL";
@@ -94,9 +96,13 @@ public class ECSWorld {
      * @description updates all gameobjects
      * @param dt delta time
      */
-    public void update(float dt) {
+    public static void update(float dt) {
         for (GameObject g : gameObjects) {
             g.update(dt);
         }
+    }
+
+    public static List<GameObject> getGameObjects() {
+        return gameObjects;
     }
 }
