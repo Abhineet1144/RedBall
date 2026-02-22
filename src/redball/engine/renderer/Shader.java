@@ -2,6 +2,7 @@ package redball.engine.renderer;
 
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL20;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -55,6 +56,12 @@ public class Shader {
 
     public void use() {
         glUseProgram(ID);
+    }
+
+    public void initTextureSamplers() {
+        int loc = GL20.glGetUniformLocation(getID(), "u_Textures");
+        int[] samplers = { 0, 1, 2, 3, 4, 5, 6, 7 };
+        GL20.glUniform1iv(loc, samplers);
     }
 
     public int getID() {

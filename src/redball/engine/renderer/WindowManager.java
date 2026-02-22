@@ -4,13 +4,12 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.system.MemoryUtil;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.SpriteRenderer;
-import redball.engine.renderer.texture.Texture;
 import redball.engine.renderer.texture.TextureManager;
+import redball.scenes.main.AbstractScene;
+import redball.scenes.main.EmptyScene;
 
 import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
 import static org.lwjgl.glfw.GLFW.GLFW_MAXIMIZED;
@@ -26,17 +25,19 @@ import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
 import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
-import static org.lwjgl.opengl.GL13.glActiveTexture;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
 
 public class WindowManager {
-    private static long window;
+    private static long window = 0L;
     private int width = 1920;
     private int height = 1080;
-    int vao;
+    private int fpsCap = Integer.MAX_VALUE;
+    private AbstractScene scene = new EmptyScene();
 
     public void init() {
+        if (window != 0L) {
+            return;
+        }
+
         GLFWErrorCallback.createPrint(System.err).set();
 
         if (!GLFW.glfwInit()) {
@@ -59,7 +60,8 @@ public class WindowManager {
         glfwSwapInterval(0);
         glEnable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthFunc(GL_LESS);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
             glViewport(0, 0, w, h);
@@ -70,45 +72,42 @@ public class WindowManager {
     }
 
     public void loop(Shader shader) {
-        GameObject obj = new GameObject("1");
-        obj.addComponent(new SpriteRenderer(TextureManager.getTexture("resources/container.jpg")));
+        shader.use();
 
-        GameObject obj1 = new GameObject("2");
-        obj1.addComponent(new SpriteRenderer(TextureManager.getTexture("resources/red.jpeg")));
-
-        BatchRenderer batchRenderer = new BatchRenderer();
-        batchRenderer.add(obj);
-        batchRenderer.add(obj1);
-
-        vao = batchRenderer.updateAllVertices();
-
-        double lastTime = 0;
-        double delatTime = 0;
+        double lastTime = glfwGetTime();
+        double lastSecond = lastTime;
+        int fps = 0;
 
         while (!GLFW.glfwWindowShouldClose(window)) {
-            // CLEAR PREVIOUS
-            GL11.glClearColor(0, 0, 0, 0);
+
+            double time = glfwGetTime();
+            double deltaTime = time - lastTime;
+            lastTime = time;
+
+            // CLEAR
+            glClearColor(0, 0, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            shader.use();
-            int loc = GL20.glGetUniformLocation(shader.getID(), "u_Textures");
-            int[] samplers = {0, 1, 2, 3, 4, 5, 6, 7};
-            GL20.glUniform1iv(loc, samplers);
+            // RENDER
+            scene.update(deltaTime);
 
-            TextureManager.bindTextures();
-
-            glBindVertexArray(vao);
-            glDrawElements(GL_TRIANGLES, 8, GL_UNSIGNED_INT, 0L);
-
-            // PREPARE FOR NEXT
+            // SWAP
             glfwSwapBuffers(window);
             glfwPollEvents();
 
-            // Calculate delta time
-            double time = glfwGetTime();
-            delatTime = time - lastTime;
-            lastTime = time;
+            // FPS Counter
+            if (time - lastSecond >= 1.0) {
+                setTitle("Red Ball. FPS: " + fps);
+                fps = 0;
+                lastSecond += 1.0;
+            }
+            fps++;
         }
+    }
+
+    public void useActiveScene(AbstractScene scene) {
+        scene.start();
+        this.scene = scene;
     }
 
     public void setVSync(int val) {

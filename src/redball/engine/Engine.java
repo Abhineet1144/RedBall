@@ -3,6 +3,7 @@ package redball.engine;
 import redball.engine.renderer.Shader;
 import redball.engine.renderer.WindowManager;
 import redball.engine.utils.AssetPool;
+import redball.scenes.main.TestScene;
 
 public class Engine {
     private static boolean started = false;
@@ -20,14 +21,15 @@ public class Engine {
 
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
 
+        windowManager.useActiveScene(new TestScene());
         windowManager.loop(shader);
     }
 
-    public WindowManager getWindowManager() {
+    public static WindowManager getWindowManager() {
         return windowManager;
     }
 
-    public Shader getShader() {
+    public static Shader getShader() {
         return shader;
     }
 }
