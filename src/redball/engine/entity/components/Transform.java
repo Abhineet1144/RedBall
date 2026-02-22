@@ -17,7 +17,7 @@ public class Transform extends Component {
     }
 
     public Matrix4f getMatrix() {
-        matrix.identity().translate(position).rotateZ(rotation).scale(scale);
+        matrix.identity().translate(position).rotateZ((float) Math.toRadians(rotation)).scale(scale);
         return matrix;
     }
 

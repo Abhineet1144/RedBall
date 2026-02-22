@@ -40,7 +40,7 @@ public class BatchRenderer {
     private int[] vertexIndex = new int[OVERALL_SIZE * 6];
     private int hightest = 0;
     private int vao;
-    private int vbo;
+    int vbo;
 
     BatchRenderer(List<GameObject> go) {
         entities = new ArrayList<>(go);
@@ -103,6 +103,7 @@ public class BatchRenderer {
 
     private void rebuildVertices() {
         int offset = 0;
+        verticesAdded = 0;
         int h = hightest;
 
         for (GameObject entity : entities) {
@@ -112,24 +113,22 @@ public class BatchRenderer {
             if (texture != null) {
                 textureSlot = texture.getUsedTexSlot();
             }
-            updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f, 0.5f, 0, 1, textureSlot);
+
+            updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f,  0.5f, 0, 1, textureSlot);
             updateComponentVertices(entity, quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0, textureSlot);
-            updateComponentVertices(entity, quadOffset + 2 * OVERALL_SIZE, 0.5f, -0.5f, 1, 0, textureSlot);
-            updateComponentVertices(entity, quadOffset + 3 * OVERALL_SIZE, 0.5f, 0.5f, 1, 1, textureSlot);
+            updateComponentVertices(entity, quadOffset + 2 * OVERALL_SIZE,  0.5f, -0.5f, 1, 0, textureSlot);
+            updateComponentVertices(entity, quadOffset + 3 * OVERALL_SIZE,  0.5f,  0.5f, 1, 1, textureSlot);
+
             for (int i : new int[]{0, 1, 2, 2, 3, 0}) {
-                int eboVal = hightest + i;
-                vertexIndex[verticesAdded++] = eboVal;
-                h = Math.max(h, eboVal);
+                vertexIndex[verticesAdded++] = h + i;
             }
+            h += 4;
             offset++;
-            hightest = h + 1;
         }
     }
 
     public void updateVertices() {
-        // recalculate verticesData
         rebuildVertices();
-        // just update buffer data, no new VAO/VBO
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, verticesData);
     }
