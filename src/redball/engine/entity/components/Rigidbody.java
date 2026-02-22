@@ -8,7 +8,6 @@ import redball.engine.core.physics.PhysicsSystem;
 public class Rigidbody extends Component {
     private Body body;
     public static final float PPM = 32.0f;
-    private float lastX, lastY;
 
     public Rigidbody() {
         body = new Body();
@@ -24,6 +23,15 @@ public class Rigidbody extends Component {
         body.setMass(MassType.NORMAL);
         PhysicsSystem.getWorld().addBody(body);
         super.markAsDirty();
+    }
+
+    public void setBodyType(MassType type) {
+        this.body.setMass(type);
+    }
+
+    public void setFixture() {
+        Transform transform = this.gameObject.getComponent(Transform.class);
+        this.body.addFixture(Geometry.createCircle(transform.scale.x / PPM));
     }
 
     @Override

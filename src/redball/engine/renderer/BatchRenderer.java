@@ -120,10 +120,10 @@ public class BatchRenderer {
                 Texture texture = entity.getComponent(SpriteRenderer.class).getTexture();
                 int textureSlot = texture != null ? texture.getUsedTexSlot() : 0;
 
-                updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f,  0.5f, 0, 1, textureSlot);
+                updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f, 0.5f, 0, 1, textureSlot);
                 updateComponentVertices(entity, quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0, textureSlot);
-                updateComponentVertices(entity, quadOffset + 2 * OVERALL_SIZE,  0.5f, -0.5f, 1, 0, textureSlot);
-                updateComponentVertices(entity, quadOffset + 3 * OVERALL_SIZE,  0.5f,  0.5f, 1, 1, textureSlot);
+                updateComponentVertices(entity, quadOffset + 2 * OVERALL_SIZE, 0.5f, -0.5f, 1, 0, textureSlot);
+                updateComponentVertices(entity, quadOffset + 3 * OVERALL_SIZE, 0.5f, 0.5f, 1, 1, textureSlot);
             }
 
             h += 4;
