@@ -25,17 +25,23 @@ public class Rigidbody extends Component {
         body.getTransform().setTranslation(transform.position.x / PPM, transform.position.y / PPM);
         body.getTransform().setRotation(Math.toRadians(transform.rotation));
         setRectangleFixture();
-        setBodyType(MassType.NORMAL);
+        setBodyType(BodyType.DYNAMIC);
         PhysicsSystem.getWorld().addBody(body);
         super.markAsDirty();
     }
 
-    public void setBodyType(MassType type) {
-        this.body.setMass(type);
+    public void setBodyType(BodyType type) {
+        this.body.setMass(type.getMassType());
     }
 
-    public MassType getBodyType() {
-        return this.body.getMass().getType();
+    public BodyType getBodyType() {
+        MassType massType = body.getMass().getType();
+        for (BodyType type : BodyType.values()) {
+            if (type.getMassType().equals(massType)) {
+                return type;
+            }
+        }
+        return BodyType.DYNAMIC;
     }
 
     public void setCircleFixture() {
@@ -60,6 +66,14 @@ public class Rigidbody extends Component {
     public void setMass(int mass) {
         Mass m = new Mass(new Vector2(0, 0), mass, 1.0);
         body.setMass(m);
+    }
+
+    public void setBounce(double value) {
+        body.getFixture(0).setRestitution(value);
+    }
+
+    public void setFriction(double value) {
+        body.getFixture(0).setFriction(value);
     }
 
     @Override

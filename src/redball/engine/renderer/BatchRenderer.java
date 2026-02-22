@@ -7,6 +7,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import redball.engine.entity.GameObject;
+import redball.engine.entity.components.BodyType;
 import redball.engine.entity.components.Rigidbody;
 import redball.engine.entity.components.SpriteRenderer;
 import redball.engine.entity.components.Transform;
@@ -111,7 +112,7 @@ public class BatchRenderer {
 
             boolean needsRebuild = t.isDirty();
 
-            if (rb != null && rb.getBodyType() == MassType.NORMAL) {
+            if (rb != null && rb.getBodyType() == BodyType.DYNAMIC) {
                 needsRebuild = true;
             }
 
@@ -135,7 +136,7 @@ public class BatchRenderer {
         boolean anyDirty = false;
 
         for (GameObject entity : entities) {
-            if (entity.getComponent(Rigidbody.class) != null && entity.getComponent(Rigidbody.class).getBodyType() == MassType.NORMAL || entity.getComponent(Transform.class).isDirty()) {
+            if (entity.getComponent(Rigidbody.class) != null && entity.getComponent(Rigidbody.class).getBodyType() == BodyType.DYNAMIC || entity.getComponent(Transform.class).isDirty()) {
                 anyDirty = true;
                 break;
             }

@@ -1,18 +1,14 @@
-package redball.scenes.levels;
+package redball.scenes;
 
 import org.joml.Vector3f;
 
-import redball.engine.core.PhysicsSystem;
-import redball.engine.entity.ECSWorld;
-import redball.engine.entity.GameObject;
-import redball.engine.entity.components.CameraComponent;
-import redball.engine.entity.components.Rigidbody;
-import redball.engine.entity.components.SpriteRenderer;
-import redball.engine.entity.components.Transform;
-import redball.engine.renderer.RenderManager;
-import redball.engine.renderer.texture.TextureManager;
-import redball.engine.renderer.texture.TextureMap;
-import redball.scenes.main.AbstractScene;
+import redball.engine.core.*;
+import redball.engine.entity.*;
+import redball.engine.entity.components.*;
+import redball.engine.renderer.*;
+import redball.engine.renderer.texture.*;
+import redball.engine.utils.*;
+
 
 public class Level1 extends AbstractScene {
 

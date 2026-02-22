@@ -4,8 +4,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryUtil;
-import redball.scenes.main.AbstractScene;
-import redball.scenes.main.EmptyScene;
+import redball.engine.utils.AbstractScene;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -15,7 +14,7 @@ public class WindowManager {
     private int width = 1920;
     private int height = 1080;
     private int fpsCap = Integer.MAX_VALUE;
-    private AbstractScene scene = new EmptyScene();
+    private AbstractScene scene;
 
     public void init() {
         if (window != 0L) {

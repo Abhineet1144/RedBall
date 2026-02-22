@@ -58,9 +58,10 @@ public class GameObject {
      * @description adds a component to a gameobject
      * @param c type of component
      */
-    public void addComponent(Component c) {
+    public <T extends Component> T addComponent(Component c) {
         this.components.add(c);
         c.gameObject = this;
+        return (T) getComponent(c.getClass());
     }
 
     /**

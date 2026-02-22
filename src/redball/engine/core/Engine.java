@@ -3,8 +3,7 @@ package redball.engine.core;
 import redball.engine.renderer.Shader;
 import redball.engine.renderer.WindowManager;
 import redball.engine.utils.AssetPool;
-import redball.scenes.levels.Level1;
-import redball.scenes.main.TestScene;
+import redball.scenes.TestScene;
 
 public class Engine {
     private static boolean started = false;

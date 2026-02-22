@@ -1,4 +1,4 @@
-package redball.scenes.main;
+package redball.engine.utils;
 
 public abstract class AbstractScene {
     public void start() {}
