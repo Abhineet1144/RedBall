@@ -14,6 +14,10 @@ public class TextureManager {
 
     private TextureManager() {}
 
+    public static Texture getTexture(TextureMap texture) {
+        return getTexture(texture.getFilePath());
+    }
+
     public static Texture getTexture(String path) {
         if (textureMap.containsKey(path)) {
             return textureMap.get(path);

@@ -9,6 +9,7 @@ import redball.engine.entity.components.Transform;
 import redball.engine.renderer.BatchRenderer;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.texture.TextureManager;
+import redball.engine.renderer.texture.TextureMap;
 
 import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
@@ -27,7 +28,7 @@ public class TestScene extends AbstractScene {
 
         obj = ECSWorld.createGameObject("1");
         obj.addComponent(new Transform(new Vector3f(400.0f, 400.0f, -1.0f), 90.0f, new Vector3f(200.0f, 200.0f, 1.0f)));
-        obj.addComponent(new SpriteRenderer(TextureManager.getTexture("resources/container.jpg")));
+        obj.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
 
         RenderManager.prepare();
     }
