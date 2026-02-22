@@ -27,6 +27,7 @@ import static org.lwjgl.glfw.GLFW.glfwSetFramebufferSizeCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowTitle;
 import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
 import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
+import static org.lwjgl.glfw.GLFW.glfwTerminate;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -116,6 +117,8 @@ public class WindowManager {
             }
             fps++;
         }
+
+        glfwTerminate();
     }
 
     public void useActiveScene(AbstractScene scene) {
