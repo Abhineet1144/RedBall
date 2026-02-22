@@ -68,6 +68,7 @@ public class WindowManager {
         glDisable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        setVSync(1);
 
         glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
             glViewport(0, 0, w, h);
@@ -88,7 +89,6 @@ public class WindowManager {
             double time = glfwGetTime();
             double deltaTime = time - lastTime;
             lastTime = time;
-
             // CLEAR
             glClearColor(0, 0, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

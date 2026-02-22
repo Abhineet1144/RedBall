@@ -35,7 +35,7 @@ public class TestScene extends AbstractScene {
         obj3.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
 
         obj = ECSWorld.createGameObject("Ball");
-        obj.addComponent(new Transform(new Vector3f(400.0f, 800.0f, -1.0f), 90.0f, new Vector3f(200.0f, 200.0f, 1.0f)));
+        obj.addComponent(new Transform(new Vector3f(400.0f, 800.0f, -1.0f), 90.0f, new Vector3f(100.0f, 100.0f, 1.0f)));
         obj.addComponent(new Rigidbody());
         obj.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BALL)));
 
@@ -55,11 +55,14 @@ public class TestScene extends AbstractScene {
         obj4.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
 
         RenderManager.prepare();
-        ECSWorld.start();
 
         obj.getComponent(Rigidbody.class).setFixture();
+
+        ECSWorld.start();
+
         obj.getComponent(Rigidbody.class).setMass(500);
         obj.getComponent(Rigidbody.class).getBody().getFixture(0).setRestitution(0.2);
+        obj.getComponent(Rigidbody.class).getBody().getFixture(0).setFriction(0.5);
 
         obj1.getComponent(Rigidbody.class).setBodyType(MassType.INFINITE);
 
