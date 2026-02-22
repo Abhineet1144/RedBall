@@ -44,8 +44,8 @@ public class Texture {
             this.width = width.get(0);
             this.height = height.get(0);
             int format = channels.get(0) == 4 ? GL11.GL_RGBA : GL11.GL_RGB;
+            GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
             GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, format, this.width, this.height, 0, format, GL11.GL_UNSIGNED_BYTE, textureImg);
-//            GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
             STBImage.stbi_image_free(textureImg);
         } else {
             System.err.println("Failed to load texture: " + filePath);

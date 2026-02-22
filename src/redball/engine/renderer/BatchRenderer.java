@@ -24,7 +24,7 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.*;
 
 public class BatchRenderer {
-    private static final int MAX_ENTITIES = 100;
+    private static final int MAX_ENTITIES = 2;
     private static final int POS_SIZE = 3;
     private static final int COLOR_SIZE = 4;
     private static final int TEXTURE_COORDS_SIZE = 2;
@@ -73,7 +73,8 @@ public class BatchRenderer {
             updateComponentVertices(quadOffset + 0 * OVERALL_SIZE, -0.5f,  0.5f, 0, 1, textureSlot);
             updateComponentVertices(quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0, textureSlot);
             updateComponentVertices(quadOffset + 2 * OVERALL_SIZE,  0.5f, -0.5f, 1, 0, textureSlot);
-            updateComponentVertices(quadOffset + 3 * OVERALL_SIZE,  0.5f,  0.5f, 1, 1, textureSlot);            for (int i : new int[]{0, 1, 2, 2, 3, 0}) {
+            updateComponentVertices(quadOffset + 3 * OVERALL_SIZE,  0.5f,  0.5f, 1, 1, textureSlot);
+            for (int i : new int[] { 0, 1, 2, 2, 3, 0 }) {
                 int eboVal = hightest + i;
                 vertexIndex[verticesAdded++] = eboVal;
                 h = Math.max(h, eboVal);

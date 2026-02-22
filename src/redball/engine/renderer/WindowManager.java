@@ -77,8 +77,8 @@ public class WindowManager {
         obj1.addComponent(new SpriteRenderer(TextureManager.getTexture("resources/red.jpeg")));
 
         BatchRenderer batchRenderer = new BatchRenderer();
-        batchRenderer.add(obj1);
         batchRenderer.add(obj);
+        batchRenderer.add(obj1);
 
         vao = batchRenderer.updateAllVertices();
 
@@ -95,15 +95,10 @@ public class WindowManager {
             int[] samplers = {0, 1, 2, 3, 4, 5, 6, 7};
             GL20.glUniform1iv(loc, samplers);
 
-            glActiveTexture(obj.getComponent(SpriteRenderer.class).getTexture().getTexID());
-            glBindTexture(GL_TEXTURE_2D, obj.getComponent(SpriteRenderer.class).getTexture().getTexID());
-
-            glActiveTexture(obj1.getComponent(SpriteRenderer.class).getTexture().getTexID());
-            glBindTexture(GL_TEXTURE_2D, obj1.getComponent(SpriteRenderer.class).getTexture().getTexID());
-
+            TextureManager.bindTextures();
 
             glBindVertexArray(vao);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0L);
+            glDrawElements(GL_TRIANGLES, 8, GL_UNSIGNED_INT, 0L);
 
             // PREPARE FOR NEXT
             glfwSwapBuffers(window);
