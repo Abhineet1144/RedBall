@@ -4,7 +4,13 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.system.MemoryUtil;
+import redball.engine.entity.GameObject;
+import redball.engine.entity.components.SpriteRenderer;
+import redball.engine.renderer.texture.Texture;
+import redball.engine.renderer.texture.TextureManager;
 
 import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
 import static org.lwjgl.glfw.GLFW.GLFW_MAXIMIZED;
@@ -20,6 +26,8 @@ import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
 import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
 
 public class WindowManager {
@@ -27,6 +35,7 @@ public class WindowManager {
     private int width = 1920;
     private int height = 1080;
     int vao;
+
     public void init() {
         GLFWErrorCallback.createPrint(System.err).set();
 
@@ -58,13 +67,21 @@ public class WindowManager {
             width = w;
             height = h;
         });
-
-        BatchRenderer batchRenderer = new BatchRenderer();
-        batchRenderer.add(null);
-        vao = batchRenderer.updateAllVertices();
     }
 
     public void loop(Shader shader) {
+        GameObject obj = new GameObject("1");
+        obj.addComponent(new SpriteRenderer(TextureManager.getTexture("resources/container.jpg")));
+
+        GameObject obj1 = new GameObject("2");
+        obj1.addComponent(new SpriteRenderer(TextureManager.getTexture("resources/red.jpeg")));
+
+        BatchRenderer batchRenderer = new BatchRenderer();
+        batchRenderer.add(obj1);
+        batchRenderer.add(obj);
+
+        vao = batchRenderer.updateAllVertices();
+
         double lastTime = 0;
         double delatTime = 0;
 
@@ -74,6 +91,17 @@ public class WindowManager {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             shader.use();
+            int loc = GL20.glGetUniformLocation(shader.getID(), "u_Textures");
+            int[] samplers = {0, 1, 2, 3, 4, 5, 6, 7};
+            GL20.glUniform1iv(loc, samplers);
+
+            glActiveTexture(obj.getComponent(SpriteRenderer.class).getTexture().getTexID());
+            glBindTexture(GL_TEXTURE_2D, obj.getComponent(SpriteRenderer.class).getTexture().getTexID());
+
+            glActiveTexture(obj1.getComponent(SpriteRenderer.class).getTexture().getTexID());
+            glBindTexture(GL_TEXTURE_2D, obj1.getComponent(SpriteRenderer.class).getTexture().getTexID());
+
+
             glBindVertexArray(vao);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0L);
 

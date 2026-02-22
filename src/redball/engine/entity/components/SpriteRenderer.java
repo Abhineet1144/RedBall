@@ -1,15 +1,12 @@
 package redball.engine.entity.components;
 
+import redball.engine.renderer.texture.Texture;
+
 public class SpriteRenderer extends Component {
-    public static final int[] QUAD = new int[] { 0, 1, 2, 2, 3, 0 };
-    public static final int[] TRIANGLE = new int[] { 0, 1, 2 };
+    private Texture texture;
 
-    public Vertex[] vertices;
-    public int[] eboVal;
-
-    public SpriteRenderer(Vertex[] vertices, int[] eboVal) {
-        this.vertices = vertices;
-        this.eboVal = eboVal;
+    public SpriteRenderer(Texture texture) {
+        this.texture = texture;
     }
 
     @Override
@@ -17,22 +14,11 @@ public class SpriteRenderer extends Component {
 
     }
 
-    public static class Vertex {
-        public float x;
-        public float y;
-        public float z;
-        public float r;
-        public float g;
-        public float b;
-        public float a;
+    public Texture getTexture() {
+        return texture;
+    }
 
-        public Vertex(float x, float y, float z, float r, float g, float b, float a) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;        }
+    public void setTexture(Texture texture) {
+        this.texture = texture;
     }
 }

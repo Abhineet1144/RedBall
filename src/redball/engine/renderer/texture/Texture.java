@@ -9,20 +9,23 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.stb.STBImage;
 
 public class Texture {
-    private static int usedTexSlots = 0;
+    private static int usedTexSlots = 1;
     private static int[] texSlots = new int[] {
             GL13.GL_TEXTURE0, GL13.GL_TEXTURE1, GL13.GL_TEXTURE2, GL13.GL_TEXTURE3, GL13.GL_TEXTURE4, GL13.GL_TEXTURE5
     };
 
     private int texSlot;
+    private int usedTexSlot;
     private int texId;
     private int width;
     private int height;
 
 
-    Texture(String filePath) {
+    public Texture(String filePath) {
         texId = GL11.glGenTextures();
-        texSlot = texSlots[usedTexSlots++];
+        usedTexSlot = usedTexSlots;
+        texSlot = texSlots[usedTexSlots-1];
+        usedTexSlots++;
         GL13.glActiveTexture(texSlot);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texId);
 
@@ -34,13 +37,13 @@ public class Texture {
         IntBuffer width = BufferUtils.createIntBuffer(1);
         IntBuffer height = BufferUtils.createIntBuffer(1);
         IntBuffer channels = BufferUtils.createIntBuffer(1);
+        STBImage.stbi_set_flip_vertically_on_load(true);
         ByteBuffer textureImg = STBImage.stbi_load(filePath, width, height, channels, 0);
 
         if (textureImg != null) {
             this.width = width.get(0);
             this.height = height.get(0);
             int format = channels.get(0) == 4 ? GL11.GL_RGBA : GL11.GL_RGB;
-            STBImage.stbi_set_flip_vertically_on_load(true);
             GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, format, this.width, this.height, 0, format, GL11.GL_UNSIGNED_BYTE, textureImg);
 //            GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
             STBImage.stbi_image_free(textureImg);
@@ -63,4 +66,11 @@ public class Texture {
         return texId;
     }
 
+    public int getTexSlot() {
+        return texSlot;
+    }
+
+    public int getUsedTexSlot() {
+        return usedTexSlot;
+    }
 }

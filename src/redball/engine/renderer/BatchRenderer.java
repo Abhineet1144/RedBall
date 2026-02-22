@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.List;
 
 import redball.engine.entity.GameObject;
+import redball.engine.entity.components.SpriteRenderer;
+import redball.engine.renderer.texture.Texture;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
@@ -63,11 +65,15 @@ public class BatchRenderer {
 
         for (GameObject entity : entities) {
             int quadOffset = offset * 4 * OVERALL_SIZE;
-            updateComponentVertices(quadOffset + 0 * OVERALL_SIZE, -0.5f, 0.5f, 0, 1);
-            updateComponentVertices(quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0);
-            updateComponentVertices(quadOffset + 2 * OVERALL_SIZE, 0.5f, -0.5f, 1, 0);
-            updateComponentVertices(quadOffset + 3 * OVERALL_SIZE, 0.5f, 0.5f, 1, 1);
-            for (int i : new int[]{0, 1, 2, 2, 3, 0}) {
+            Texture texture = entity.getComponent(SpriteRenderer.class).getTexture();
+            int textureSlot = 0;
+            if (texture != null) {
+                textureSlot = texture.getUsedTexSlot();
+            }
+            updateComponentVertices(quadOffset + 0 * OVERALL_SIZE, -0.5f,  0.5f, 0, 1, textureSlot);
+            updateComponentVertices(quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0, textureSlot);
+            updateComponentVertices(quadOffset + 2 * OVERALL_SIZE,  0.5f, -0.5f, 1, 0, textureSlot);
+            updateComponentVertices(quadOffset + 3 * OVERALL_SIZE,  0.5f,  0.5f, 1, 1, textureSlot);            for (int i : new int[]{0, 1, 2, 2, 3, 0}) {
                 int eboVal = hightest + i;
                 vertexIndex[verticesAdded++] = eboVal;
                 h = Math.max(h, eboVal);
@@ -98,7 +104,7 @@ public class BatchRenderer {
         glVertexAttribPointer(2, 2, GL_FLOAT, false, OVERALL_STRIDE, 7 * Float.BYTES);
         glEnableVertexAttribArray(2);
 
-        glVertexAttribIPointer(3, 1, GL_INT, OVERALL_STRIDE, 9 * Float.BYTES);
+        glVertexAttribPointer(3, 1, GL_FLOAT, false, OVERALL_STRIDE, 9 * Float.BYTES);
         glEnableVertexAttribArray(3);
 
         glDrawElements(GL_TRIANGLES, verticesAdded, GL_UNSIGNED_INT, 0);
@@ -106,16 +112,16 @@ public class BatchRenderer {
         return vao;
     }
 
-    private void updateComponentVertices(int off, float x, float y, int tx, int ty) {
+    private void updateComponentVertices(int off, float x, float y, int tx, int ty, int tId) {
         verticesData[off] = x;
         verticesData[off + 1] = y;
         verticesData[off + 2] = 0;
         verticesData[off + 3] = 1;
-        verticesData[off + 4] = 0;
-        verticesData[off + 5] = 0;
+        verticesData[off + 4] = 1;
+        verticesData[off + 5] = 1;
         verticesData[off + 6] = 1;
         verticesData[off + 7] = tx;
         verticesData[off + 8] = ty;
-        verticesData[off + 9] = 0;
+        verticesData[off + 9] = tId;
     }
 }

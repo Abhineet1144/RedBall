@@ -66,4 +66,9 @@ public class Shader {
         value.get(matrixBuffer);
         glUniformMatrix4fv(glGetUniformLocation(ID, name), false, matrixBuffer);
     }
+
+    public void uploadInt(String name, int value) {
+        int location = glGetUniformLocation(ID, name);
+        glUniform1i(location, value);
+    }
 }
