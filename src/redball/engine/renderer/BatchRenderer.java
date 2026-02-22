@@ -6,6 +6,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import redball.engine.entity.GameObject;
+import redball.engine.entity.components.Rigidbody;
 import redball.engine.entity.components.SpriteRenderer;
 import redball.engine.entity.components.Transform;
 import redball.engine.renderer.texture.Texture;
@@ -32,6 +33,7 @@ public class BatchRenderer {
     private static final int TEXTURE_ID_SIZE = 1;
     private static final int OVERALL_SIZE = POS_SIZE + COLOR_SIZE + TEXTURE_COORDS_SIZE + TEXTURE_ID_SIZE;
     private static final int OVERALL_STRIDE = OVERALL_SIZE * Float.BYTES;
+    public static final float PPM = 32.0f;
 
     public int entityCount = 0;
     private int verticesAdded = 0;
@@ -116,10 +118,10 @@ public class BatchRenderer {
                 textureSlot = texture.getUsedTexSlot();
             }
 
-            updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f,  0.5f, 0, 1, textureSlot);
+            updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f, 0.5f, 0, 1, textureSlot);
             updateComponentVertices(entity, quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0, textureSlot);
-            updateComponentVertices(entity, quadOffset + 2 * OVERALL_SIZE,  0.5f, -0.5f, 1, 0, textureSlot);
-            updateComponentVertices(entity, quadOffset + 3 * OVERALL_SIZE,  0.5f,  0.5f, 1, 1, textureSlot);
+            updateComponentVertices(entity, quadOffset + 2 * OVERALL_SIZE, 0.5f, -0.5f, 1, 0, textureSlot);
+            updateComponentVertices(entity, quadOffset + 3 * OVERALL_SIZE, 0.5f, 0.5f, 1, 1, textureSlot);
 
             for (int i : new int[]{0, 1, 2, 2, 3, 0}) {
                 vertexIndex[verticesAdded++] = h + i;
@@ -137,12 +139,22 @@ public class BatchRenderer {
 
 
     private void updateComponentVertices(GameObject go, int off, float x, float y, int tx, int ty, int tId) {
-        Matrix4f transform = go.getComponent(Transform.class).getMatrix();
-        Vector4f pos = transform.transform(new Vector4f(x, y, 0, 1));
+        Rigidbody rb = go.getComponent(Rigidbody.class);
+        Transform transform = go.getComponent(Transform.class);
+        Vector4f result = transform.getMatrix().transform(new Vector4f(x, y, 0, 1));
+        if (rb != null) {
+            org.dyn4j.geometry.Transform physTransform = rb.getBody().getTransform();
 
-        verticesData[off] = pos.x;
-        verticesData[off + 1] = pos.y;
-        verticesData[off + 2] = pos.z;
+            Vector3f pos = new Vector3f((float) physTransform.getTranslationX() * PPM, (float) physTransform.getTranslationY() * PPM, transform.position.z);
+            float rotation = (float) physTransform.getRotationAngle();
+
+            Matrix4f matrix = new Matrix4f().translate(pos).rotateZ(rotation).scale(transform.scale);
+
+            result = matrix.transform(new Vector4f(x, y, 0, 1));
+        }
+        verticesData[off] = result.x;
+        verticesData[off + 1] = result.y;
+        verticesData[off + 2] = result.z;
         verticesData[off + 3] = 1;
         verticesData[off + 4] = 1;
         verticesData[off + 5] = 1;

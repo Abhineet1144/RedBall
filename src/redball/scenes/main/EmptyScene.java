@@ -2,6 +2,6 @@ package redball.scenes.main;
 
 public class EmptyScene extends AbstractScene {
     @Override
-    public void update(double deltaTime) {
+    public void update(float deltaTime) {
     }
 }

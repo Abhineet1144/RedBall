@@ -93,7 +93,7 @@ public class WindowManager {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // RENDER
-            scene.update(deltaTime);
+            scene.update((float) deltaTime);
 
             // SWAP
             glfwSwapBuffers(window);

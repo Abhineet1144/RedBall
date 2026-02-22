@@ -8,6 +8,7 @@ public class Transform extends Component {
     public float rotation;
     public Vector3f scale;
     private Matrix4f matrix;
+    public static final float PPM = 32.0f;
 
     public Transform(Vector3f position, float rotation, Vector3f scale) {
         this.position = position;
@@ -18,22 +19,32 @@ public class Transform extends Component {
     }
 
     public void setXPosition(float xPos) {
-        this.position.x = xPos;
+        Rigidbody rb =  this.gameObject.getComponent(Rigidbody.class);
+        if (rb != null) {
+            rb.getBody().getTransform().setTranslationX(xPos / PPM);
+        } else {
+            this.position.x = xPos;
+        }
         super.markAsDirty();
     }
 
     public void setYPosition(float yPos) {
-        this.position.y = yPos;
-        super.markAsDirty();
-    }
-
-    public void setZPosition(float zPos) {
-        this.position.z = zPos;
+        Rigidbody rb =  this.gameObject.getComponent(Rigidbody.class);
+        if (rb != null) {
+            rb.getBody().getTransform().setTranslationY(yPos / PPM);
+        } else {
+            this.position.y = yPos;
+        }
         super.markAsDirty();
     }
 
     public void setRotation(float rotation) {
-        this.rotation = rotation;
+        Rigidbody rb =  this.gameObject.getComponent(Rigidbody.class);
+        if (rb != null) {
+            rb.getBody().getTransform().setRotation(rotation);
+        } else {
+            this.rotation = rotation;
+        }
         super.markAsDirty();
     }
 
@@ -59,9 +70,5 @@ public class Transform extends Component {
 
     @Override
     public void update(float dt) {
-    }
-
-    public Vector3f getPosition() {
-        return position;
     }
 }
