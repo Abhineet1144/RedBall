@@ -28,6 +28,7 @@ public class RenderManager {
 
     public static void render() {
         for (BatchRenderer batchRenderer : batches) {
+            batchRenderer.updateVertices();
             batchRenderer.render();
         }
     }

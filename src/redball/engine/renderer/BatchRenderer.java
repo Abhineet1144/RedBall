@@ -36,18 +36,15 @@ public class BatchRenderer {
     public int entityCount = 0;
     private int verticesAdded = 0;
     private List<GameObject> entities;
-    private List<float[]> vertexData;
-    private List<int[]> vertexIndices;
     private float[] verticesData = new float[OVERALL_SIZE * MAX_ENTITIES * 4];
     private int[] vertexIndex = new int[OVERALL_SIZE * 6];
     private int hightest = 0;
     private int vao;
+    private int vbo;
 
     BatchRenderer(List<GameObject> go) {
         entities = new ArrayList<>(go);
         entityCount = entities.size();
-        vertexData = new ArrayList<>();
-        vertexIndices = new ArrayList<>();
     }
 
     public int updateAllVertices() {
@@ -78,11 +75,11 @@ public class BatchRenderer {
         System.out.println(Arrays.toString(vertexIndex));
 
         int vao = glGenVertexArrays();
-        int vbo = glGenBuffers();
+        vbo = glGenBuffers();
         int EBO = glGenBuffers();
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, verticesData, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, verticesData, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexIndex, GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -103,6 +100,40 @@ public class BatchRenderer {
 
         return vao;
     }
+
+    private void rebuildVertices() {
+        int offset = 0;
+        int h = hightest;
+
+        for (GameObject entity : entities) {
+            int quadOffset = offset * 4 * OVERALL_SIZE;
+            Texture texture = entity.getComponent(SpriteRenderer.class).getTexture();
+            int textureSlot = 0;
+            if (texture != null) {
+                textureSlot = texture.getUsedTexSlot();
+            }
+            updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f, 0.5f, 0, 1, textureSlot);
+            updateComponentVertices(entity, quadOffset + 1 * OVERALL_SIZE, -0.5f, -0.5f, 0, 0, textureSlot);
+            updateComponentVertices(entity, quadOffset + 2 * OVERALL_SIZE, 0.5f, -0.5f, 1, 0, textureSlot);
+            updateComponentVertices(entity, quadOffset + 3 * OVERALL_SIZE, 0.5f, 0.5f, 1, 1, textureSlot);
+            for (int i : new int[]{0, 1, 2, 2, 3, 0}) {
+                int eboVal = hightest + i;
+                vertexIndex[verticesAdded++] = eboVal;
+                h = Math.max(h, eboVal);
+            }
+            offset++;
+            hightest = h + 1;
+        }
+    }
+
+    public void updateVertices() {
+        // recalculate verticesData
+        rebuildVertices();
+        // just update buffer data, no new VAO/VBO
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, verticesData);
+    }
+
 
     private void updateComponentVertices(GameObject go, int off, float x, float y, int tx, int ty, int tId) {
         Matrix4f transform = go.getComponent(Transform.class).getMatrix();

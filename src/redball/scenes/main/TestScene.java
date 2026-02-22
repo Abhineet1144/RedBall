@@ -32,5 +32,7 @@ public class TestScene extends AbstractScene {
     public void update(double deltaTime) {
         RenderManager.render();
         obj.update((float) deltaTime);
+        Transform t = obj.getComponent(Transform.class);
+        t.position.x += (float)(100 * deltaTime);
     }
 }
