@@ -18,6 +18,9 @@ public class TestScene extends AbstractScene {
     float x = 200;
     GameObject obj;
     GameObject obj1;
+    GameObject obj2;
+    GameObject obj3;
+    GameObject obj4;
     GameObject camera = new GameObject("Camera");
 
     @Override
@@ -26,31 +29,58 @@ public class TestScene extends AbstractScene {
         camera.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
         camera.addComponent(new CameraComponent(1920, 1080));
 
-        obj = ECSWorld.createGameObject("1");
-        obj.addComponent(new Transform(new Vector3f(400.0f, 400.0f, -1.0f), 90.0f, new Vector3f(200.0f, 200.0f, 1.0f)));
+        obj3 = ECSWorld.createGameObject("Ground");
+        obj3.addComponent(new Transform(new Vector3f(1920f / 2, 1080f / 2, -1f), 0f, new Vector3f(1920, 1080, 1)));
+        obj3.addComponent(new Rigidbody());
+        obj3.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
+
+        obj = ECSWorld.createGameObject("Ball");
+        obj.addComponent(new Transform(new Vector3f(400.0f, 800.0f, -1.0f), 90.0f, new Vector3f(200.0f, 200.0f, 1.0f)));
         obj.addComponent(new Rigidbody());
         obj.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BALL)));
 
-        obj1 = ECSWorld.createGameObject("2");
-        obj1.addComponent(new Transform(new Vector3f(150.0f, 150.0f, -1.0f), 5.0f, new Vector3f(1920.0f, 20.0f, 1.0f)));
+        obj1 = ECSWorld.createGameObject("Ground");
+        obj1.addComponent(new Transform(new Vector3f(150.0f, 250.0f, -1.0f), -15.0f, new Vector3f(1920.0f/2, 20.0f, 1.0f)));
         obj1.addComponent(new Rigidbody());
-        obj1.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
+        obj1.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+
+        obj2 = ECSWorld.createGameObject("Ground");
+        obj2.addComponent(new Transform(new Vector3f(1000.0f, 150.0f, -1.0f), 0.0f, new Vector3f(1920.0f/2, 20.0f, 1.0f)));
+        obj2.addComponent(new Rigidbody());
+        obj2.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+
+        obj4 = ECSWorld.createGameObject("Ground");
+        obj4.addComponent(new Transform(new Vector3f(1900.0f, 250.0f, -1.0f), 15.0f, new Vector3f(1920.0f/2, 20.0f, 1.0f)));
+        obj4.addComponent(new Rigidbody());
+        obj4.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
 
         RenderManager.prepare();
-        obj.start();
-        obj.getComponent(Rigidbody.class).setFixture();
+        ECSWorld.start();
 
-        obj1.start();
+        obj.getComponent(Rigidbody.class).setFixture();
+        obj.getComponent(Rigidbody.class).setMass(500);
+        obj.getComponent(Rigidbody.class).getBody().getFixture(0).setRestitution(0.2);
+
         obj1.getComponent(Rigidbody.class).setBodyType(MassType.INFINITE);
+
+        obj2.getComponent(Rigidbody.class).setBodyType(MassType.INFINITE);
+
+        obj4.getComponent(Rigidbody.class).setBodyType(MassType.INFINITE);
+
+        obj3.getComponent(Rigidbody.class).setBodyType(MassType.INFINITE);
+        obj3.getComponent(Rigidbody.class).setSensor(true);
+
+
     }
+
 
     @Override
     public void update(float deltaTime) {
         RenderManager.render(camera);
         PhysicsSystem.getWorld().update(deltaTime);
 
-        obj.update(deltaTime);
-//        obj.getComponent(Rigidbody.class).getBody().applyTorque(50);
+        ECSWorld.update(deltaTime);
+//        obj.getComponent(Rigidbody.class).getBody().applyTorque(-5);
 //        obj.getComponent(Transform.class).setXPosition(x += deltaTime * 100);
     }
 }

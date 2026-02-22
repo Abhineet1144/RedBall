@@ -106,6 +106,12 @@ public class ECSWorld {
         }
     }
 
+    public static void start() {
+        for (GameObject g : gameObjects) {
+            g.start();
+        }
+    }
+
     public static List<GameObject> getGameObjects() {
         return gameObjects;
     }

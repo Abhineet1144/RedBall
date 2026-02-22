@@ -103,7 +103,6 @@ public class BatchRenderer {
     private void rebuildVertices() {
         int offset = 0;
         int h = 0;
-        System.out.println("ss");
         for (GameObject entity : entities) {
             int quadOffset = offset * 4 * OVERALL_SIZE;
             Transform t = entity.getComponent(Transform.class);
