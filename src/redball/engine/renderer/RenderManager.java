@@ -1,7 +1,9 @@
 package redball.engine.renderer;
 
+import redball.engine.Engine;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
+import redball.engine.entity.components.CameraComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +28,10 @@ public class RenderManager {
         }
     }
 
-    public static void render() {
+    public static void render(GameObject camera) {
+        Engine.getShader().setMat4f ("projection", camera.getComponent(CameraComponent.class).getProjectionMatrix());
+        Engine.getShader().setMat4f("view", camera.getComponent(CameraComponent.class).getViewMatrix());
+
         for (BatchRenderer batchRenderer : batches) {
             batchRenderer.updateVertices();
             batchRenderer.render();

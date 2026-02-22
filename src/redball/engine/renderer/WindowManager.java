@@ -38,8 +38,6 @@ public class WindowManager {
     private int fpsCap = Integer.MAX_VALUE;
     private AbstractScene scene = new EmptyScene();
 
-    GameObject camera = new GameObject("Camera");
-
     public void init() {
         if (window != 0L) {
             return;
@@ -75,9 +73,6 @@ public class WindowManager {
             width = w;
             height = h;
         });
-
-        camera.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
-        camera.addComponent(new CameraComponent(1920, 1080));
     }
 
     public void loop(Shader shader) {
@@ -96,11 +91,6 @@ public class WindowManager {
             // CLEAR
             glClearColor(0, 0, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            shader.setMat4f ("projection", camera.getComponent(CameraComponent.class).getProjectionMatrix());
-            shader.setMat4f("view", camera.getComponent(CameraComponent.class).getViewMatrix());
-            camera.update((float) deltaTime);
-
 
             // RENDER
             scene.update(deltaTime);

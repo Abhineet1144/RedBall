@@ -18,9 +18,13 @@ import static org.lwjgl.opengl.GL30.glBindVertexArray;
 public class TestScene extends AbstractScene {
     float x = 0;
     GameObject obj;
+    GameObject camera = new GameObject("Camera");
 
     @Override
     public void start() {
+        camera.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
+        camera.addComponent(new CameraComponent(1920, 1080));
+
         obj = ECSWorld.createGameObject("1");
         obj.addComponent(new Transform(new Vector3f(400.0f, 400.0f, -1.0f), 90.0f, new Vector3f(200.0f, 200.0f, 1.0f)));
         obj.addComponent(new SpriteRenderer(TextureManager.getTexture("resources/container.jpg")));
@@ -30,7 +34,7 @@ public class TestScene extends AbstractScene {
 
     @Override
     public void update(double deltaTime) {
-        RenderManager.render();
+        RenderManager.render(camera);
         obj.update((float) deltaTime);
         Transform t = obj.getComponent(Transform.class);
         t.setXPosition(x += (float) (deltaTime) * 100);
