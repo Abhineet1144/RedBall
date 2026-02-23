@@ -30,6 +30,10 @@ public class Rigidbody extends Component {
         super.markAsDirty();
     }
 
+    @Override
+    public void update(float dt) {
+    }
+
     public void setBodyType(BodyType type) {
         this.body.setMass(type.getMassType());
     }
@@ -49,6 +53,7 @@ public class Rigidbody extends Component {
         body.removeAllFixtures();
         body.addFixture(Geometry.createCircle((transform.scale.x / PPM) / 2));
         body.updateMass();
+        body.setAtRest(false);
     }
 
     public void setRectangleFixture() {
@@ -76,8 +81,8 @@ public class Rigidbody extends Component {
         body.getFixture(0).setFriction(value);
     }
 
-    @Override
-    public void update(float dt) {
+    public boolean isColliding(Body body) {
+        return !PhysicsSystem.getWorld().getContacts(body).isEmpty();
     }
 
     public Body getBody() {

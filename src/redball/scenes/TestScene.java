@@ -1,11 +1,17 @@
 package redball.scenes;
 
+import org.dyn4j.dynamics.Body;
+import org.dyn4j.dynamics.contact.Contact;
 import org.dyn4j.geometry.Vector2;
+import org.dyn4j.world.ContactCollisionData;
+import org.dyn4j.world.listener.ContactListenerAdapter;
 import org.joml.Vector3f;
 
+import org.lwjgl.glfw.GLFW;
 import redball.engine.core.*;
 import redball.engine.entity.*;
 import redball.engine.entity.components.*;
+import redball.engine.input.KeyboardInput;
 import redball.engine.renderer.*;
 import redball.engine.renderer.texture.*;
 import redball.engine.utils.*;
@@ -51,9 +57,9 @@ public class TestScene extends AbstractScene {
 
         RenderManager.prepare();
 
-        ballRb.setMass(500);
-        ballRb.setBounce(0.2);
-        ballRb.setFriction(0.5);
+        ballRb.setMass(200);
+        ballRb.setBounce(0.1);
+        ballRb.setFriction(0.2);
 
         groundLRb.setBodyType(BodyType.STATIC);
         groundCRb.setBodyType(BodyType.STATIC);
@@ -62,11 +68,27 @@ public class TestScene extends AbstractScene {
 
     @Override
     public void update(float deltaTime) {
+        Rigidbody ballBody = ball.getComponent(Rigidbody.class);
         RenderManager.render(camera);
-        PhysicsSystem.getWorld().update(deltaTime);
 
+        if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_SPACE) || KeyboardInput.isKeyDown(GLFW.GLFW_KEY_UP)) {
+            if (ballBody.isColliding(groundC.getComponent(Rigidbody.class).getBody())) {
+                ballBody.getBody().applyImpulse(new Vector2(0, 200));
+            }
+        }
+
+        if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_LEFT)) {
+//            ballBody.getBody().applyForce(new Vector2(-200, 0));
+            ballBody.getBody().applyTorque(1000);
+        }
+
+        if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_RIGHT)) {
+//            ballBody.getBody().applyForce(new Vector2(200, 0));
+            ballBody.getBody().applyTorque(-10);
+        }
+
+        PhysicsSystem.getWorld().update(deltaTime);
         ECSWorld.update(deltaTime);
-        ball.getComponent(Rigidbody.class).getBody().applyForce(new Vector2(500.0f, 0.0f));
 //        obj.getComponent(Transform.class).setXPosition(x += deltaTime * 100);
     }
 }

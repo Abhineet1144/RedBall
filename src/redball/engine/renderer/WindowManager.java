@@ -19,7 +19,6 @@ public class WindowManager {
     private int height = 1080;
     private int fpsCap = Integer.MAX_VALUE;
     private AbstractScene scene;
-    private boolean spaceWasPressed = false;
 
     public void init() {
         if (window != 0L) {
@@ -47,7 +46,6 @@ public class WindowManager {
         GL.createCapabilities();
         GLFW.glfwShowWindow(window);
 
-        glfwSwapInterval(0);
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
@@ -77,11 +75,7 @@ public class WindowManager {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // RENDER
-            boolean spacePressed = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_SPACE) == GLFW.GLFW_PRESS;
-            if (spacePressed && !spaceWasPressed) {
-                changeScene(0);
-            }
-            spaceWasPressed = spacePressed;
+
             scene.update((float) deltaTime);
 
             // SWAP

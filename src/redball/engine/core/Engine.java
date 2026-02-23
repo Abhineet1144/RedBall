@@ -1,5 +1,6 @@
 package redball.engine.core;
 
+import redball.engine.input.KeyboardInput;
 import redball.engine.renderer.Shader;
 import redball.engine.renderer.WindowManager;
 import redball.engine.utils.AssetPool;
@@ -18,6 +19,7 @@ public class Engine {
         started = true;
         windowManager = new WindowManager();
         windowManager.init();
+        KeyboardInput.init(windowManager.getWindow());
 
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
 
