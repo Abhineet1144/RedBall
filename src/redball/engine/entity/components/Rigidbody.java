@@ -53,7 +53,6 @@ public class Rigidbody extends Component {
         body.removeAllFixtures();
         body.addFixture(Geometry.createCircle((transform.scale.x / PPM) / 2));
         body.updateMass();
-        body.setAtRest(false);
     }
 
     public void setRectangleFixture() {

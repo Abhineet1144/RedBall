@@ -37,7 +37,6 @@ public class TestScene extends AbstractScene {
         ball = ECSWorld.createGameObject("Ball");
         ball.addComponent(new Transform(new Vector3f(400.0f, 800.0f, -1.0f), 90.0f, new Vector3f(100.0f, 100.0f, 1.0f)));
         Rigidbody ballRb = ball.addComponent(new Rigidbody());
-        ballRb.setCircleFixture();
         ball.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BALL)));
 
         groundL = ECSWorld.createGameObject("GroundL");
@@ -57,9 +56,10 @@ public class TestScene extends AbstractScene {
 
         RenderManager.prepare();
 
+        ballRb.setCircleFixture();
         ballRb.setMass(200);
         ballRb.setBounce(0.1);
-        ballRb.setFriction(0.2);
+        ballRb.setFriction(0.5);
 
         groundLRb.setBodyType(BodyType.STATIC);
         groundCRb.setBodyType(BodyType.STATIC);
@@ -79,12 +79,12 @@ public class TestScene extends AbstractScene {
 
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_LEFT)) {
 //            ballBody.getBody().applyForce(new Vector2(-200, 0));
-            ballBody.getBody().applyTorque(1000);
+            ballBody.getBody().applyTorque(200);
         }
 
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_RIGHT)) {
-//            ballBody.getBody().applyForce(new Vector2(200, 0));
-            ballBody.getBody().applyTorque(-10);
+            ballBody.getBody().applyForce(new Vector2(200, 0));
+//            ballBody.getBody().applyTorque(-200);
         }
 
         PhysicsSystem.getWorld().update(deltaTime);

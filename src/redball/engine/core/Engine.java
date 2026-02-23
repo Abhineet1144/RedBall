@@ -4,7 +4,6 @@ import redball.engine.input.KeyboardInput;
 import redball.engine.renderer.Shader;
 import redball.engine.renderer.WindowManager;
 import redball.engine.utils.AssetPool;
-import redball.scenes.TestScene;
 
 public class Engine {
     private static boolean started = false;
@@ -17,16 +16,18 @@ public class Engine {
         }
 
         started = true;
+
         windowManager = new WindowManager();
         windowManager.init();
         KeyboardInput.init(windowManager.getWindow());
 
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
 
-//        windowManager.useActiveScene(new Level1());
-        windowManager.useActiveScene(new TestScene());
+        windowManager.switchScene(1);
+
         windowManager.loop(shader);
     }
+
 
     public static WindowManager getWindowManager() {
         return windowManager;

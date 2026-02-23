@@ -4,7 +4,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryUtil;
-import redball.engine.core.PhysicsSystem;
+import redball.engine.core.Engine;
 import redball.engine.entity.ECSWorld;
 import redball.engine.utils.AbstractScene;
 import redball.scenes.Level1;
@@ -50,7 +50,7 @@ public class WindowManager {
         glDisable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        setVSync(1);
+        setVSync(0);
 
         glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
             glViewport(0, 0, w, h);
@@ -75,7 +75,6 @@ public class WindowManager {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // RENDER
-
             scene.update((float) deltaTime);
 
             // SWAP
@@ -94,17 +93,19 @@ public class WindowManager {
         glfwTerminate();
     }
 
+    public void switchScene(int index) {
+        ECSWorld.removeAll();
+        RenderManager.clear();
+        changeScene(index);
+    }
+
     public void changeScene(int newScene) {
         switch (newScene) {
             case 0:
-                ECSWorld.removeAll();
-                RenderManager.clear();
-                useActiveScene(new Level1());
+                useScene(new Level1());
                 break;
             case 1:
-                ECSWorld.removeAll();
-                RenderManager.clear();
-                useActiveScene(new TestScene());
+                useScene(new TestScene());
                 break;
             default:
                 assert false : "Unknown scene '" + newScene + "'";
@@ -112,7 +113,7 @@ public class WindowManager {
         }
     }
 
-    public void useActiveScene(AbstractScene scene) {
+    public void useScene(AbstractScene scene) {
         scene.start();
         this.scene = scene;
     }
