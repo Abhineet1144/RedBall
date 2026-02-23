@@ -96,6 +96,10 @@ public class ECSWorld {
         return removeGameObject(go);
     }
 
+    public static void removeAll() {
+        gameObjects.clear();
+    }
+
     /**
      * @description updates all gameobjects
      * @param dt delta time

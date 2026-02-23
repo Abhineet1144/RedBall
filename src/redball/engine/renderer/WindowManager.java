@@ -4,7 +4,11 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryUtil;
+import redball.engine.core.PhysicsSystem;
+import redball.engine.entity.ECSWorld;
 import redball.engine.utils.AbstractScene;
+import redball.scenes.Level1;
+import redball.scenes.TestScene;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -15,6 +19,7 @@ public class WindowManager {
     private int height = 1080;
     private int fpsCap = Integer.MAX_VALUE;
     private AbstractScene scene;
+    private boolean spaceWasPressed = false;
 
     public void init() {
         if (window != 0L) {
@@ -62,7 +67,6 @@ public class WindowManager {
         int fps = 0;
         shader.use();
 
-
         while (!GLFW.glfwWindowShouldClose(window)) {
 
             double time = glfwGetTime();
@@ -73,6 +77,11 @@ public class WindowManager {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // RENDER
+            boolean spacePressed = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_SPACE) == GLFW.GLFW_PRESS;
+            if (spacePressed && !spaceWasPressed) {
+                changeScene(0);
+            }
+            spaceWasPressed = spacePressed;
             scene.update((float) deltaTime);
 
             // SWAP
@@ -89,6 +98,24 @@ public class WindowManager {
         }
 
         glfwTerminate();
+    }
+
+    public void changeScene(int newScene) {
+        switch (newScene) {
+            case 0:
+                ECSWorld.removeAll();
+                RenderManager.clear();
+                useActiveScene(new Level1());
+                break;
+            case 1:
+                ECSWorld.removeAll();
+                RenderManager.clear();
+                useActiveScene(new TestScene());
+                break;
+            default:
+                assert false : "Unknown scene '" + newScene + "'";
+                break;
+        }
     }
 
     public void useActiveScene(AbstractScene scene) {
