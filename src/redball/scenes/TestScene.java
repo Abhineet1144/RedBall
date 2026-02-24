@@ -24,6 +24,7 @@ public class TestScene extends AbstractScene {
     GameObject groundR;
     GameObject camera = new GameObject("Camera");
     boolean wasSpaceDown = false;
+    float maxSpeed = 25f;
 
     @Override
     public void start() {
@@ -58,7 +59,7 @@ public class TestScene extends AbstractScene {
         RenderManager.prepare();
 
         ballRb.setCircleFixture();
-        ballRb.setMass(200);
+        ballRb.setMass(100);
         ballRb.setBounce(0.1);
         ballRb.setFriction(1.0);
 
@@ -69,23 +70,27 @@ public class TestScene extends AbstractScene {
 
     @Override
     public void update(float deltaTime) {
+
         Rigidbody ballBody = ball.getComponent(Rigidbody.class);
         RenderManager.render(camera);
+        Vector2 ballVelocity = ballBody.getBody().getLinearVelocity();
 
-        boolean spaceDown = KeyboardInput.isKeyDown(GLFW.GLFW_KEY_SPACE);
+        boolean spaceDown = KeyboardInput.isKeyDown(GLFW.GLFW_KEY_SPACE) || KeyboardInput.isKeyDown(GLFW.GLFW_KEY_UP);
         if (spaceDown && !wasSpaceDown) {
-                ballBody.getBody().applyImpulse(new Vector2(0, 500));
+                ballBody.getBody().applyImpulse(new Vector2(0, 4000));
         }
         wasSpaceDown = spaceDown;
 
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_LEFT)) {
-//            ballBody.getBody().applyForce(new Vector2(-200, 0));
-            ballBody.getBody().setLinearVelocity(-10,0);
+            if (ballVelocity.x > -maxSpeed) {
+                ballBody.getBody().applyForce(new Vector2(-20, 0));
+            }
         }
 
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_RIGHT)) {
-//            ballBody.getBody().applyForce(new Vector2(200, 0));
-            ballBody.getBody().setLinearVelocity(10,0);
+            if (ballVelocity.x < maxSpeed) {
+                ballBody.getBody().applyForce(new Vector2(20, 0));
+            }
         }
 
         ECSWorld.update(deltaTime);
