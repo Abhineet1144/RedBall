@@ -149,7 +149,6 @@ public class BatchRenderer {
         glBufferSubData(GL_ARRAY_BUFFER, 0, verticesData);
     }
 
-
     private void updateComponentVertices(GameObject go, int off, float x, float y, int tx, int ty, int tId) {
         Rigidbody rb = go.getComponent(Rigidbody.class);
         Transform transform = go.getComponent(Transform.class);

@@ -5,6 +5,7 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryUtil;
 import redball.engine.core.Engine;
+import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
 import redball.engine.utils.AbstractScene;
 import redball.scenes.Level1;
@@ -50,7 +51,7 @@ public class WindowManager {
         glDisable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        setVSync(0);
+        setVSync(1);
 
         glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
             glViewport(0, 0, w, h);
@@ -63,23 +64,30 @@ public class WindowManager {
         double lastTime = glfwGetTime();
         double lastSecond = lastTime;
         int fps = 0;
+
         shader.use();
 
         while (!GLFW.glfwWindowShouldClose(window)) {
-
             double time = glfwGetTime();
             double deltaTime = time - lastTime;
             lastTime = time;
+
+            if (deltaTime > 0.25) {
+                deltaTime = 0.25;
+            }
+
             // CLEAR
             glClearColor(0, 0, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
             // RENDER
             scene.update((float) deltaTime);
+            PhysicsSystem.getWorld().update(deltaTime);
 
             // SWAP
-            glfwSwapBuffers(window);
             glfwPollEvents();
+            glfwSwapBuffers(window);
 
             // FPS Counter
             if (time - lastSecond >= 1.0) {
