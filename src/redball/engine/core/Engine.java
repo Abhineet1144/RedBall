@@ -23,7 +23,7 @@ public class Engine {
 
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
 
-        windowManager.switchScene(1);
+        windowManager.switchScene(0);
 
         windowManager.loop(shader);
     }

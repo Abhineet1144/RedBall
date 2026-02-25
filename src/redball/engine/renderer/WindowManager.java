@@ -63,6 +63,8 @@ public class WindowManager {
     public void loop(Shader shader) {
         double lastTime = glfwGetTime();
         double lastSecond = lastTime;
+        double physicsStep = 1.0 / 60.0;
+        double accumulator = 0;
         int fps = 0;
 
         shader.use();
@@ -70,11 +72,8 @@ public class WindowManager {
         while (!GLFW.glfwWindowShouldClose(window)) {
             double time = glfwGetTime();
             double deltaTime = time - lastTime;
+            accumulator += deltaTime;
             lastTime = time;
-
-            if (deltaTime > 0.25) {
-                deltaTime = 0.25;
-            }
 
             // CLEAR
             glClearColor(0, 0, 0, 1);
@@ -82,8 +81,12 @@ public class WindowManager {
 
 
             // RENDER
-            scene.update((float) deltaTime);
-            PhysicsSystem.getWorld().update(deltaTime);
+            while (accumulator >= physicsStep) {
+                PhysicsSystem.getWorld().update(physicsStep);
+                scene.update((float) physicsStep);
+                accumulator -= physicsStep;
+            }
+            scene.render();
 
             // SWAP
             glfwPollEvents();

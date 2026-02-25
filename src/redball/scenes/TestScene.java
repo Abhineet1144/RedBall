@@ -1,11 +1,6 @@
 package redball.scenes;
 
-import org.dyn4j.dynamics.Body;
-import org.dyn4j.dynamics.contact.Contact;
 import org.dyn4j.geometry.Vector2;
-import org.dyn4j.world.ContactCollisionData;
-import org.dyn4j.world.listener.ContactListenerAdapter;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import org.lwjgl.glfw.GLFW;
@@ -25,7 +20,7 @@ public class TestScene extends AbstractScene {
     GameObject groundR;
     GameObject camera = new GameObject("Camera");
     boolean wasSpaceDown = false;
-    float maxSpeed = 25f;
+    float maxSpeed = 27f;
 
     @Override
     public void start() {
@@ -74,7 +69,6 @@ public class TestScene extends AbstractScene {
         Transform camT = camera.getComponent(Transform.class);
         Transform ballT = ball.getComponent(Transform.class);
         Rigidbody ballBody = ball.getComponent(Rigidbody.class);
-        RenderManager.render(camera);
         Vector2 ballVelocity = ballBody.getBody().getLinearVelocity();
         Transform backGT = background.getComponent(Transform.class);
 
@@ -89,18 +83,21 @@ public class TestScene extends AbstractScene {
 
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_LEFT)) {
             if (ballVelocity.x > -maxSpeed) {
-                ballBody.getBody().applyForce(new Vector2(-20, 0));
+                ballBody.getBody().applyForce(new Vector2(-1000000 * deltaTime, 0));
             }
         }
 
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_RIGHT)) {
             if (ballVelocity.x < maxSpeed) {
-                ballBody.getBody().applyForce(new Vector2(20, 0));
+                ballBody.getBody().applyForce(new Vector2(1000000 * deltaTime, 0));
             }
         }
 
         ECSWorld.update(camera, deltaTime);
+    }
 
-//        obj.getComponent(Transform.class).setXPosition(x += deltaTime * 100);
+    @Override
+    public void render() {
+        RenderManager.render(camera);
     }
 }
