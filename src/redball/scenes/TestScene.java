@@ -24,7 +24,7 @@ public class TestScene extends AbstractScene {
     GameObject groundR;
     GameObject camera = new GameObject("Camera");
     boolean wasSpaceDown = false;
-    float maxSpeed = 25f;
+    float maxSpeed = 27f;
 
     @Override
     public void start() {
@@ -83,13 +83,13 @@ public class TestScene extends AbstractScene {
 
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_LEFT)) {
             if (ballVelocity.x > -maxSpeed) {
-                ballBody.getBody().applyForce(new Vector2(-20, 0));
+                ballBody.getBody().applyForce(new Vector2(-40, 0));
             }
         }
 
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_RIGHT)) {
             if (ballVelocity.x < maxSpeed) {
-                ballBody.getBody().applyForce(new Vector2(20, 0));
+                ballBody.getBody().applyForce(new Vector2(40, 0));
             }
         }
 
