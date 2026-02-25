@@ -5,6 +5,7 @@ import org.dyn4j.dynamics.contact.Contact;
 import org.dyn4j.geometry.Vector2;
 import org.dyn4j.world.ContactCollisionData;
 import org.dyn4j.world.listener.ContactListenerAdapter;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import org.lwjgl.glfw.GLFW;
@@ -24,7 +25,7 @@ public class TestScene extends AbstractScene {
     GameObject groundR;
     GameObject camera = new GameObject("Camera");
     boolean wasSpaceDown = false;
-    float maxSpeed = 27f;
+    float maxSpeed = 25f;
 
     @Override
     public void start() {
@@ -70,30 +71,35 @@ public class TestScene extends AbstractScene {
 
     @Override
     public void update(float deltaTime) {
-
+        Transform camT = camera.getComponent(Transform.class);
+        Transform ballT = ball.getComponent(Transform.class);
         Rigidbody ballBody = ball.getComponent(Rigidbody.class);
         RenderManager.render(camera);
         Vector2 ballVelocity = ballBody.getBody().getLinearVelocity();
+        Transform backGT = background.getComponent(Transform.class);
+
+        camT.setXPosition(ballT.getXPosition()-960);
+        backGT.setXPosition(ballT.getXPosition());
 
         boolean spaceDown = KeyboardInput.isKeyDown(GLFW.GLFW_KEY_SPACE) || KeyboardInput.isKeyDown(GLFW.GLFW_KEY_UP);
         if (spaceDown && !wasSpaceDown) {
-                ballBody.getBody().applyImpulse(new Vector2(0, 4000));
+            ballBody.getBody().applyImpulse(new Vector2(0, 4000));
         }
         wasSpaceDown = spaceDown;
 
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_LEFT)) {
             if (ballVelocity.x > -maxSpeed) {
-                ballBody.getBody().applyForce(new Vector2(-40, 0));
+                ballBody.getBody().applyForce(new Vector2(-20, 0));
             }
         }
 
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_RIGHT)) {
             if (ballVelocity.x < maxSpeed) {
-                ballBody.getBody().applyForce(new Vector2(40, 0));
+                ballBody.getBody().applyForce(new Vector2(20, 0));
             }
         }
 
-        ECSWorld.update(deltaTime);
+        ECSWorld.update(camera, deltaTime);
 
 //        obj.getComponent(Transform.class).setXPosition(x += deltaTime * 100);
     }

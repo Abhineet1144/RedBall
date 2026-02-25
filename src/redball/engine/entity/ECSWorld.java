@@ -104,10 +104,11 @@ public class ECSWorld {
      * @description updates all gameobjects
      * @param dt delta time
      */
-    public static void update(float dt) {
+    public static void update(GameObject camera, float dt) {
         for (GameObject g : gameObjects) {
             g.update(dt);
         }
+        camera.update(dt);
     }
 
     public static void start() {

@@ -15,7 +15,10 @@ public class SpriteRenderer extends Component {
     }
 
     public Texture getTexture() {
-        return texture;
+        if (texture != null) {
+            return texture;
+        }
+        return null;
     }
 
     public void setTexture(Texture texture) {

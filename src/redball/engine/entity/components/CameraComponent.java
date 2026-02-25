@@ -17,7 +17,6 @@ public class CameraComponent extends Component {
 
     @Override
     public void update(float dt) {
-        // sync camera position from the entity's transform
         camera.setPosition(new Vector2f(gameObject.getComponent(Transform.class).position.x, gameObject.getComponent(Transform.class).position.y));
     }
 

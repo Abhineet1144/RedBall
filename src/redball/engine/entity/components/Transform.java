@@ -69,6 +69,14 @@ public class Transform extends Component {
         return matrix;
     }
 
+    public float getXPosition() {
+        Rigidbody rb =  this.gameObject.getComponent(Rigidbody.class);
+        if (rb != null) {
+            return (float) rb.getBody().getTransform().getTranslationX() * PPM;
+        }
+        return position.x;
+    }
+
     @Override
     public void update(float dt) {
     }
