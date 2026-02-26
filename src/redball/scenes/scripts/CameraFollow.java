@@ -7,12 +7,12 @@ import redball.engine.entity.components.Transform;
 
 public class CameraFollow extends Component {
 
-    Transform camT;
-    Transform ballT;
-    Transform backGT;
+    public Transform camT;
+    public Transform ballT;
+    public Transform backGT;
 
-    GameObject ball;
-    GameObject background;
+    public GameObject ball;
+    public GameObject background;
 
     public CameraFollow(GameObject ball, GameObject back) {
         this.ball = ball;

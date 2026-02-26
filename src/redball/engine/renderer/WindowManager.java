@@ -85,7 +85,7 @@ public class WindowManager {
 
             // RENDER
             while (accumulator >= physicsStep) {
-                PhysicsSystem.getWorld().update(physicsStep);
+                PhysicsSystem.update((float) physicsStep);
                 accumulator -= physicsStep;
             }
             scene.update((float) deltaTime);

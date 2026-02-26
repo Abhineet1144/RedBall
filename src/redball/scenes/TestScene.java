@@ -18,7 +18,7 @@ public class TestScene extends AbstractScene {
     GameObject groundC;
     GameObject background;
     GameObject groundR;
-    GameObject camera = new GameObject("Camera");
+    GameObject camera = ECSWorld.createGameObject("Camera");
 
     @Override
     public void start() {

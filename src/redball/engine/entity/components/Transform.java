@@ -20,7 +20,7 @@ public class Transform extends Component {
     }
 
     public void setXPosition(float xPos) {
-        Rigidbody rb =  this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
         if (rb != null) {
             rb.getBody().getTransform().setTranslationX(xPos / PPM);
         } else {
@@ -30,7 +30,7 @@ public class Transform extends Component {
     }
 
     public void setYPosition(float yPos) {
-        Rigidbody rb =  this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
         if (rb != null) {
             rb.getBody().getTransform().setTranslationY(yPos / PPM);
         } else {
@@ -40,7 +40,7 @@ public class Transform extends Component {
     }
 
     public void setRotation(float rotation) {
-        Rigidbody rb =  this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
         if (rb != null) {
             rb.getBody().getTransform().setRotation(rotation);
         } else {
@@ -50,17 +50,17 @@ public class Transform extends Component {
     }
 
     public void setXScale(float xPos) {
-        this.scale.x = xPos;
+        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
+        if (rb != null) {
+            rb.getBody().getFixture(0);
+        } else {
+            this.scale.x = xPos;
+        }
         super.markAsDirty();
     }
 
     public void setYScale(float yPos) {
         this.scale.y = yPos;
-        super.markAsDirty();
-    }
-
-    public void setZScale(float zPos) {
-        this.scale.z = zPos;
         super.markAsDirty();
     }
 
@@ -70,7 +70,7 @@ public class Transform extends Component {
     }
 
     public float getXPosition() {
-        Rigidbody rb =  this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
         if (rb != null) {
             return (float) rb.getBody().getTransform().getTranslationX() * PPM;
         }
@@ -78,11 +78,27 @@ public class Transform extends Component {
     }
 
     public float getYPosition() {
-        Rigidbody rb =  this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
         if (rb != null) {
             return (float) rb.getBody().getTransform().getTranslationY() * PPM;
         }
         return position.y;
+    }
+
+    public float getRotation() {
+        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
+        if (rb != null) {
+            return (float) rb.getBody().getTransform().getRotationAngle() * PPM;
+        }
+        return rotation;
+    }
+
+    public float getScaleX() {
+        return scale.x;
+    }
+
+    public float getScaleY() {
+        return scale.y;
     }
 
     @Override
