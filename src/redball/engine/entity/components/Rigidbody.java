@@ -9,10 +9,9 @@ import redball.engine.core.PhysicsSystem;
 
 import static redball.engine.core.PhysicsSystem.PPM;
 
-
 public class Rigidbody extends Component {
     private Body body;
-
+    public int mass = 0;
 
     public Rigidbody() {
         body = new Body();
@@ -72,8 +71,20 @@ public class Rigidbody extends Component {
         body.setMass(m);
     }
 
+    public int getMass() {
+        return (int) body.getMass().getMass();
+    }
+
     public void setBounce(double value) {
         body.getFixture(0).setRestitution(value);
+    }
+
+    public float getBounce() {
+        return (float) body.getFixture(0).getRestitution();
+    }
+
+    public float getFriction() {
+        return (float) body.getFixture(0).getFriction();
     }
 
     public void setFriction(double value) {

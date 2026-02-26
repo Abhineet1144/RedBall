@@ -53,7 +53,7 @@ public class Level1 extends AbstractScene {
         Rigidbody groundRRb = this.groundR.addComponent(new Rigidbody());
         this.groundR.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
 
-        RenderManager.prepare();
+        RenderManager.prepare(camera);
 
         ballRb.setCircleFixture();
         ballRb.setMass(100);
@@ -97,10 +97,5 @@ public class Level1 extends AbstractScene {
         }
 
         ECSWorld.update(camera, deltaTime);
-    }
-
-    @Override
-    public void render() {
-        RenderManager.render(camera);
     }
 }

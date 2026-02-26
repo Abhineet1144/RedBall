@@ -14,7 +14,7 @@ import static redball.engine.renderer.BatchRenderer.MAX_ENTITIES;
 public class RenderManager {
     private static List<BatchRenderer> batches = new ArrayList<>();
 
-    public static void prepare() {
+    public static void prepare(GameObject camera) {
         List<GameObject> gos = ECSWorld.getGameObjects();
 
         for (int i = 0; i < gos.size(); i += MAX_ENTITIES) {
@@ -27,6 +27,7 @@ public class RenderManager {
             System.out.println("Total entity count: " + gos.size());
         }
         ECSWorld.start();
+        camera.start();
     }
 
     public static void render(GameObject camera) {

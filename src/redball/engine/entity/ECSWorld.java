@@ -2,6 +2,7 @@ package redball.engine.entity;
 
 import redball.engine.entity.components.Tag;
 import redball.engine.renderer.BatchRenderer;
+import redball.engine.renderer.RenderManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -105,10 +106,11 @@ public class ECSWorld {
      * @param dt delta time
      */
     public static void update(GameObject camera, float dt) {
+        camera.update(dt);
         for (GameObject g : gameObjects) {
             g.update(dt);
         }
-        camera.update(dt);
+        RenderManager.render(camera);
     }
 
     public static void start() {
