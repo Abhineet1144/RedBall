@@ -40,17 +40,20 @@ public class TestScene extends AbstractScene {
         groundL = ECSWorld.createGameObject("GroundL");
         groundL.addComponent(new Transform(new Vector3f(150.0f, 250.0f, -1.0f), -15.0f, new Vector3f(1920.0f / 2, 20.0f, 1.0f)));
         Rigidbody groundLRb = this.groundL.addComponent(new Rigidbody());
-        this.groundL.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundL.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundL.addComponent(new Tag("Ground"));
 
         groundC = ECSWorld.createGameObject("GroundC");
         groundC.addComponent(new Transform(new Vector3f(1000.0f, 150.0f, -1.0f), 0.0f, new Vector3f(1920.0f / 2, 20.0f, 1.0f)));
         Rigidbody groundCRb = this.groundC.addComponent(new Rigidbody());
-        this.groundC.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundC.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundC.addComponent(new Tag("Ground"));
 
         groundR = ECSWorld.createGameObject("GroundR");
         groundR.addComponent(new Transform(new Vector3f(1900.0f, 250.0f, -1.0f), 15.0f, new Vector3f(1920.0f / 2, 20.0f, 1.0f)));
         Rigidbody groundRRb = this.groundR.addComponent(new Rigidbody());
-        this.groundR.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundR.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundR.addComponent(new Tag("Ground"));
 
         camera.addComponent(new CameraFollow(ball, background));
         RenderManager.prepare(camera);

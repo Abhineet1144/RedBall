@@ -43,7 +43,10 @@ public class ECSWorld {
      */
     public static GameObject findGameObjectByTag(String tag) {
         for (GameObject g : gameObjects) {
-            if (g.getComponent(Tag.class).getTag().equals(tag)) return g;
+            Tag gTag = g.getComponent(Tag.class);
+            if (gTag != null) {
+                if (gTag.getTag().equals(tag)) return g;
+            }
         }
         return null;
     }

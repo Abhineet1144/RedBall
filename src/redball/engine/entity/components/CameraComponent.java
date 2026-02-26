@@ -6,7 +6,7 @@ import redball.engine.renderer.Camera;
 
 // CameraComponent.java
 public class CameraComponent extends Component {
-    private Camera camera;
+    public Camera camera;
     public boolean isMain;
 
     public CameraComponent(int width, int height) {

@@ -1,11 +1,15 @@
 package redball.engine.entity.components;
 
 import org.dyn4j.dynamics.Body;
+import org.dyn4j.dynamics.contact.ContactConstraint;
 import org.dyn4j.geometry.Geometry;
 import org.dyn4j.geometry.Mass;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Vector2;
 import redball.engine.core.PhysicsSystem;
+import redball.engine.entity.GameObject;
+
+import java.util.List;
 
 import static redball.engine.core.PhysicsSystem.PPM;
 
@@ -15,6 +19,7 @@ public class Rigidbody extends Component {
 
     public Rigidbody() {
         body = new Body();
+        this.body.setUserData(this);
     }
 
     @Override
@@ -91,8 +96,13 @@ public class Rigidbody extends Component {
         body.getFixture(0).setFriction(value);
     }
 
-    public boolean isColliding(Body body) {
-        return !PhysicsSystem.getWorld().getContacts(body).isEmpty();
+    public Rigidbody isColliding() {
+        List<ContactConstraint<Body>> contacts = PhysicsSystem.getWorld().getContacts(this.body);
+        for (ContactConstraint<Body> constraint : contacts) {
+            Body collidedBody = constraint.getBody2();
+            return (Rigidbody) collidedBody.getUserData();
+        }
+        return null;
     }
 
     public Body getBody() {
