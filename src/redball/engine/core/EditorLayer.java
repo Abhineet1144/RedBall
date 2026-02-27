@@ -3,26 +3,30 @@ package redball.engine.core;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.ImGuiStyle;
-import imgui.flag.ImGuiCol;
-import imgui.flag.ImGuiConfigFlags;
-import imgui.flag.ImGuiInputTextFlags;
-import imgui.flag.ImGuiTreeNodeFlags;
+import imgui.flag.*;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
 import imgui.type.ImString;
 import org.dyn4j.geometry.Rectangle;
+import org.reflections.Reflections;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.*;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.Set;
 
 public class EditorLayer {
     private final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
     private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
     private String selected = null;
     private final ImGuiIO io;
+    private int selectedIndex = -1;
+    private String[] componentList = null;
+    private Set<Class<? extends Component>> subclasses;
 
     public EditorLayer(Long window) {
         ImGui.createContext();
@@ -42,9 +46,21 @@ public class EditorLayer {
         style.setColor(ImGuiCol.TitleBgActive, 1.17f, 0.63f, 0.33f, 1.00f);
         style.setColor(ImGuiCol.FrameBg, 0.14f, 0.14f, 0.20f, 1.00f);
         style.setColor(ImGuiCol.Button, 0.20f, 0.20f, 0.30f, 1.00f);
+
+        // Get all components
+        // needs fix
+        Reflections reflections = new Reflections("redball");
+        subclasses = reflections.getSubTypesOf(Component.class);
+        componentList = new String[subclasses.size()];
+        int index = 0;
+        for (Class<? extends Component> cls : subclasses) {
+            componentList[index] = cls.getSimpleName();
+            System.out.println(componentList[index]);
+            index++;
+        }
     }
 
-    public void renderDebug() {
+    public void renderDebug() throws InvocationTargetException, InstantiationException, IllegalAccessException {
         imGuiGlfw.newFrame();
         imGuiGl3.newFrame();
         ImGui.newFrame();
@@ -76,12 +92,63 @@ public class EditorLayer {
                     customComponents(go.getComponent(c.getClass()));
                 }
             }
+            addComponent(go);
             ImGui.end();
         }
 
         ImGui.render();
         imGuiGl3.renderDrawData(ImGui.getDrawData());
     }
+
+    private Component selectComponent(int n) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        for (Class<? extends Component> cls : subclasses) {
+            if (cls.getSimpleName().equals(componentList[n])) {
+                Constructor<?> constructor = cls.getConstructors()[0];
+                Object[] params = new Object[constructor.getParameterCount()];
+                // params are already null by default
+                Component instance = (Component) constructor.newInstance(params);
+                return instance;
+            }
+        }
+        return null;
+    }
+
+    private void addComponent(GameObject go) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        ImString searchBuffer = new ImString(256);
+
+        if (ImGui.button("Add Component")) {
+            ImGui.openPopup("##addComponent");
+        }
+
+        if (ImGui.beginPopup("##addComponent")) {
+            ImGui.inputTextWithHint("##search", "Search...", searchBuffer);
+
+            if (ImGui.beginListBox("##ListBox")) {
+                for (int n = 0; n < componentList.length; n++) {
+
+                    String query = searchBuffer.get().toLowerCase();
+                    if (!query.isEmpty() && !componentList[n].toLowerCase().contains(query)) {
+                        continue;
+                    }
+
+                    boolean is_selected = (selectedIndex == n);
+                    if (ImGui.selectable(componentList[n], is_selected, ImGuiSelectableFlags.AllowDoubleClick)) {
+                        if (ImGui.isMouseDoubleClicked(0)) {
+                            selectedIndex = n;
+                            Component c = go.addComponent(selectComponent(n));
+                            c.start();
+                        }
+                    }
+                    if (is_selected) {
+                        ImGui.setItemDefaultFocus();
+                    }
+                }
+                ImGui.endListBox();
+            }
+            ImGui.endPopup();
+        }
+    }
+
 
     private void transformComponent(GameObject go) {
         if (ImGui.collapsingHeader("Transform", ImGuiTreeNodeFlags.DefaultOpen)) {

@@ -2,7 +2,6 @@ package redball.scenes.scripts;
 
 import org.dyn4j.geometry.Vector2;
 import org.lwjgl.glfw.GLFW;
-import redball.engine.entity.ECSWorld;
 import redball.engine.entity.components.Component;
 import redball.engine.entity.components.Rigidbody;
 import redball.engine.entity.components.Tag;

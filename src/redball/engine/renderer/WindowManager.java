@@ -11,6 +11,8 @@ import redball.engine.utils.AbstractScene;
 import redball.scenes.Level1;
 import redball.scenes.TestScene;
 
+import java.lang.reflect.InvocationTargetException;
+
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -64,7 +66,7 @@ public class WindowManager {
         });
     }
 
-    public void loop(Shader shader) {
+    public void loop(Shader shader) throws InvocationTargetException, InstantiationException, IllegalAccessException {
         double lastTime = glfwGetTime();
         double lastSecond = lastTime;
         double physicsStep = 1.0 / 60.0;
