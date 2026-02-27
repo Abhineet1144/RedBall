@@ -1,7 +1,7 @@
 package redball.engine.entity.components;
 
 public class Tag extends Component {
-    String tag;
+    public String tag;
 
     public Tag(String tag) {
         this.tag = tag;

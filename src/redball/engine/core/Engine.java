@@ -5,12 +5,14 @@ import redball.engine.renderer.Shader;
 import redball.engine.renderer.WindowManager;
 import redball.engine.utils.AssetPool;
 
+import java.lang.reflect.InvocationTargetException;
+
 public class Engine {
     private static boolean started = false;
     private static WindowManager windowManager = null;
     private static Shader shader = null;
 
-    public static void start() {
+    public static void start() throws InvocationTargetException, InstantiationException, IllegalAccessException {
         if (started) {
             return;
         }
@@ -23,7 +25,7 @@ public class Engine {
 
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
 
-        windowManager.switchScene(0);
+        windowManager.switchScene(1);
 
         windowManager.loop(shader);
     }

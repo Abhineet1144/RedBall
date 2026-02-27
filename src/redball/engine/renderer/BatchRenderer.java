@@ -58,7 +58,11 @@ public class BatchRenderer {
 
         for (GameObject entity : entities) {
             int quadOffset = offset * 4 * OVERALL_SIZE;
-            Texture texture = entity.getComponent(SpriteRenderer.class).getTexture();
+
+            SpriteRenderer sr  = entity.getComponent(SpriteRenderer.class);
+            if (sr == null) continue;
+            Texture texture = sr.getTexture();
+
             int textureSlot = 0;
             if (texture != null) {
                 textureSlot = texture.getUsedTexSlot();
@@ -118,7 +122,10 @@ public class BatchRenderer {
 
             if (needsRebuild) {
                 t.markAsClean();
-                Texture texture = entity.getComponent(SpriteRenderer.class).getTexture();
+                SpriteRenderer sr  = entity.getComponent(SpriteRenderer.class);
+                if (sr == null) continue;
+                Texture texture = sr.getTexture();
+
                 int textureSlot = texture != null ? texture.getUsedTexSlot() : 0;
 
                 updateComponentVertices(entity, quadOffset + 0 * OVERALL_SIZE, -0.5f, 0.5f, 0, 1, textureSlot);
@@ -178,7 +185,9 @@ public class BatchRenderer {
     public void bindTextures() {
         for (GameObject entity : entities) {
             SpriteRenderer sr = entity.getComponent(SpriteRenderer.class);
-            sr.getTexture().bindTexture();
+            if (sr != null) {
+                sr.getTexture().bindTexture();
+            }
         }
     }
 

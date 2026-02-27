@@ -1,16 +1,14 @@
 package redball.scenes;
 
-import org.dyn4j.geometry.Vector2;
 import org.joml.Vector3f;
 
-import org.lwjgl.glfw.GLFW;
 import redball.engine.core.*;
 import redball.engine.entity.*;
 import redball.engine.entity.components.*;
-import redball.engine.input.KeyboardInput;
 import redball.engine.renderer.*;
 import redball.engine.renderer.texture.*;
 import redball.engine.utils.*;
+import redball.scenes.scripts.CameraFollow;
 
 public class TestScene extends AbstractScene {
     GameObject ball;
@@ -18,9 +16,7 @@ public class TestScene extends AbstractScene {
     GameObject groundC;
     GameObject background;
     GameObject groundR;
-    GameObject camera = new GameObject("Camera");
-    boolean wasSpaceDown = false;
-    float maxSpeed = 27f;
+    GameObject camera = ECSWorld.createGameObject("Camera");
 
     @Override
     public void start() {
@@ -36,28 +32,31 @@ public class TestScene extends AbstractScene {
         ball.addComponent(new Transform(new Vector3f(400.0f, 800.0f, -1.0f), 90.0f, new Vector3f(100.0f, 100.0f, 1.0f)));
         Rigidbody ballRb = ball.addComponent(new Rigidbody());
         ball.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BALL)));
-
         groundL = ECSWorld.createGameObject("GroundL");
         groundL.addComponent(new Transform(new Vector3f(150.0f, 250.0f, -1.0f), -15.0f, new Vector3f(1920.0f / 2, 20.0f, 1.0f)));
         Rigidbody groundLRb = this.groundL.addComponent(new Rigidbody());
-        this.groundL.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundL.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundL.addComponent(new Tag("Ground"));
 
         groundC = ECSWorld.createGameObject("GroundC");
         groundC.addComponent(new Transform(new Vector3f(1000.0f, 150.0f, -1.0f), 0.0f, new Vector3f(1920.0f / 2, 20.0f, 1.0f)));
         Rigidbody groundCRb = this.groundC.addComponent(new Rigidbody());
-        this.groundC.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundC.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundC.addComponent(new Tag("Ground"));
 
         groundR = ECSWorld.createGameObject("GroundR");
         groundR.addComponent(new Transform(new Vector3f(1900.0f, 250.0f, -1.0f), 15.0f, new Vector3f(1920.0f / 2, 20.0f, 1.0f)));
         Rigidbody groundRRb = this.groundR.addComponent(new Rigidbody());
-        this.groundR.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundR.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.TEST1)));
+        groundR.addComponent(new Tag("Ground"));
 
-        RenderManager.prepare();
+        camera.addComponent(new CameraFollow(ball, background));
+        RenderManager.prepare(camera);
 
         ballRb.setCircleFixture();
         ballRb.setMass(100);
         ballRb.setBounce(0.1);
-        ballRb.setFriction(1.0);
+        ballRb.setFriction(0.2);
 
         groundLRb.setBodyType(BodyType.STATIC);
         groundCRb.setBodyType(BodyType.STATIC);
@@ -66,38 +65,6 @@ public class TestScene extends AbstractScene {
 
     @Override
     public void update(float deltaTime) {
-        Transform camT = camera.getComponent(Transform.class);
-        Transform ballT = ball.getComponent(Transform.class);
-        Rigidbody ballBody = ball.getComponent(Rigidbody.class);
-        Vector2 ballVelocity = ballBody.getBody().getLinearVelocity();
-        Transform backGT = background.getComponent(Transform.class);
-
-        camT.setXPosition(ballT.getXPosition()-960);
-        backGT.setXPosition(ballT.getXPosition());
-
-        boolean spaceDown = KeyboardInput.isKeyDown(GLFW.GLFW_KEY_SPACE) || KeyboardInput.isKeyDown(GLFW.GLFW_KEY_UP);
-        if (spaceDown && !wasSpaceDown) {
-            ballBody.getBody().applyImpulse(new Vector2(0, 4000));
-        }
-        wasSpaceDown = spaceDown;
-
-        if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_LEFT)) {
-            if (ballVelocity.x > -maxSpeed) {
-                ballBody.getBody().applyForce(new Vector2(-1000000 * deltaTime, 0));
-            }
-        }
-
-        if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_RIGHT)) {
-            if (ballVelocity.x < maxSpeed) {
-                ballBody.getBody().applyForce(new Vector2(1000000 * deltaTime, 0));
-            }
-        }
-
         ECSWorld.update(camera, deltaTime);
-    }
-
-    @Override
-    public void render() {
-        RenderManager.render(camera);
     }
 }

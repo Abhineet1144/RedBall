@@ -4,9 +4,11 @@ import redball.engine.renderer.texture.Texture;
 
 public class SpriteRenderer extends Component {
     private Texture texture;
+    public String file;
 
     public SpriteRenderer(Texture texture) {
         this.texture = texture;
+        this.file = texture.getFilePath();
     }
 
     @Override

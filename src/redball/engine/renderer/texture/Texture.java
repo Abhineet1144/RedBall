@@ -23,9 +23,10 @@ public class Texture {
     private int texId;
     private int width;
     private int height;
-
+    private String filePath;
 
     public Texture(String filePath) {
+        this.filePath = filePath;
         texId = GL11.glGenTextures();
         usedTexSlot = usedTexSlots;
         texSlot = texSlots[usedTexSlots-1];
@@ -80,5 +81,9 @@ public class Texture {
 
     public int getUsedTexSlot() {
         return usedTexSlot;
+    }
+
+    public String getFilePath() {
+        return filePath;
     }
 }
