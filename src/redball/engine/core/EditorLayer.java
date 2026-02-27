@@ -19,6 +19,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.Set;
 
+import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
+
 public class EditorLayer {
     private final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
     private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
@@ -27,8 +29,10 @@ public class EditorLayer {
     private int selectedIndex = -1;
     private String[] componentList = null;
     private Set<Class<? extends Component>> subclasses;
+    private Long window;
 
     public EditorLayer(Long window) {
+        this.window = window;
         ImGui.createContext();
         imGuiGlfw.init(window, true);
         imGuiGl3.init("#version 150");
@@ -65,6 +69,8 @@ public class EditorLayer {
         imGuiGl3.newFrame();
         ImGui.newFrame();
 
+        renderMenuBar();
+
         ImGui.begin("Hierarchy");
         for (GameObject go : ECSWorld.getGameObjects()) {
             if (ImGui.button(go.getName())) {
@@ -98,6 +104,31 @@ public class EditorLayer {
 
         ImGui.render();
         imGuiGl3.renderDrawData(ImGui.getDrawData());
+    }
+
+    private void renderMenuBar() throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (ImGui.beginMainMenuBar()) {
+            if (ImGui.beginMenu("File")) {
+                if (ImGui.menuItem("New")) {
+                    System.out.println("New Clicked!!");
+                }
+                if (ImGui.menuItem("Save")) {
+                    System.out.println("Save Clicked!!");
+                }
+                ImGui.separator();
+                if (ImGui.menuItem("Exit")) {
+                    glfwSetWindowShouldClose(window, true);
+                }
+                ImGui.endMenu();
+            }
+            if (ImGui.beginMenu("Edit")) {
+                if (ImGui.menuItem("Add Component")) {
+                    System.out.println("Add clicked!!");
+                }
+                ImGui.endMenu();
+            }
+            ImGui.endMainMenuBar();
+        }
     }
 
     private Component selectComponent(int n) throws InvocationTargetException, InstantiationException, IllegalAccessException {
