@@ -4,7 +4,7 @@ public enum TextureMap {
 
     BACKGROUND("resources/background.png"),
     BALL("resources/ball.png"),
-    TEST1("resources/container.jpg"),
+    TEST1("resources/ground.png"),
     TEST2("resources/red.jpeg");
 
     private String filepath;

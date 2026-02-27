@@ -9,8 +9,6 @@ import redball.engine.renderer.*;
 import redball.engine.renderer.texture.*;
 import redball.engine.utils.*;
 import redball.scenes.scripts.CameraFollow;
-import redball.scenes.scripts.PlayerMovement;
-
 
 public class TestScene extends AbstractScene {
     GameObject ball;

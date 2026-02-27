@@ -7,7 +7,6 @@ import org.dyn4j.geometry.Mass;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Vector2;
 import redball.engine.core.PhysicsSystem;
-import redball.engine.entity.GameObject;
 
 import java.util.List;
 
