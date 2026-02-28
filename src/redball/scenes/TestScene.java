@@ -23,6 +23,7 @@ public class TestScene extends AbstractScene {
         PhysicsSystem.init();
         camera.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
         camera.addComponent(new CameraComponent(1920, 1080));
+        camera.addComponent(new Tag("Camera"));
 
         background = ECSWorld.createGameObject("BackGround");
         background.addComponent(new Transform(new Vector3f(1920f / 2, 1080f / 2, -1f), 0f, new Vector3f(1920, 1080, 1)));

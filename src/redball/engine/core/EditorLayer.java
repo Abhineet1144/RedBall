@@ -1,17 +1,19 @@
 package redball.engine.core;
 
-import imgui.ImGui;
-import imgui.ImGuiIO;
-import imgui.ImGuiStyle;
+import imgui.*;
 import imgui.flag.*;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
+import imgui.type.ImBoolean;
 import imgui.type.ImString;
 import org.dyn4j.geometry.Rectangle;
 import org.reflections.Reflections;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.*;
+import redball.engine.renderer.BatchRenderer;
+import redball.engine.renderer.FrameBuffer;
+import redball.engine.renderer.RenderManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -39,6 +41,7 @@ public class EditorLayer {
         io = ImGui.getIO();
         io.addConfigFlags(ImGuiConfigFlags.DpiEnableScaleFonts);
         io.getFonts().setFreeTypeRenderer(true);
+        io.addConfigFlags(ImGuiConfigFlags.DockingEnable);
 
         ImGuiStyle style = ImGui.getStyle();
         style.setColor(ImGuiCol.WindowBg, 0.08f, 0.08f, 0.12f, 1.00f);
@@ -64,10 +67,41 @@ public class EditorLayer {
         }
     }
 
+    // Creates dockable space
+    void createDockSpace() {
+        int windowFlags = ImGuiWindowFlags.MenuBar
+                | ImGuiWindowFlags.NoDocking
+                | ImGuiWindowFlags.NoTitleBar
+                | ImGuiWindowFlags.NoCollapse
+                | ImGuiWindowFlags.NoResize
+                | ImGuiWindowFlags.NoMove
+                | ImGuiWindowFlags.NoBringToFrontOnFocus
+                | ImGuiWindowFlags.NoNavFocus;
+
+        ImGuiViewport viewport = ImGui.getMainViewport();
+        ImGui.setNextWindowPos(viewport.getPosX(), viewport.getPosY());
+        ImGui.setNextWindowSize(viewport.getSizeX(), viewport.getSizeY());
+        ImGui.setNextWindowViewport(viewport.getID());
+
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 0.0f);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0.0f, 0.0f);
+
+        ImGui.begin("DockSpace", new ImBoolean(true), windowFlags);
+        ImGui.popStyleVar(3);
+
+        // Create the actual dockspace
+        int dockspaceId = ImGui.getID("MyDockSpace");
+        ImGui.dockSpace(dockspaceId, 0.0f, 0.0f, ImGuiDockNodeFlags.None);
+
+        ImGui.end();
+    }
+
     public void renderDebug() throws InvocationTargetException, InstantiationException, IllegalAccessException {
         imGuiGlfw.newFrame();
         imGuiGl3.newFrame();
         ImGui.newFrame();
+        createDockSpace();
 
         renderMenuBar();
 
@@ -84,8 +118,10 @@ public class EditorLayer {
         }
         ImGui.end();
 
+        renderViewPort();
+
+        ImGui.begin("Inpector");
         if (selected != null) {
-            ImGui.begin("Inpector");
             GameObject go = ECSWorld.findGameObjectByName(selected);
             ImGui.text("Name");
             ImGui.sameLine();
@@ -99,11 +135,38 @@ public class EditorLayer {
                 }
             }
             addComponent(go);
-            ImGui.end();
         }
+        ImGui.end();
 
         ImGui.render();
         imGuiGl3.renderDrawData(ImGui.getDrawData());
+    }
+
+    void renderViewPort() {
+        ImGui.begin("Viewport");
+
+        ImVec2 size = ImGui.getContentRegionAvail();
+
+        float frameBufferWidth = RenderManager.getFrameBuffer().getWidth();
+        float frameBufferHeight = RenderManager.getFrameBuffer().getHeight();
+
+        float aspect = frameBufferWidth / frameBufferHeight;
+        float windowAspect = size.x / size.y;
+
+        float renderWidth = size.x;
+        float renderHeight = size.y;
+
+        if (windowAspect > aspect) {
+            renderWidth = size.y * aspect;
+        } else {
+            renderHeight = size.x / aspect;
+        }
+
+        ImGui.setCursorPos(7.5f, (size.y - renderHeight)/2);
+
+        ImGui.image(RenderManager.getFrameBuffer().getTextureId(), new ImVec2(renderWidth, renderHeight), new ImVec2(0, 1), new ImVec2(1, 0));
+
+        ImGui.end();
     }
 
     private void renderMenuBar() throws InvocationTargetException, InstantiationException, IllegalAccessException {
