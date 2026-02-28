@@ -27,12 +27,12 @@ public class TestScene extends AbstractScene {
 
         background = ECSWorld.createGameObject("BackGround");
         background.addComponent(new Transform(new Vector3f(1920f / 2, 1080f / 2, -1f), 0f, new Vector3f(1920, 1080, 1)));
-        background.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BACKGROUND)));
 
         ball = ECSWorld.createGameObject("Ball");
         ball.addComponent(new Transform(new Vector3f(400.0f, 800.0f, -1.0f), 90.0f, new Vector3f(100.0f, 100.0f, 1.0f)));
         Rigidbody ballRb = ball.addComponent(new Rigidbody());
         ball.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BALL)));
+
         groundL = ECSWorld.createGameObject("GroundL");
         groundL.addComponent(new Transform(new Vector3f(150.0f, 250.0f, -1.0f), -15.0f, new Vector3f(1920.0f / 2, 20.0f, 1.0f)));
         Rigidbody groundLRb = this.groundL.addComponent(new Rigidbody());

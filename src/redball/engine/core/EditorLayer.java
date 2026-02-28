@@ -7,6 +7,7 @@ import imgui.glfw.ImGuiImplGlfw;
 import imgui.type.ImBoolean;
 import imgui.type.ImString;
 import org.dyn4j.geometry.Rectangle;
+import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import org.reflections.Reflections;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
@@ -14,6 +15,7 @@ import redball.engine.entity.components.*;
 import redball.engine.renderer.BatchRenderer;
 import redball.engine.renderer.FrameBuffer;
 import redball.engine.renderer.RenderManager;
+import redball.engine.renderer.texture.Texture;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -146,6 +148,7 @@ public class EditorLayer {
         ImGui.begin("Viewport");
 
         ImVec2 size = ImGui.getContentRegionAvail();
+        RenderManager.getFrameBuffer().resize((int) size.x, (int) size.y);
 
         float frameBufferWidth = RenderManager.getFrameBuffer().getWidth();
         float frameBufferHeight = RenderManager.getFrameBuffer().getHeight();
@@ -265,13 +268,26 @@ public class EditorLayer {
     }
 
     private void tagComponent(GameObject go) {
-        Tag tag = go.getComponent(Tag.class);
-        if (tag != null) {
-            ImGui.text("Tag");
-            ImGui.sameLine();
-            ImString val = new ImString(tag.getTag(), 256);
-            if (ImGui.inputText("##Tag", val)) {
-                tag.setTag(val.get());
+        SpriteRenderer tag = go.getComponent(SpriteRenderer.class);
+//        if (tag != null) {
+//            ImGui.text("Tag");
+//            ImGui.sameLine();
+//            ImString val = new ImString(tag.getTag(), 256);
+//            if (ImGui.inputText("##Tag", val)) {
+//                tag.setTag(val.get());
+//            }
+//        }
+
+        if (ImGui.button("Select File")) {
+            String path = TinyFileDialogs.tinyfd_openFileDialog(
+                    "Select File",  // title
+                    "",             // default path
+                    null,           // filter patterns
+                    null,           // filter description
+                    false           // multi select
+            );
+            if (path != null) {
+                tag.setTexture(new Texture(path));
             }
         }
     }
