@@ -7,6 +7,7 @@ import org.lwjgl.system.MemoryUtil;
 import redball.engine.core.EditorLayer;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
+import redball.engine.entity.components.CameraComponent;
 import redball.engine.utils.AbstractScene;
 import redball.scenes.Level1;
 import redball.scenes.TestScene;
@@ -15,6 +16,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
+import static org.lwjgl.opengl.GL30.glBindFramebuffer;
 
 public class WindowManager {
     private static long window = 0L;
@@ -58,12 +61,13 @@ public class WindowManager {
 
         // GUI
         editorLayer = new EditorLayer(window);
+        FrameBuffer.init(width, height);
 
-        glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
-            glViewport(0, 0, w, h);
-            width = w;
-            height = h;
-        });
+//        glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
+//            glViewport(0, 0, w, h);
+//            width = w;
+//            height = h;
+//        });
     }
 
     public void loop(Shader shader) throws InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -92,6 +96,7 @@ public class WindowManager {
             }
             scene.update((float) deltaTime);
             editorLayer.renderDebug();
+
             // SWAP
             glfwPollEvents();
             glfwSwapBuffers(window);
@@ -151,5 +156,13 @@ public class WindowManager {
 
     public int getHeight() {
         return height;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 }

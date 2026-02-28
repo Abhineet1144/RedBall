@@ -1,11 +1,14 @@
 package redball.engine.renderer;
 
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.*;
 
 import org.dyn4j.geometry.MassType;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.BufferUtils;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.BodyType;
 import redball.engine.entity.components.Rigidbody;
@@ -45,6 +48,7 @@ public class BatchRenderer {
     private int hightest = 0;
     private int vao;
     int vbo;
+
     private int indexCount = 0;
 
     BatchRenderer(List<GameObject> go) {
@@ -83,6 +87,7 @@ public class BatchRenderer {
         int vao = glGenVertexArrays();
         vbo = glGenBuffers();
         int EBO = glGenBuffers();
+
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, verticesData, GL_DYNAMIC_DRAW);

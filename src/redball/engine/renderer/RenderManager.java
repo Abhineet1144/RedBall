@@ -13,8 +13,10 @@ import static redball.engine.renderer.BatchRenderer.MAX_ENTITIES;
 
 public class RenderManager {
     private static List<BatchRenderer> batches = new ArrayList<>();
+    private static FrameBuffer frameBuffer;
 
     public static void prepare(GameObject camera) {
+        frameBuffer = FrameBuffer.getINSTANCE();
         List<GameObject> gos = ECSWorld.getGameObjects();
 
         for (int i = 0; i < gos.size(); i += MAX_ENTITIES) {
@@ -36,11 +38,17 @@ public class RenderManager {
 
         Engine.getShader().initTextureSamplers();
 
+        frameBuffer.bind();
         for (BatchRenderer batchRenderer : batches) {
             batchRenderer.bindTextures();
             batchRenderer.updateVertices();
             batchRenderer.render();
         }
+        frameBuffer.unbind();
+    }
+
+    public static FrameBuffer getFrameBuffer() {
+        return frameBuffer;
     }
 
     public static void clear() {
