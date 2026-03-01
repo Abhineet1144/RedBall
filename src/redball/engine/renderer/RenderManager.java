@@ -32,6 +32,18 @@ public class RenderManager {
         camera.start();
     }
 
+    public static void rebuild() {
+        batches.clear();
+        List<GameObject> gos = ECSWorld.getGameObjects();
+
+        for (int i = 0; i < gos.size(); i += MAX_ENTITIES) {
+            List<GameObject> chunk = gos.subList(i, Math.min(i + MAX_ENTITIES, gos.size()));
+            BatchRenderer batch = new BatchRenderer(chunk);
+            batch.prepare();
+            batches.add(batch);
+        }
+    }
+
     public static void render(GameObject camera) {
         Engine.getShader().setMat4f("projection", camera.getComponent(CameraComponent.class).getProjectionMatrix());
         Engine.getShader().setMat4f("view", camera.getComponent(CameraComponent.class).getViewMatrix());
@@ -39,6 +51,7 @@ public class RenderManager {
         Engine.getShader().initTextureSamplers();
 
         frameBuffer.bind();
+
         for (BatchRenderer batchRenderer : batches) {
             batchRenderer.bindTextures();
             batchRenderer.updateVertices();

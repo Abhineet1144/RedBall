@@ -12,8 +12,6 @@ import org.reflections.Reflections;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.*;
-import redball.engine.renderer.BatchRenderer;
-import redball.engine.renderer.FrameBuffer;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.texture.Texture;
 
@@ -131,8 +129,9 @@ public class EditorLayer {
             tagComponent(go);
             transformComponent(go);
             rigidbodyComponent(go);
+            spriteRendererComponent(go);
             for (Component c : go.getComponents()) {
-                if (!(c instanceof Rigidbody) && !(c instanceof Transform) && !(c instanceof Tag)) {
+                if (!(c instanceof Rigidbody) && !(c instanceof Transform) && !(c instanceof Tag) && !(c instanceof SpriteRenderer)) {
                     customComponents(go.getComponent(c.getClass()));
                 }
             }
@@ -148,7 +147,6 @@ public class EditorLayer {
         ImGui.begin("Viewport");
 
         ImVec2 size = ImGui.getContentRegionAvail();
-        RenderManager.getFrameBuffer().resize((int) size.x, (int) size.y);
 
         float frameBufferWidth = RenderManager.getFrameBuffer().getWidth();
         float frameBufferHeight = RenderManager.getFrameBuffer().getHeight();
@@ -165,7 +163,8 @@ public class EditorLayer {
             renderHeight = size.x / aspect;
         }
 
-        ImGui.setCursorPos(7.5f, (size.y - renderHeight)/2);
+        ImVec2 cur = ImGui.getCursorPos();
+        ImGui.setCursorPos((size.x + cur.x - renderWidth) / 2, (25f + size.y + cur.y - renderHeight) / 2);
 
         ImGui.image(RenderManager.getFrameBuffer().getTextureId(), new ImVec2(renderWidth, renderHeight), new ImVec2(0, 1), new ImVec2(1, 0));
 
@@ -233,6 +232,7 @@ public class EditorLayer {
                         if (ImGui.isMouseDoubleClicked(0)) {
                             selectedIndex = n;
                             Component c = go.addComponent(selectComponent(n));
+                            if (c instanceof SpriteRenderer) RenderManager.rebuild();
                             c.start();
                         }
                     }
@@ -268,26 +268,36 @@ public class EditorLayer {
     }
 
     private void tagComponent(GameObject go) {
-        SpriteRenderer tag = go.getComponent(SpriteRenderer.class);
-//        if (tag != null) {
-//            ImGui.text("Tag");
-//            ImGui.sameLine();
-//            ImString val = new ImString(tag.getTag(), 256);
-//            if (ImGui.inputText("##Tag", val)) {
-//                tag.setTag(val.get());
-//            }
-//        }
+        Tag tag = go.getComponent(Tag.class);
+        if (tag != null) {
+            ImGui.text("Tag");
+            ImGui.sameLine();
+            ImString val = new ImString(tag.getTag(), 256);
+            if (ImGui.inputText("##Tag", val)) {
+                tag.setTag(val.get());
+            }
+        }
+    }
 
-        if (ImGui.button("Select File")) {
-            String path = TinyFileDialogs.tinyfd_openFileDialog(
-                    "Select File",  // title
-                    "",             // default path
-                    null,           // filter patterns
-                    null,           // filter description
-                    false           // multi select
-            );
-            if (path != null) {
-                tag.setTexture(new Texture(path));
+    private void spriteRendererComponent(GameObject go) {
+        SpriteRenderer spriteRenderer = go.getComponent(SpriteRenderer.class);
+        if (spriteRenderer != null) {
+            if (ImGui.collapsingHeader("Sprite Renderer", ImGuiTreeNodeFlags.DefaultOpen)) {
+                ImGui.text("Sprite");
+                ImGui.sameLine();
+                String texturePath = spriteRenderer.getFilePath();
+                if (ImGui.button(texturePath.isEmpty() ? "None (Sprite)" : texturePath)) {
+                    String path = TinyFileDialogs.tinyfd_openFileDialog("Select File",  // title
+                            "",             // default path
+                            null,           // filter patterns
+                            null,           // filter description
+                            false           // multi select
+                    );
+                    if (path != null) {
+                        spriteRenderer.setTexture(new Texture(path));
+                        RenderManager.rebuild();
+                    }
+                }
             }
         }
     }

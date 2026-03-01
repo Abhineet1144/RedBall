@@ -6,6 +6,7 @@ import java.nio.IntBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.stb.STBImage;
 
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
@@ -14,9 +15,8 @@ import static org.lwjgl.opengl.GL13.glActiveTexture;
 
 public class Texture {
     private static int usedTexSlots = 1;
-    private static int[] texSlots = new int[] {
-            GL13.GL_TEXTURE0, GL13.GL_TEXTURE1, GL13.GL_TEXTURE2, GL13.GL_TEXTURE3, GL13.GL_TEXTURE4, GL13.GL_TEXTURE5
-    };
+    private static int maxSlots = GL11.glGetInteger(GL20.GL_MAX_TEXTURE_IMAGE_UNITS);
+    private static int[] texSlots = new int[maxSlots];
 
     private int texSlot;
     private int usedTexSlot;
@@ -25,14 +25,26 @@ public class Texture {
     private int height;
     private String filePath;
 
+    public static void init() {
+        maxSlots = Math.min(maxSlots, 16);
+
+        texSlots = new int[maxSlots];
+
+        for (int i = 0; i < maxSlots; i++) {
+            texSlots[i] = GL13.GL_TEXTURE0 + i;
+        }
+        System.out.println(texSlots.length);
+    }
+
     public Texture(String filePath) {
         this.filePath = filePath;
         texId = GL11.glGenTextures();
         usedTexSlot = usedTexSlots;
-        texSlot = texSlots[usedTexSlots-1];
+        texSlot = texSlots[usedTexSlots - 1];
         usedTexSlots++;
         GL13.glActiveTexture(texSlot);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texId);
+        System.out.println("1");
 
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
@@ -59,8 +71,8 @@ public class Texture {
     }
 
     public void bindTexture() {
-        glActiveTexture(getTexID());
-        glBindTexture(GL_TEXTURE_2D, getTexID());
+        glActiveTexture(texSlot);
+        glBindTexture(GL_TEXTURE_2D, texId);
     }
 
     public int getWidth() {
@@ -85,5 +97,12 @@ public class Texture {
 
     public String getFilePath() {
         return filePath;
+    }
+
+    public void bindToSlot(int slot) {
+        this.usedTexSlot = slot;
+        this.texSlot = texSlots[slot - 1];
+        glActiveTexture(texSlot);
+        glBindTexture(GL_TEXTURE_2D, texId);
     }
 }
