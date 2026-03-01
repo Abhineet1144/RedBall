@@ -1,4 +1,4 @@
-package redball.scenes;
+package redball.example.assets;
 
 import org.joml.Vector3f;
 
@@ -8,7 +8,7 @@ import redball.engine.entity.components.*;
 import redball.engine.renderer.*;
 import redball.engine.renderer.texture.*;
 import redball.engine.utils.*;
-import redball.scenes.scripts.CameraFollow;
+import redball.example.assets.scripts.CameraFollow;
 
 public class TestScene extends AbstractScene {
     GameObject ball;
