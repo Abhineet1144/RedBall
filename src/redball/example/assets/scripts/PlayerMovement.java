@@ -1,4 +1,4 @@
-package redball.scenes.scripts;
+package redball.example.assets.scripts;
 
 import org.dyn4j.geometry.Vector2;
 import org.lwjgl.glfw.GLFW;

@@ -4,11 +4,13 @@ import redball.engine.renderer.texture.Texture;
 
 public class SpriteRenderer extends Component {
     private Texture texture;
-    public String file;
+    public String filePath = "";
 
     public SpriteRenderer(Texture texture) {
         this.texture = texture;
-        this.file = texture.getFilePath();
+        if (texture != null) {
+            this.filePath = texture.getFilePath();
+        }
     }
 
     @Override
@@ -25,5 +27,12 @@ public class SpriteRenderer extends Component {
 
     public void setTexture(Texture texture) {
         this.texture = texture;
+        if (texture != null) {
+            this.filePath = texture.getFilePath();
+        }
+    }
+
+    public String getFilePath() {
+        return filePath;
     }
 }

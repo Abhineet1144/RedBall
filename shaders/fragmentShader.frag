@@ -5,21 +5,13 @@ in vec4 ourColor;
 in vec2 TexCoord;
 flat in int ourTId;
 
-uniform sampler2D u_Textures[8];
+uniform sampler2D u_Textures[16];
 
 void main()
 {
     if (ourTId == 0) {
         FragColor = ourColor;
     } else {
-        vec4 texColor;
-        switch(ourTId) {
-            case 1:  texColor = texture(u_Textures[0], TexCoord); break;
-            case 2:  texColor = texture(u_Textures[1], TexCoord); break;
-            case 3:  texColor = texture(u_Textures[2], TexCoord); break;
-            case 4:  texColor = texture(u_Textures[3], TexCoord); break;
-            default: texColor = texture(u_Textures[0], TexCoord); break;
-        }
-        FragColor = texColor * ourColor;
+        FragColor = texture(u_Textures[ourTId - 1], TexCoord) * ourColor;
     }
 }

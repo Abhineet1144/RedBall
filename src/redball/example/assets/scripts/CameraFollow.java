@@ -1,4 +1,4 @@
-package redball.scenes.scripts;
+package redball.example.assets.scripts;
 
 import redball.engine.core.Engine;
 import redball.engine.entity.GameObject;

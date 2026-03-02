@@ -7,11 +7,13 @@ import imgui.glfw.ImGuiImplGlfw;
 import imgui.type.ImBoolean;
 import imgui.type.ImString;
 import org.dyn4j.geometry.Rectangle;
+import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import org.reflections.Reflections;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.*;
 import redball.engine.renderer.RenderManager;
+import redball.engine.renderer.texture.Texture;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -94,7 +96,14 @@ public class EditorLayer {
 
     // Creates dockable space
     void createDockSpace() {
-        int windowFlags = ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
+        int windowFlags = ImGuiWindowFlags.MenuBar
+                | ImGuiWindowFlags.NoDocking
+                | ImGuiWindowFlags.NoTitleBar
+                | ImGuiWindowFlags.NoCollapse
+                | ImGuiWindowFlags.NoResize
+                | ImGuiWindowFlags.NoMove
+                | ImGuiWindowFlags.NoBringToFrontOnFocus
+                | ImGuiWindowFlags.NoNavFocus;
 
         ImGuiViewport viewport = ImGui.getMainViewport();
         ImGui.setNextWindowPos(viewport.getPosX(), viewport.getPosY());
@@ -119,7 +128,6 @@ public class EditorLayer {
         imGuiGlfw.newFrame();
         imGuiGl3.newFrame();
         ImGui.newFrame();
-
         createDockSpace();
 
         renderMenuBar();
@@ -211,7 +219,8 @@ public class EditorLayer {
             renderHeight = size.x / aspect;
         }
 
-        ImGui.setCursorPos(7.5f, (size.y - renderHeight) / 2);
+        ImVec2 cur = ImGui.getCursorPos();
+        ImGui.setCursorPos((size.x + cur.x - renderWidth) / 2, (25f + size.y + cur.y - renderHeight) / 2);
 
         ImGui.image(RenderManager.getFrameBuffer().getTextureId(), new ImVec2(renderWidth, renderHeight), new ImVec2(0, 1), new ImVec2(1, 0));
 
@@ -292,6 +301,7 @@ public class EditorLayer {
                         if (ImGui.isMouseDoubleClicked(0)) {
                             selectedIndex = n;
                             Component c = go.addComponent(getComponent(n));
+                            if (c instanceof SpriteRenderer) RenderManager.rebuild();
                             try {
                                 c.start();
                             } catch (Exception e) {
@@ -338,6 +348,29 @@ public class EditorLayer {
             ImString val = new ImString(tag.getTag(), 256);
             if (ImGui.inputText("##Tag", val)) {
                 tag.setTag(val.get());
+            }
+        }
+    }
+
+    private void spriteRendererComponent(GameObject go) {
+        SpriteRenderer spriteRenderer = go.getComponent(SpriteRenderer.class);
+        if (spriteRenderer != null) {
+            if (ImGui.collapsingHeader("Sprite Renderer", ImGuiTreeNodeFlags.DefaultOpen)) {
+                ImGui.text("Sprite");
+                ImGui.sameLine();
+                String texturePath = spriteRenderer.getFilePath();
+                if (ImGui.button(texturePath.isEmpty() ? "None (Sprite)" : texturePath)) {
+                    String path = TinyFileDialogs.tinyfd_openFileDialog("Select File",  // title
+                            "",             // default path
+                            null,           // filter patterns
+                            null,           // filter description
+                            false           // multi select
+                    );
+                    if (path != null) {
+                        spriteRenderer.setTexture(new Texture(path));
+                        RenderManager.rebuild();
+                    }
+                }
             }
         }
     }
@@ -554,9 +587,5 @@ public class EditorLayer {
         imGuiGl3.destroyDeviceObjects();
         imGuiGlfw.shutdown();
         ImGui.destroyContext();
-    }
-
-    public ImGuiImplGlfw getImGuiGlfw() {
-        return imGuiGlfw;
     }
 }

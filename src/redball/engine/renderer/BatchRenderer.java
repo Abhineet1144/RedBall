@@ -191,7 +191,9 @@ public class BatchRenderer {
         for (GameObject entity : entities) {
             SpriteRenderer sr = entity.getComponent(SpriteRenderer.class);
             if (sr != null) {
-                sr.getTexture().bindTexture();
+                if (sr.getTexture() != null) {
+                    sr.getTexture().bindTexture();
+                }
             }
         }
     }

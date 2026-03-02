@@ -7,9 +7,10 @@ import org.lwjgl.system.MemoryUtil;
 import redball.engine.core.EditorLayer;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
+import redball.engine.renderer.texture.Texture;
 import redball.engine.utils.AbstractScene;
-import redball.scenes.Level1;
-import redball.scenes.TestScene;
+import redball.example.assets.Level1;
+import redball.example.assets.TestScene;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -54,6 +55,8 @@ public class WindowManager {
         glDepthFunc(GL_LESS);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         setVSync(0);
+
+        Texture.init();
 
         // GUI
         FrameBuffer.init(width, height);

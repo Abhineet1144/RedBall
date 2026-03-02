@@ -1,4 +1,4 @@
-package redball.scenes;
+package redball.example.assets;
 
 import org.joml.Vector3f;
 
@@ -8,7 +8,7 @@ import redball.engine.entity.components.*;
 import redball.engine.renderer.*;
 import redball.engine.renderer.texture.*;
 import redball.engine.utils.*;
-import redball.scenes.scripts.CameraFollow;
+import redball.example.assets.scripts.CameraFollow;
 
 public class TestScene extends AbstractScene {
     GameObject ball;
@@ -32,7 +32,8 @@ public class TestScene extends AbstractScene {
         ball = ECSWorld.createGameObject("Ball");
         ball.addComponent(new Transform(new Vector3f(400.0f, 800.0f, -1.0f), 90.0f, new Vector3f(100.0f, 100.0f, 1.0f)));
         Rigidbody ballRb = ball.addComponent(new Rigidbody());
-        ball.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BALL)));
+//        ball.addComponent(new SpriteRenderer(TextureManager.getTexture(TextureMap.BALL)));
+
         groundL = ECSWorld.createGameObject("GroundL");
         groundL.addComponent(new Transform(new Vector3f(150.0f, 250.0f, -1.0f), -15.0f, new Vector3f(1920.0f / 2, 20.0f, 1.0f)));
         Rigidbody groundLRb = this.groundL.addComponent(new Rigidbody());

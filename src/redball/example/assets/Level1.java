@@ -1,4 +1,4 @@
-package redball.scenes;
+package redball.example.assets;
 
 import org.dyn4j.geometry.Vector2;
 import org.joml.Vector3f;
