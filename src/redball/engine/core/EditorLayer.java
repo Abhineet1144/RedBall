@@ -11,19 +11,21 @@ import org.reflections.Reflections;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.*;
-import redball.engine.renderer.BatchRenderer;
-import redball.engine.renderer.FrameBuffer;
 import redball.engine.renderer.RenderManager;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Set;
 
 import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
+import static org.reflections.Reflections.log;
 
 public class EditorLayer {
+    private static EditorLayer INSTANCE;
     private final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
     private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
     private String selected = null;
@@ -32,6 +34,15 @@ public class EditorLayer {
     private String[] componentList = null;
     private Set<Class<? extends Component>> subclasses;
     private Long window;
+    private File[] assets;
+    private String currentFolder;
+    private String[] breadCrumbs;
+    private final ImString renameBuffer = new ImString(256);
+    private File renamingFile = null;
+
+    public static void init(Long window) {
+        INSTANCE = new EditorLayer(window);
+    }
 
     public EditorLayer(Long window) {
         this.window = window;
@@ -42,6 +53,16 @@ public class EditorLayer {
         io.addConfigFlags(ImGuiConfigFlags.DpiEnableScaleFonts);
         io.getFonts().setFreeTypeRenderer(true);
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable);
+        io.getFonts().addFontDefault();
+
+        ImFontConfig config = new ImFontConfig();
+        config.setMergeMode(true);
+        config.setPixelSnapH(true);
+
+        short[] iconRanges = {(short) 0xF000, (short) 0xF8FF, 0};
+
+        io.getFonts().addFontFromFileTTF("resources/Font Awesome 7 Free-Solid-900.otf", 32.0f, config, iconRanges);
+        io.getFonts().build();
 
         ImGuiStyle style = ImGui.getStyle();
         style.setColor(ImGuiCol.WindowBg, 0.08f, 0.08f, 0.12f, 1.00f);
@@ -67,16 +88,13 @@ public class EditorLayer {
         }
     }
 
+    public static EditorLayer getINSTANCE() {
+        return INSTANCE;
+    }
+
     // Creates dockable space
     void createDockSpace() {
-        int windowFlags = ImGuiWindowFlags.MenuBar
-                | ImGuiWindowFlags.NoDocking
-                | ImGuiWindowFlags.NoTitleBar
-                | ImGuiWindowFlags.NoCollapse
-                | ImGuiWindowFlags.NoResize
-                | ImGuiWindowFlags.NoMove
-                | ImGuiWindowFlags.NoBringToFrontOnFocus
-                | ImGuiWindowFlags.NoNavFocus;
+        int windowFlags = ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
         ImGuiViewport viewport = ImGui.getMainViewport();
         ImGui.setNextWindowPos(viewport.getPosX(), viewport.getPosY());
@@ -101,6 +119,7 @@ public class EditorLayer {
         imGuiGlfw.newFrame();
         imGuiGl3.newFrame();
         ImGui.newFrame();
+
         createDockSpace();
 
         renderMenuBar();
@@ -114,6 +133,20 @@ public class EditorLayer {
                 ImGui.setDragDropPayload("GAME_OBJECT", go);
                 ImGui.text(go.getName());
                 ImGui.endDragDropSource();
+            }
+            if (ImGui.beginDragDropTarget()) {
+                Object payload = ImGui.acceptDragDropPayload("String");
+                if (payload instanceof String dropped) {
+                    Component component = go.addComponent(getComponent(dropped));
+                    if (component != null) {
+                        try {
+                            component.start();
+                        } catch (Exception e) {
+                            log.error("e: ", e);
+                        }
+                    }
+                }
+                ImGui.endDragDropTarget();
             }
         }
         ImGui.end();
@@ -135,8 +168,24 @@ public class EditorLayer {
                 }
             }
             addComponent(go);
+            if (ImGui.beginDragDropTarget()) {
+                Object payload = ImGui.acceptDragDropPayload("String");
+                if (payload instanceof String dropped) {
+                    Component component = go.addComponent(getComponent(dropped));
+                    if (component != null) {
+                        try {
+                            component.start();
+                        } catch (Exception e) {
+                            log.error("e: ", e);
+                        }
+                    }
+                }
+                ImGui.endDragDropTarget();
+            }
         }
         ImGui.end();
+
+        assetBrowser();
 
         ImGui.render();
         imGuiGl3.renderDrawData(ImGui.getDrawData());
@@ -162,7 +211,7 @@ public class EditorLayer {
             renderHeight = size.x / aspect;
         }
 
-        ImGui.setCursorPos(7.5f, (size.y - renderHeight)/2);
+        ImGui.setCursorPos(7.5f, (size.y - renderHeight) / 2);
 
         ImGui.image(RenderManager.getFrameBuffer().getTextureId(), new ImVec2(renderWidth, renderHeight), new ImVec2(0, 1), new ImVec2(1, 0));
 
@@ -194,9 +243,22 @@ public class EditorLayer {
         }
     }
 
-    private Component selectComponent(int n) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+    private Component getComponent(int n) throws InvocationTargetException, InstantiationException, IllegalAccessException {
         for (Class<? extends Component> cls : subclasses) {
             if (cls.getSimpleName().equals(componentList[n])) {
+                Constructor<?> constructor = cls.getConstructors()[0];
+                Object[] params = new Object[constructor.getParameterCount()];
+                // params are already null by default
+                Component instance = (Component) constructor.newInstance(params);
+                return instance;
+            }
+        }
+        return null;
+    }
+
+    private Component getComponent(String name) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        for (Class<? extends Component> cls : subclasses) {
+            if (cls.getSimpleName().equals(name)) {
                 Constructor<?> constructor = cls.getConstructors()[0];
                 Object[] params = new Object[constructor.getParameterCount()];
                 // params are already null by default
@@ -229,8 +291,12 @@ public class EditorLayer {
                     if (ImGui.selectable(componentList[n], is_selected, ImGuiSelectableFlags.AllowDoubleClick)) {
                         if (ImGui.isMouseDoubleClicked(0)) {
                             selectedIndex = n;
-                            Component c = go.addComponent(selectComponent(n));
-                            c.start();
+                            Component c = go.addComponent(getComponent(n));
+                            try {
+                                c.start();
+                            } catch (Exception e) {
+                                log.error("e: ", e);
+                            }
                         }
                     }
                     if (is_selected) {
@@ -354,9 +420,143 @@ public class EditorLayer {
         }
     }
 
+    private void assetBrowser() {
+        ImGui.begin("AssetBrowser");
+        float thumbnailSize = 64;
+        float padding = 8;
+        float cellSize = thumbnailSize + padding;
+
+        float panelWidth = ImGui.getContentRegionAvailX();
+        int columnCount = Math.max(1, (int) (panelWidth / cellSize));
+        currentFolder = AssetManager.getFile().getPath();
+        breadCrumbs = currentFolder.split("/");
+
+
+        for (int i = 0; i < breadCrumbs.length; i++) {
+            if (i != 0) {
+                ImGui.sameLine();
+                ImGui.setWindowFontScale(0.3f);
+                float posX = ImGui.getCursorPosX();
+                float posY = ImGui.getCursorPosY();
+                ImGui.setCursorPos(posX, posY + 7);
+                ImGui.text(getIcon("chevron"));
+                ImGui.setWindowFontScale(1.0f);
+                ImGui.sameLine();
+            }
+
+            if (ImGui.button(breadCrumbs[i])) {
+                String[] sub = Arrays.copyOfRange(breadCrumbs, 0, i + 1);
+                currentFolder = String.join("/", sub);
+                AssetManager.setFile(new File(currentFolder));
+            }
+        }
+
+        assets = AssetManager.getFile().listFiles();
+
+        ImGui.columns(columnCount, "assetGrid", false);
+        if (ImGui.isMouseClicked(1)) {
+            ImGui.openPopup("FileEditPopup");
+        }
+
+        if (ImGui.beginPopup("FileEditPopup")) {
+            if (ImGui.beginMenu("Create"))  {
+                if (ImGui.menuItem("Folder")) {
+                    System.out.println("Clicked folder");
+                }
+                if (ImGui.menuItem("Script")) {
+                    System.out.println("Clicked script");
+                }
+                ImGui.endMenu();
+            }
+            ImGui.endPopup();
+        }
+        for (File asset : assets) {
+            String name = asset.getName();
+            String fileType = asset.isDirectory() ? "FOLDER" : asset.getName().substring(asset.getName().lastIndexOf("."));
+
+            ImGui.pushID(asset.getName());
+
+            float posX = ImGui.getCursorPosX();
+            float posY = ImGui.getCursorPosY();
+
+            ImGui.selectable("##" + name, false, 0, thumbnailSize, thumbnailSize + 10);
+            boolean clicked = ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0);
+            boolean rightClicked = ImGui.isItemHovered() && ImGui.isMouseClicked(1);
+            if (ImGui.beginDragDropSource()) {
+                ImGui.setDragDropPayload("String", name.substring(0, asset.getName().lastIndexOf(".")));
+                ImGui.setWindowFontScale(0.3f);
+                ImGui.text(asset.isDirectory() ? "\uF07B" : "\uF15B");
+                ImGui.setWindowFontScale(1.0f);
+                ImGui.text(asset.getName());
+                ImGui.endDragDropSource();
+            }
+
+            ImGui.setCursorPos(posX + (thumbnailSize / 2) - thumbnailSize / 4, posY + thumbnailSize / 2);
+            ImGui.setWindowFontScale(1.0f);
+
+            ImGui.text(asset.isDirectory() ? getIcon("folder") : getIcon("file"));
+            float textWidth = Math.min(ImGui.calcTextSize(name).x, thumbnailSize);
+            ImGui.setCursorPos(posX + (thumbnailSize / 2) - (textWidth / 2), posY + thumbnailSize - 10);
+
+            if (renamingFile != null && renamingFile.equals(asset)) {
+                ImGui.setKeyboardFocusHere();
+                if (ImGui.inputText("##rename", renameBuffer, ImGuiInputTextFlags.EnterReturnsTrue)) {
+                    asset.renameTo(new File(asset.getParent() + "/" + renameBuffer.get()));
+                    renamingFile = null;
+                }
+                if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
+                    renamingFile = null;
+                }
+            }
+            else {
+                ImGui.textWrapped(name);
+            }
+
+
+            if (clicked) {
+                if (asset.isDirectory()) {
+                    currentFolder += "/" + name;
+                    AssetManager.setFile(new File(currentFolder));
+                }
+            }
+
+            if (rightClicked) {
+                ImGui.openPopup("FileSelectPopup");
+            }
+
+            if (ImGui.beginPopup("FileSelectPopup")) {
+                if (ImGui.menuItem("Rename")) {
+                    renamingFile = asset;
+                    renameBuffer.set(name);
+                    ImGui.closeCurrentPopup();
+                }
+                ImGui.endMenu();
+            }
+
+            ImGui.popID();
+            ImGui.nextColumn();
+        }
+
+        ImGui.columns(1);
+        ImGui.end();
+    }
+
+    public String getIcon(String icon) {
+        return switch (icon) {
+            case "folder" -> "\uF07B";
+            case "file" -> "\uF1C9";
+            case "chevron" -> "\uF054";
+            default -> "?";
+        };
+    }
+
     public void dispose() {
         imGuiGl3.destroyDeviceObjects();
         imGuiGlfw.shutdown();
         ImGui.destroyContext();
+    }
+
+    public ImGuiImplGlfw getImGuiGlfw() {
+        return imGuiGlfw;
     }
 }

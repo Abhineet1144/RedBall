@@ -1,11 +1,14 @@
 package redball.engine.entity;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redball.engine.entity.components.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class GameObject {
+    private static final Logger log = LoggerFactory.getLogger(GameObject.class);
     // Name of the gameobject
     private String name;
     // List of all components
@@ -59,6 +62,10 @@ public class GameObject {
      * @param c type of component
      */
     public <T extends Component> T addComponent(Component c) {
+        if (c == null) {
+            return null;
+        }
+        if (contains(c)) return null;
         this.components.add(c);
         c.gameObject = this;
         return (T) getComponent(c.getClass());
@@ -70,7 +77,11 @@ public class GameObject {
      */
     public void update(float dt) {
         for (Component c : components) {
-            c.update(dt);
+            try {
+                c.update(dt);
+            } catch (Exception e) {
+                log.error("e: ", e);
+            }
         }
     }
 
@@ -79,7 +90,11 @@ public class GameObject {
      */
     public void start() {
         for (Component c : components) {
-            c.start();
+            try {
+                c.start();
+            } catch (Exception e) {
+                log.error("e: ", e);
+            }
         }
     }
 
@@ -92,5 +107,14 @@ public class GameObject {
 
     public List<Component> getComponents() {
         return components;
+    }
+
+    public boolean contains(Component c) {
+        for (Component component : components) {
+            if (c.getClass().isInstance(component)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

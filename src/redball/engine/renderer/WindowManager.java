@@ -7,7 +7,6 @@ import org.lwjgl.system.MemoryUtil;
 import redball.engine.core.EditorLayer;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
-import redball.engine.entity.components.CameraComponent;
 import redball.engine.utils.AbstractScene;
 import redball.scenes.Level1;
 import redball.scenes.TestScene;
@@ -16,8 +15,6 @@ import java.lang.reflect.InvocationTargetException;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
-import static org.lwjgl.opengl.GL30.glBindFramebuffer;
 
 public class WindowManager {
     private static long window = 0L;
@@ -25,7 +22,6 @@ public class WindowManager {
     private int height = 1080;
     private int fpsCap = Integer.MAX_VALUE;
     private AbstractScene scene;
-    private EditorLayer editorLayer;
 
     public void init() {
         if (window != 0L) {
@@ -60,7 +56,6 @@ public class WindowManager {
         setVSync(0);
 
         // GUI
-        editorLayer = new EditorLayer(window);
         FrameBuffer.init(width, height);
 
 //        glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
@@ -95,7 +90,7 @@ public class WindowManager {
                 accumulator -= physicsStep;
             }
             scene.update((float) deltaTime);
-            editorLayer.renderDebug();
+            EditorLayer.getINSTANCE().renderDebug();
 
             // SWAP
             glfwPollEvents();
@@ -109,7 +104,7 @@ public class WindowManager {
             }
             fps++;
         }
-        editorLayer.dispose();
+        EditorLayer.getINSTANCE().dispose();
         glfwTerminate();
     }
 

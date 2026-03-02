@@ -4,6 +4,7 @@ import redball.engine.input.KeyboardInput;
 import redball.engine.renderer.Shader;
 import redball.engine.renderer.WindowManager;
 import redball.engine.utils.AssetPool;
+import redball.engine.core.EditorLayer;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -18,10 +19,12 @@ public class Engine {
         }
 
         started = true;
-
+        AssetManager.init("src/redball/scenes");
         windowManager = new WindowManager();
         windowManager.init();
-        KeyboardInput.init(windowManager.getWindow());
+        EditorLayer.init(windowManager.getWindow());
+
+        KeyboardInput.init(windowManager.getWindow(), EditorLayer.getINSTANCE().getImGuiGlfw());
 
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
 

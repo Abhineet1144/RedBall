@@ -5,6 +5,8 @@ import redball.engine.entity.GameObject;
 import redball.engine.entity.components.Component;
 import redball.engine.entity.components.Transform;
 
+import java.io.IOException;
+
 public class CameraFollow extends Component {
 
     public Transform camT;

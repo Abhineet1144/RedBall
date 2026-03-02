@@ -53,21 +53,6 @@ public class FrameBuffer {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    public void resize(int newWidth, int newHeight) {
-        this.width = newWidth;
-        this.height = newHeight;
-
-        // Resize color texture
-        glBindTexture(GL_TEXTURE_2D, fboTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, newWidth, newHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, (ByteBuffer) null);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        // Resize depth renderbuffer
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, newWidth, newHeight);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    }
-
     public static FrameBuffer getINSTANCE() {
         return INSTANCE;
     }

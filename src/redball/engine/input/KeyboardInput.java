@@ -1,5 +1,7 @@
 package redball.engine.input;
 
+import imgui.glfw.ImGuiImplGlfw;
+
 import static org.lwjgl.glfw.GLFW.*;
 
 public class KeyboardInput {
@@ -7,8 +9,10 @@ public class KeyboardInput {
 
     private KeyboardInput() {}
 
-    public static void init(long window) {
+    public static void init(long window, ImGuiImplGlfw imGuiGlfw) {
         glfwSetKeyCallback(window, (w, key, scancode, action, mods) -> {
+            imGuiGlfw.keyCallback(w, key, scancode, action, mods);
+
             if (key >= 0 && key < GLFW_KEY_LAST) {
                 KEYS[key] = (action != GLFW_RELEASE);
             }
