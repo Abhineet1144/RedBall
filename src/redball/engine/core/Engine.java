@@ -19,7 +19,7 @@ public class Engine {
         }
 
         started = true;
-        AssetManager.init("src/redball/scenes");
+        AssetManager.init("src/redball/example");
         windowManager = new WindowManager();
         windowManager.init();
         EditorLayer.init(windowManager.getWindow());

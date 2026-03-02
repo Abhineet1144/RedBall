@@ -170,8 +170,9 @@ public class EditorLayer {
             tagComponent(go);
             transformComponent(go);
             rigidbodyComponent(go);
+            spriteRendererComponent(go);
             for (Component c : go.getComponents()) {
-                if (!(c instanceof Rigidbody) && !(c instanceof Transform) && !(c instanceof Tag)) {
+                if (!(c instanceof Rigidbody) && !(c instanceof Transform) && !(c instanceof Tag) && !(c instanceof SpriteRenderer)) {
                     customComponents(go.getComponent(c.getClass()));
                 }
             }
@@ -227,7 +228,7 @@ public class EditorLayer {
         ImGui.end();
     }
 
-    private void renderMenuBar() throws InvocationTargetException, InstantiationException, IllegalAccessException {
+    private void renderMenuBar() {
         if (ImGui.beginMainMenuBar()) {
             if (ImGui.beginMenu("File")) {
                 if (ImGui.menuItem("New")) {
@@ -587,5 +588,9 @@ public class EditorLayer {
         imGuiGl3.destroyDeviceObjects();
         imGuiGlfw.shutdown();
         ImGui.destroyContext();
+    }
+
+    public ImGuiImplGlfw getImGuiGlfw() {
+        return imGuiGlfw;
     }
 }
