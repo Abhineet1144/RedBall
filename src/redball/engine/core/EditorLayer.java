@@ -12,6 +12,7 @@ import org.reflections.Reflections;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.*;
+import redball.engine.entity.components.Component;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.texture.Texture;
 
@@ -20,9 +21,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Set;
+import java.util.*;
 
 import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
 import static org.reflections.Reflections.log;
@@ -83,9 +82,12 @@ public class EditorLayer {
         // needs fix
         Reflections reflections = new Reflections("redball");
         subclasses = reflections.getSubTypesOf(Component.class);
-        componentList = new String[subclasses.size()];
+        componentList = new String[subclasses.size()-1];
         int index = 0;
         for (Class<? extends Component> cls : subclasses) {
+            if (cls.isAssignableFrom(Transform.class)) {
+                continue;
+            }
             componentList[index] = cls.getSimpleName();
             index++;
         }
@@ -162,7 +164,7 @@ public class EditorLayer {
 
         renderViewPort();
 
-        ImGui.begin("Inpector");
+        ImGui.begin("Inspector");
         if (selected != null) {
             GameObject go = ECSWorld.findGameObjectByName(selected);
             ImGui.text("Name");
@@ -170,13 +172,17 @@ public class EditorLayer {
             ImGui.inputText("##Name", new ImString(go.getName()));
             tagComponent(go);
             transformComponent(go);
-            rigidbodyComponent(go);
+            rigidBodyComponent(go);
             spriteRendererComponent(go);
-            for (Component c : go.getComponents()) {
-                if (!(c instanceof Rigidbody) && !(c instanceof Transform) && !(c instanceof Tag) && !(c instanceof SpriteRenderer)) {
-                    customComponents(go.getComponent(c.getClass()));
+
+            ListIterator<Component> componentIterator = go.getComponents().listIterator();
+            while (componentIterator.hasNext()) {
+                Component c = componentIterator.next();
+                if (!(c instanceof Rigidbody) && !(c instanceof Transform) && !(c instanceof Tag) && !(c instanceof SpriteRenderer) && c != null) {
+                    customComponents(go.getComponent(c.getClass()), componentIterator);
                 }
             }
+
             addComponent(go);
             if (ImGui.beginDragDropTarget()) {
                 Object payload = ImGui.acceptDragDropPayload("String");
@@ -320,6 +326,7 @@ public class EditorLayer {
             }
             ImGui.endPopup();
         }
+        selectedIndex = -1;
     }
 
 
@@ -359,6 +366,19 @@ public class EditorLayer {
         SpriteRenderer spriteRenderer = go.getComponent(SpriteRenderer.class);
         if (spriteRenderer != null) {
             if (ImGui.collapsingHeader("Sprite Renderer", ImGuiTreeNodeFlags.DefaultOpen)) {
+                boolean rightClicked = ImGui.isItemHovered() && ImGui.isMouseClicked(1);
+                if (rightClicked) {
+                    ImGui.openPopup("RemoveSpriteRendererPopup");
+                }
+
+                if (ImGui.beginPopup("RemoveSpriteRendererPopup")) {
+                    if (ImGui.menuItem("Remove Component")) {
+                        go.removeComponent(SpriteRenderer.class);
+                        RenderManager.rebuild();
+                        ImGui.closeCurrentPopup();
+                    }
+                    ImGui.endMenu();
+                }
                 ImGui.text("Sprite");
                 ImGui.sameLine();
                 String label = (spriteRenderer != null) ? spriteName : "None ( Sprite Renderer )";
@@ -376,23 +396,53 @@ public class EditorLayer {
         }
     }
 
-    private void rigidbodyComponent(GameObject go) {
+    private void rigidBodyComponent(GameObject go) {
         Rigidbody rb = go.getComponent(Rigidbody.class);
         if (rb != null) {
             if (ImGui.collapsingHeader("RigidBody", ImGuiTreeNodeFlags.DefaultOpen)) {
+                if (ImGui.beginDragDropSource()) {
+                    ImGui.setDragDropPayload("GAME_OBJECT", go);
+                    ImGui.text(go.getName());
+                    ImGui.endDragDropSource();
+                }
+                boolean rightClicked = ImGui.isItemHovered() && ImGui.isMouseClicked(1);
+                if (rightClicked) {
+                    ImGui.openPopup("RemoveRigidBodyPopup");
+                }
+
+                if (ImGui.beginPopup("RemoveRigidBodyPopup")) {
+                    if (ImGui.menuItem("Remove Component")) {
+                        go.removeComponent(rb.getClass());
+                        RenderManager.rebuild();
+                        ImGui.closeCurrentPopup();
+                    }
+                    ImGui.endMenu();
+                }
+
                 ImGui.checkbox("isDynamic", rb.getBodyType() == BodyType.DYNAMIC ? true : false);
                 ImGui.inputText("Shape", new ImString(rb.getBody().getFixture(0).getShape() instanceof Rectangle ? "Rectangle" : "Circle"));
                 ImGui.inputText("Mass", new ImString(String.valueOf(rb.getMass())));
                 ImGui.inputText("Bounciness", new ImString(String.valueOf(rb.getBounce())));
                 ImGui.inputText("Friction", new ImString(String.valueOf(rb.getFriction())));
-                ImGui.inputText("Friction", new ImString(String.valueOf(rb.getFriction())));
             }
         }
     }
 
-    private void customComponents(Component component) {
+    private void customComponents(Component component, ListIterator<Component> iterator) {
         Class<?> clazz = component.getClass();
         if (ImGui.collapsingHeader(clazz.getSimpleName(), ImGuiTreeNodeFlags.DefaultOpen)) {
+            boolean rightClicked = ImGui.isItemHovered() && ImGui.isMouseClicked(1);
+            if (rightClicked) {
+                ImGui.openPopup("Remove" + clazz.getSimpleName() + "Popup");
+            }
+
+            if (ImGui.beginPopup("Remove" + clazz.getSimpleName() + "Popup")) {
+                if (ImGui.menuItem("Remove Component")) {
+                    iterator.remove();
+                    ImGui.closeCurrentPopup();
+                }
+                ImGui.endMenu();
+            }
             for (Field field : clazz.getDeclaredFields()) {
                 if (!Modifier.isPublic(field.getModifiers())) continue;
                 try {
@@ -551,7 +601,6 @@ public class EditorLayer {
                 ImGui.textWrapped(name);
             }
 
-
             if (clicked) {
                 if (asset.isDirectory()) {
                     currentFolder += "/" + name;
@@ -582,9 +631,6 @@ public class EditorLayer {
 
     private void renderConsole() {
         ImGui.begin("Console");
-        if (ImGui.button("Clear")) {
-            LogCapture.clear();
-        }
         ArrayDeque<LogLine> lines = LogCapture.getLogs();
         for (LogLine line : lines) {
             if (line.isError()) {
@@ -595,6 +641,9 @@ public class EditorLayer {
             else {
                 ImGui.text(line.getMessage());
             }
+        }
+        if (ImGui.button("Clear")) {
+            LogCapture.clear();
         }
         ImGui.end();
     }

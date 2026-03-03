@@ -42,7 +42,6 @@ public class LogCapture {
     }
 
     public static void start() {
-
         System.setOut(captureLog(false));
         System.setErr(captureLog(true));
     }
