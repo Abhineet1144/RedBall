@@ -6,6 +6,7 @@ import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
 import imgui.type.ImBoolean;
 import imgui.type.ImString;
+import imgui.flag.ImGuiCol;
 import org.dyn4j.geometry.Rectangle;
 import org.reflections.Reflections;
 import redball.engine.entity.ECSWorld;
@@ -19,6 +20,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -184,7 +186,7 @@ public class EditorLayer {
                         try {
                             component.start();
                         } catch (Exception e) {
-                            log.error("e: ", e);
+                            System.err.println("ERROR: " + e);
                         }
                     }
                 }
@@ -194,6 +196,7 @@ public class EditorLayer {
         ImGui.end();
 
         assetBrowser();
+        renderConsole();
 
         ImGui.render();
         imGuiGl3.renderDrawData(ImGui.getDrawData());
@@ -305,7 +308,7 @@ public class EditorLayer {
                             try {
                                 c.start();
                             } catch (Exception e) {
-                                log.error("e: ", e);
+                                System.err.println("ERROR: " + e);
                             }
                         }
                     }
@@ -574,6 +577,25 @@ public class EditorLayer {
         }
 
         ImGui.columns(1);
+        ImGui.end();
+    }
+
+    private void renderConsole() {
+        ImGui.begin("Console");
+        if (ImGui.button("Clear")) {
+            LogCapture.clear();
+        }
+        ArrayDeque<LogLine> lines = LogCapture.getLogs();
+        for (LogLine line : lines) {
+            if (line.isError()) {
+                ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.0f, 0.0f, 1.0f);
+                ImGui.text(line.getMessage());
+                ImGui.popStyleColor();
+            }
+            else {
+                ImGui.text(line.getMessage());
+            }
+        }
         ImGui.end();
     }
 

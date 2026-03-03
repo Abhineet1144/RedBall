@@ -19,9 +19,11 @@ public class Engine {
         }
 
         started = true;
+        LogCapture.start();
         AssetManager.init("src/redball/example");
         windowManager = new WindowManager();
         windowManager.init();
+
         EditorLayer.init(windowManager.getWindow());
 
         KeyboardInput.init(windowManager.getWindow(), EditorLayer.getINSTANCE().getImGuiGlfw());

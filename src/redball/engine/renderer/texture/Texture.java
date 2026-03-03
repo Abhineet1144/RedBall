@@ -33,7 +33,6 @@ public class Texture {
         for (int i = 0; i < maxSlots; i++) {
             texSlots[i] = GL13.GL_TEXTURE0 + i;
         }
-        System.out.println(texSlots.length);
     }
 
     public Texture(String filePath) {
@@ -44,7 +43,6 @@ public class Texture {
         usedTexSlots++;
         GL13.glActiveTexture(texSlot);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texId);
-        System.out.println("1");
 
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);

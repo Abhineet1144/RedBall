@@ -80,7 +80,7 @@ public class GameObject {
             try {
                 c.update(dt);
             } catch (Exception e) {
-                log.error("e: ", e);
+                System.err.println("ERROR: " + e);
             }
         }
     }
@@ -93,7 +93,7 @@ public class GameObject {
             try {
                 c.start();
             } catch (Exception e) {
-                log.error("e: ", e);
+                log.error("ERROR: ", e);
             }
         }
     }
