@@ -7,7 +7,6 @@ import imgui.glfw.ImGuiImplGlfw;
 import imgui.type.ImBoolean;
 import imgui.type.ImString;
 import org.dyn4j.geometry.Rectangle;
-import org.lwjgl.util.tinyfd.TinyFileDialogs;
 import org.reflections.Reflections;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
@@ -41,6 +40,7 @@ public class EditorLayer {
     private String[] breadCrumbs;
     private final ImString renameBuffer = new ImString(256);
     private File renamingFile = null;
+    private String spriteName = "";
 
     public static void init(Long window) {
         INSTANCE = new EditorLayer(window);
@@ -85,7 +85,6 @@ public class EditorLayer {
         int index = 0;
         for (Class<? extends Component> cls : subclasses) {
             componentList[index] = cls.getSimpleName();
-            System.out.println(componentList[index]);
             index++;
         }
     }
@@ -359,20 +358,18 @@ public class EditorLayer {
             if (ImGui.collapsingHeader("Sprite Renderer", ImGuiTreeNodeFlags.DefaultOpen)) {
                 ImGui.text("Sprite");
                 ImGui.sameLine();
-                String texturePath = spriteRenderer.getFilePath();
-                if (ImGui.button(texturePath.isEmpty() ? "None (Sprite)" : texturePath)) {
-                    String path = TinyFileDialogs.tinyfd_openFileDialog("Select File",  // title
-                            "",             // default path
-                            null,           // filter patterns
-                            null,           // filter description
-                            false           // multi select
-                    );
-                    if (path != null) {
-                        spriteRenderer.setTexture(new Texture(path));
+                String label = (spriteRenderer != null) ? spriteName : "None ( Sprite Renderer )";
+                ImGui.inputText("##Label", new ImString(label));
+                if (ImGui.beginDragDropTarget()) {
+                    String payload = ImGui.acceptDragDropPayload("String");
+                    if (payload instanceof String dropped) {
+                        spriteRenderer.setTexture(new Texture(dropped));
                         RenderManager.rebuild();
                     }
+                    ImGui.endDragDropTarget();
                 }
             }
+            spriteName = new File(spriteRenderer.getFilePath()).getName();
         }
     }
 
@@ -488,7 +485,8 @@ public class EditorLayer {
         assets = AssetManager.getFile().listFiles();
 
         ImGui.columns(columnCount, "assetGrid", false);
-        if (ImGui.isMouseClicked(1)) {
+        // Allow only in asset browser tab
+        if (ImGui.isMouseClicked(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
             ImGui.openPopup("FileEditPopup");
         }
 
@@ -517,7 +515,11 @@ public class EditorLayer {
             boolean clicked = ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0);
             boolean rightClicked = ImGui.isItemHovered() && ImGui.isMouseClicked(1);
             if (ImGui.beginDragDropSource()) {
-                ImGui.setDragDropPayload("String", name.substring(0, asset.getName().lastIndexOf(".")));
+                if (fileType.equals(".java")) {
+                    ImGui.setDragDropPayload("String", name.substring(0, asset.getName().lastIndexOf(".")));
+                } else {
+                    ImGui.setDragDropPayload("String", asset.getPath());
+                }
                 ImGui.setWindowFontScale(0.3f);
                 ImGui.text(asset.isDirectory() ? "\uF07B" : "\uF15B");
                 ImGui.setWindowFontScale(1.0f);
