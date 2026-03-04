@@ -1,40 +1,77 @@
 package redball.engine.core;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import org.dyn4j.dynamics.Body;
+import com.google.gson.*;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.Component;
 import redball.engine.renderer.Camera;
-import redball.engine.renderer.texture.Texture;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.Map;
 
 public class Serialization {
-    public static void save() throws IllegalAccessException {
-        JsonObject jsonObject = new JsonObject();
+    public static String serialize() throws IllegalAccessException {
+        JsonObject sceneJsonObject = new JsonObject();
         Gson gson = new Gson();
-        StringBuilder data = new StringBuilder();
+        JsonArray scene = new JsonArray();
+
         for (GameObject go : ECSWorld.getGameObjects()) {
-            jsonObject.addProperty("name", go.getName());
-            JsonObject components = new JsonObject();
+
+            sceneJsonObject.addProperty("id", go.getId().toString());
+            sceneJsonObject.addProperty("name", go.getName());
+            JsonArray componentsJsonArray = new JsonArray();
+
             for (Component component : go.getComponents()) {
-                JsonObject c = new JsonObject();
+                JsonObject componentJsonObject = new JsonObject();
                 for (Field field : component.getClass().getFields()) {
+
                     if (!Modifier.isPublic(field.getModifiers())) continue;
-                    if (Component.class.isAssignableFrom(field.getType()) || Camera.class.isAssignableFrom(field.getType()) || Texture.class.isAssignableFrom(field.getType()) || Body.class.isAssignableFrom(field.getType()) || GameObject.class.isAssignableFrom(field.getType())) {
-                        break;
+                    if (Camera.class.isAssignableFrom(field.getType())) continue;
+                    if (field.getName().equals("gameObject")) continue;
+
+                    if (Component.class.isAssignableFrom(field.getType()) || GameObject.class.isAssignableFrom(field.getType())) {
+                        // Add reference types
+                        JsonObject ref = getRefJsonObject(component, field);
+                        componentJsonObject.addProperty("type", component.getClass().getTypeName());
+                        componentJsonObject.add(field.getName(), ref);
                     } else {
-                        c.add(field.getName(), new Gson().toJsonTree(field.get(component)));
+                        // Add primitive types
+                        componentJsonObject.addProperty("type", component.getClass().getTypeName());
+                        componentJsonObject.add(field.getName(), new Gson().toJsonTree(field.get(component)));
                     }
                 }
-                components.add(component.getClass().getSimpleName(), c);
+                componentsJsonArray.add(componentJsonObject);
             }
-            jsonObject.add("component", components);
-            data.append(gson.toJson(jsonObject));
+            sceneJsonObject.add("component", componentsJsonArray);
+            scene.add(gson.toJsonTree(sceneJsonObject));
         }
-        System.out.println(data);
+        return scene.toString();
+    }
+
+    public static void deserialize(String scene) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        JsonArray jsonArray = JsonParser.parseString(scene).getAsJsonArray();
+        Gson gson = new Gson();
+        for (JsonElement jsonElement : jsonArray) {
+            JsonObject dataObject = jsonElement.getAsJsonObject();
+
+            String name = dataObject.get("name").getAsString();
+            GameObject go = ECSWorld.createGameObject(name);
+            for (JsonElement componentArray : dataObject.get("component").getAsJsonArray()) {
+//                go.addComponent(comp);
+            }
+
+        }
+    }
+
+    private static JsonObject getRefJsonObject(Component component, Field field) throws IllegalAccessException {
+        Object refObject = field.get(component);
+        JsonObject ref = new JsonObject();
+        ref.addProperty("$ref", true);
+        ref.addProperty("parentId", refObject instanceof Component ? ((Component) refObject).gameObject.getId().toString() : ((GameObject) refObject).getId().toString());
+        ref.addProperty("componentType", refObject instanceof Component ? ((Component) refObject).getClass().getTypeName() : ((GameObject) refObject).getClass().getTypeName());
+        return ref;
     }
 }

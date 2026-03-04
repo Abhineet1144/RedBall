@@ -13,7 +13,7 @@ public class Engine {
     private static WindowManager windowManager = null;
     private static Shader shader = null;
 
-    public static void start() throws InvocationTargetException, InstantiationException, IllegalAccessException {
+    public static void start() throws InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException, NoSuchMethodException {
         if (started) {
             return;
         }

@@ -68,7 +68,7 @@ public class WindowManager {
 //        });
     }
 
-    public void loop(Shader shader) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+    public void loop(Shader shader) throws InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException, NoSuchMethodException {
         double lastTime = glfwGetTime();
         double lastSecond = lastTime;
         double physicsStep = 1.0 / 60.0;
@@ -82,10 +82,6 @@ public class WindowManager {
             double deltaTime = time - lastTime;
             accumulator += deltaTime;
             lastTime = time;
-
-            // CLEAR
-            glClearColor(0, 0, 0, 1);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // RENDER
             while (accumulator >= physicsStep) {

@@ -129,7 +129,7 @@ public class EditorLayer {
         ImGui.end();
     }
 
-    public void renderDebug() throws InvocationTargetException, InstantiationException, IllegalAccessException {
+    public void renderDebug() throws InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException, NoSuchMethodException {
         imGuiGlfw.newFrame();
         imGuiGl3.newFrame();
         ImGui.newFrame();
@@ -210,11 +210,18 @@ public class EditorLayer {
         imGuiGl3.renderDrawData(ImGui.getDrawData());
     }
 
-    void renderViewPort() throws IllegalAccessException {
+    void renderViewPort() throws IllegalAccessException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException {
         ImGui.begin("Viewport");
         if (ImGui.button("Save")) {
-            Serialization.save();
+            AssetManager.getINSTANCE().saveScene();
         }
+
+        if (ImGui.button("Load")) {
+            ECSWorld.removeAll();
+            RenderManager.clear();
+            AssetManager.getINSTANCE().loadScene();
+        }
+
         ImVec2 size = ImGui.getContentRegionAvail();
 
         float frameBufferWidth = RenderManager.getFrameBuffer().getWidth();
@@ -504,7 +511,6 @@ public class EditorLayer {
                     e.printStackTrace();
                 }
             }
-
         }
     }
 

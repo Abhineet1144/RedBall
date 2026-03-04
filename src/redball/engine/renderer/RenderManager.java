@@ -8,6 +8,8 @@ import redball.engine.entity.components.CameraComponent;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static redball.engine.renderer.BatchRenderer.MAX_ENTITIES;
 
 
@@ -51,6 +53,10 @@ public class RenderManager {
         Engine.getShader().initTextureSamplers();
 
         frameBuffer.bind();
+
+        // CLEAR
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         for (BatchRenderer batchRenderer : batches) {
             batchRenderer.bindTextures();

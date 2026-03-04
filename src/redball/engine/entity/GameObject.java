@@ -1,16 +1,15 @@
 package redball.engine.entity;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import redball.engine.entity.components.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class GameObject {
-    private static final Logger log = LoggerFactory.getLogger(GameObject.class);
     // Name of the gameobject
     private String name;
+    private UUID id = UUID.randomUUID();
     // List of all components
     private List<Component> components;
 
@@ -93,7 +92,7 @@ public class GameObject {
             try {
                 c.start();
             } catch (Exception e) {
-                log.error("ERROR: ", e);
+                System.err.println("ERROR: " + e);
             }
         }
     }
@@ -116,5 +115,9 @@ public class GameObject {
             }
         }
         return false;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }
