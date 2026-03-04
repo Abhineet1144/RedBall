@@ -6,16 +6,17 @@ import redball.engine.entity.GameObject;
 import redball.engine.renderer.texture.TextureManager;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 public class SaveObject implements Serializable {
-    private final List<GameObject> gameObjects;
-    private final Collection<String> textures;
+    private final ArrayList<GameObject> gameObjects;
+    private final ArrayList<String> textures;
 
     public SaveObject() {
-        this.gameObjects = ECSWorld.getGameObjects();
-        this.textures = TextureManager.listBoundTextures();
+        this.gameObjects = (ArrayList<GameObject>) ECSWorld.getGameObjects();
+        this.textures = new ArrayList<>(TextureManager.listBoundTextures());
     }
 
     public static SaveObject parseFrom(byte[] bytes) {
