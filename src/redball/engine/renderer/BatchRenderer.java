@@ -52,7 +52,12 @@ public class BatchRenderer {
     private int indexCount = 0;
 
     BatchRenderer(List<GameObject> go) {
-        entities = new ArrayList<>(go);
+        entities = new ArrayList<>();
+        for (GameObject g : go) {
+            if (g.getComponent(SpriteRenderer.class) != null) {
+                entities.add(g);
+            }
+        }
         entityCount = entities.size();
     }
 
