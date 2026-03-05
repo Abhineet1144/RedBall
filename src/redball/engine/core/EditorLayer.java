@@ -7,8 +7,6 @@ import imgui.glfw.ImGuiImplGlfw;
 import imgui.type.ImBoolean;
 import imgui.type.ImString;
 import imgui.flag.ImGuiCol;
-import org.dyn4j.geometry.Rectangle;
-import org.dyn4j.geometry.Vector3;
 import org.joml.Vector3f;
 import org.reflections.Reflections;
 import redball.engine.core.Logger.LogCapture;
@@ -223,7 +221,7 @@ public class EditorLayer {
     void renderViewPort() {
         ImGui.begin("Viewport");
 
-        if (ImGui.button("Save")) {
+        if (ImGui.button("Save") && !Engine.isPlaying()) {
             SaveManager.save();
         }
 
@@ -445,10 +443,23 @@ public class EditorLayer {
                     ImGui.endMenu();
                 }
 
-                ImGui.checkbox("isDynamic", rb.getBodyType() == BodyType.DYNAMIC);
-                ImGui.inputText("Mass", new ImString(String.valueOf(rb.getMass())));
-                ImGui.inputText("Bounciness", new ImString(String.valueOf(rb.getBounce())));
-                ImGui.inputText("Friction", new ImString(String.valueOf(rb.getFriction())));
+                ImBoolean isDynamic = new ImBoolean(rb.getBodyType() == BodyType.DYNAMIC);
+                if (ImGui.checkbox("isDynamic", isDynamic.get())) {
+                    rb.setBodyType(isDynamic.get() ? BodyType.DYNAMIC : BodyType.STATIC);
+                    rb.physicsSystemSetBodyType(isDynamic.get() ? BodyType.STATIC : BodyType.DYNAMIC);
+                }
+                int[] mass = {rb.getMass()};
+                if (ImGui.dragInt("Mass", mass)) {
+                    rb.setMass(mass[0]);
+                }
+                float[] bounciness = {rb.getBounce()};
+                if (ImGui.dragFloat("Bounciness", bounciness)) {
+                    rb.setBounce(bounciness[0]);
+                }
+                float[] friction = {rb.getFriction()};
+                if (ImGui.dragFloat("Friction", friction)) {
+                    rb.setFriction(friction[0]);
+                }
             }
         }
     }
@@ -661,7 +672,7 @@ public class EditorLayer {
             }
 
             if (clicked) {
-                if (fileType.equals(".scene")) {
+                if (fileType.equals(".scene") && !Engine.isPlaying()) {
                     SaveManager.loadScene(asset.getPath());
                     selected = null;
                 }

@@ -88,14 +88,14 @@ public class WindowManager {
             double deltaTime = time - lastTime;
             accumulator += deltaTime;
             lastTime = time;
-            if (Engine.isPlaying) {
+            if (Engine.isPlaying()) {
                 // RENDER
                 while (accumulator >= physicsStep) {
                     PhysicsSystem.update((float) physicsStep);
                     accumulator -= physicsStep;
                 }
                 // use if corrupt
-//                 scene.update((float) deltaTime);
+                // scene.update((float) deltaTime);
                 ECSWorld.update(Objects.requireNonNull(ECSWorld.findGameObjectByTag("Camera")), (float) deltaTime);
             } else {
                 accumulator = 0;

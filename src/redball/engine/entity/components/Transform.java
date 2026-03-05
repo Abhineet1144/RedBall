@@ -28,9 +28,8 @@ public class Transform extends Component {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
         if (rb != null) {
             rb.getBody().getTransform().setTranslationX(xPos / PPM);
-        } else {
-            this.position.x = xPos;
         }
+        this.position.x = xPos;
         super.markAsDirty();
     }
 
@@ -38,9 +37,8 @@ public class Transform extends Component {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
         if (rb != null) {
             rb.getBody().getTransform().setTranslationY(yPos / PPM);
-        } else {
-            this.position.y = yPos;
         }
+        this.position.y = yPos;
         super.markAsDirty();
     }
 
@@ -48,9 +46,8 @@ public class Transform extends Component {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
         if (rb != null) {
             rb.getBody().getTransform().setRotation(rotation);
-        } else {
-            this.rotation = rotation;
         }
+        this.rotation = rotation;
         super.markAsDirty();
     }
 
@@ -58,9 +55,8 @@ public class Transform extends Component {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
         if (rb != null) {
             rb.getBody().getFixture(0);
-        } else {
-            this.scale.x = xPos;
         }
+        this.scale.x = xPos;
         super.markAsDirty();
     }
 

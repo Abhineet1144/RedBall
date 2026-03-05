@@ -46,6 +46,13 @@ public class Rigidbody extends Component {
 
     public void physicsSystemSetBodyType(BodyType type) {
         getBody().setMass(type.getMassType());
+        Transform t = gameObject.getComponent(Transform.class);
+        if (t != null) {
+            body.getTransform().setTranslation(
+                    t.position.x / PPM,
+                    t.position.y / PPM
+            );
+        }
     }
 
     public void physiosSystemSetBodyFixture(BodyFixture bodyFixture) {
@@ -131,7 +138,6 @@ public class Rigidbody extends Component {
         body.setUserData(this);
         Transform transform = this.gameObject.getComponent(Transform.class);
 
-        getBody().getTransform().setTranslation(transform.position.x / PPM, transform.position.y / PPM);
         getBody().getTransform().setRotation(Math.toRadians(transform.rotation));
 
         physiosSystemSetBodyFixture(bodyFixture);

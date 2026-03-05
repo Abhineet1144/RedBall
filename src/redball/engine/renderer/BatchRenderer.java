@@ -152,10 +152,13 @@ public class BatchRenderer {
 
             // check if body is awake and simulating, not just its type
             if (rb != null && rb.getBody() != null) {
-                if (!rb.getBody().isAtRest() || t.isDirty()) {
+                if (!rb.getBody().isAtRest()) {
                     anyDirty = true;
                     break;
                 }
+            } else if (t.isDirty()) {
+                    anyDirty = true;
+                    break;
             }
         }
 
