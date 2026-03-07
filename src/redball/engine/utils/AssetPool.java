@@ -6,8 +6,8 @@ import java.io.IOException;
 import org.apache.commons.io.IOUtils;
 
 public class AssetPool {
-    private static final String VERTEX_SHADER_PATH = "shaders/vertexShader.vert";
-    private static final String FRAGMENT_SHADER_PATH = "shaders/fragmentShader.frag";
+    private static final String VERTEX_SHADER_PATH = "/home/tejas/Projects/RedBall/shaders/vertexShader.vert";
+    private static final String FRAGMENT_SHADER_PATH = "/home/tejas/Projects/RedBall/shaders/fragmentShader.frag";
 
     public static String getFragmentShaderSource() {
         try {

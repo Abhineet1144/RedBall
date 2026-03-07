@@ -64,14 +64,14 @@ public class WindowManager {
         // GUI
         FrameBuffer.init(width, height);
 
-//        glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
-//            glViewport(0, 0, w, h);
-//            width = w;
-//            height = h;
-//        });
+        glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
+            glViewport(0, 0, w, h);
+            width = w;
+            height = h;
+        });
     }
 
-    public void loop(Shader shader) throws Exception {
+    public void loop(Shader shader, boolean build) throws Exception {
         double lastTime = glfwGetTime();
         double lastSecond = lastTime;
         double physicsStep = 1.0 / 60.0;
@@ -81,14 +81,19 @@ public class WindowManager {
         shader.use();
         SceneManager.init();
         SceneManager.loadDefault();
+        if (build)
+        {
+            ECSWorld.start();
+        }
 
         while (!GLFW.glfwWindowShouldClose(window)) {
-            ScriptManager.processReloads(); // add this line
+            ScriptManager.processReloads();
             double time = glfwGetTime();
             double deltaTime = time - lastTime;
             accumulator += deltaTime;
             lastTime = time;
-            if (Engine.isPlaying()) {
+
+            if (Engine.isPlaying() || build) {
                 // RENDER
                 while (accumulator >= physicsStep) {
                     PhysicsSystem.update((float) physicsStep);
@@ -100,8 +105,10 @@ public class WindowManager {
             } else {
                 accumulator = 0;
             }
-            EditorLayer.getINSTANCE().renderDebug();
             RenderManager.render(Objects.requireNonNull(ECSWorld.findGameObjectByTag("Camera")));
+            if (!build) {
+                EditorLayer.getINSTANCE().renderDebug();
+            }
 
             // SWAP
             glfwPollEvents();

@@ -21,6 +21,7 @@ import redball.engine.renderer.texture.Texture;
 import redball.engine.save.SaveManager;
 import redball.engine.scene.AssetManager;
 import redball.engine.scene.SceneManager;
+import redball.engine.utils.PakWriter;
 import redball.engine.utils.ScriptManager;
 
 import java.io.File;
@@ -76,7 +77,7 @@ public class EditorLayer {
 
         short[] iconRanges = {(short) 0xF000, (short) 0xF8FF, 0};
 
-        io.getFonts().addFontFromFileTTF("resources/Font Awesome 7 Free-Solid-900.otf", 32.0f, config, iconRanges);
+        io.getFonts().addFontFromFileTTF("/home/tejas/Projects/RedBall/resources/Font Awesome 7 Free-Solid-900.otf", 32.0f, config, iconRanges);
         io.getFonts().build();
 
         ImGuiStyle style = ImGui.getStyle();
@@ -282,6 +283,9 @@ public class EditorLayer {
                 if (ImGui.menuItem("Scene Manager")) {
                     showSceneManager.set(true);
                 }
+                if (ImGui.menuItem("Build")) {
+                    build();
+                }
                 ImGui.separator();
                 if (ImGui.menuItem("Exit")) {
                     glfwSetWindowShouldClose(window, true);
@@ -296,6 +300,11 @@ public class EditorLayer {
             }
             ImGui.endMainMenuBar();
         }
+    }
+
+    private void build() {
+        PakWriter.writePak(AssetManager.getINSTANCE().getWorkingDirectory());
+
     }
 
     private Component getComponent(int n) throws InvocationTargetException, InstantiationException, IllegalAccessException {

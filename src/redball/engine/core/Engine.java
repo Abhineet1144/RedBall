@@ -12,6 +12,7 @@ import redball.engine.renderer.WindowManager;
 import redball.engine.save.SaveObject;
 import redball.engine.scene.AssetManager;
 import redball.engine.utils.AssetPool;
+import redball.engine.utils.PakWriter;
 import redball.engine.utils.ScriptManager;
 
 import java.util.concurrent.Executors;
@@ -22,6 +23,7 @@ public class Engine {
     private static Shader shader = null;
     public static boolean isPlaying = false;
     private static byte[] savedScene;
+    public static boolean isBuild;
 
     public static void onPlay() {
         // save current scene to memory
@@ -48,29 +50,35 @@ public class Engine {
         RenderManager.prepare(ECSWorld.findGameObjectByTag("Camera"));
     }
 
-    public static void start(String path) throws Exception {
+    public static void start(String path, boolean build) throws Exception {
         if (started) {
             return;
         }
 
         started = true;
+        isBuild = build;
         AssetManager.init(path);
         LogCapture.start();
-
         Executors.newSingleThreadExecutor().execute(new ScriptManager());
 
         windowManager = new WindowManager();
         windowManager.init();
 
-        EditorLayer.init(windowManager.getWindow());
+        if (build) {
+            PakWriter.loadPak();
+        }
+
+        if (!build) {
+            EditorLayer.init(windowManager.getWindow());
+        }
 
         KeyboardInput.init(windowManager.getWindow(), EditorLayer.getINSTANCE().getImGuiGlfw());
-
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
+
         ScriptManager.compileAll(AssetManager.getINSTANCE().getScriptDirectory());
         EditorLayer.getINSTANCE().initComponentList();
 
-        windowManager.loop(shader);
+        windowManager.loop(shader, build);
     }
 
 

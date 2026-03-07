@@ -10,6 +10,7 @@ public class AssetManager {
     public String scenesDirectory;
     public String scriptDirectory;
     public String compileDirectory;
+    public String buildDirectory;
     private File file;
     public String currentWorkingScene = "";
 
@@ -18,6 +19,7 @@ public class AssetManager {
         scenesDirectory = workingDirectory + File.separatorChar + "assets/scenes" + File.separatorChar;
         scriptDirectory = workingDirectory + File.separatorChar + "assets/scripts" + File.separatorChar;
         compileDirectory = workingDirectory + File.separatorChar + "out" + File.separatorChar;
+        buildDirectory = workingDirectory + File.separatorChar + "build" + File.separatorChar;
         file = new File(workingDirectory);
     }
 
@@ -35,6 +37,10 @@ public class AssetManager {
 
     public String getCompileDirectory() {
         return compileDirectory;
+    }
+
+    public String getBuildDirectory() {
+        return buildDirectory;
     }
 
     public void setWorkingDirectory(String workingDirectory) {
