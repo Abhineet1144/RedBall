@@ -29,6 +29,7 @@ public class ScriptManager implements Runnable {
     private static final ConcurrentLinkedQueue<File> reloadQueue = new ConcurrentLinkedQueue<>();
     private static final String OUTPUT_DIR = ScriptManager.class.getProtectionDomain().getCodeSource().getLocation().getPath();
     public static volatile boolean reloaded = false;
+    private static int res = 0;
 
     @Override
     public void run() {
@@ -39,18 +40,23 @@ public class ScriptManager implements Runnable {
         }
     }
 
-    public static void compileAll(String scriptsDir) throws Exception {
+    public static boolean compileAll(String scriptsDir) throws Exception {
         if (Engine.isBuild) {
             loadAllFromPak();
-            return;
+            return true;
         }
 
         File dir = new File(scriptsDir);
         File[] javaFiles = dir.listFiles((f, name) -> name.endsWith(".java"));
-        if (javaFiles == null || javaFiles.length == 0) return;
+        if (javaFiles == null || javaFiles.length == 0) return false;
         for (File file : javaFiles) {
             compile(file);
         }
+        if (res != 0) {
+            res = 0;
+            return false;
+        }
+        return true;
     }
 
     private static void loadAllFromPak() throws Exception {
@@ -115,7 +121,12 @@ public class ScriptManager implements Runnable {
                 "-d", AssetManager.getINSTANCE().getCompileDirectory(),
                 file.getPath()
         );
-        if (result != 0) throw new RuntimeException("Compilation failed — check stderr above");
+        if (res == 0) {
+            res = result;
+        }
+        if (result != 0) {
+            System.err.println("Compilation failed — check stderr above");
+        }
 
         String fullName = getFullyQualifiedName(file);
 
@@ -165,7 +176,7 @@ public class ScriptManager implements Runnable {
                 if (c.getClass().getName().equals(clazz.getName())) {
                     Component newInstance = (Component) clazz.getDeclaredConstructor().newInstance();
                     go.removeComponentByName(clazz.getName());
-                    Component result = go.addComponent(newInstance);
+                    go.addComponent(newInstance);
                     break;
                 }
             }

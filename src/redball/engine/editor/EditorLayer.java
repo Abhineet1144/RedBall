@@ -56,6 +56,11 @@ public class EditorLayer {
     private String[] componentList = null;
     private Set<Class<? extends Component>> subclasses;
 
+    private ImString nameBuffer = null;
+    private String prevSelected = null;
+
+    private ImString searchBuffer = null;
+
     public static void init(Long window) {
         INSTANCE = new EditorLayer(window);
     }
@@ -69,27 +74,105 @@ public class EditorLayer {
         io.addConfigFlags(ImGuiConfigFlags.DpiEnableScaleFonts);
         io.getFonts().setFreeTypeRenderer(true);
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable);
-        io.getFonts().addFontDefault();
+        io.getFonts().setFreeTypeRenderer(true);
 
-        ImFontConfig config = new ImFontConfig();
-        config.setMergeMode(true);
-        config.setPixelSnapH(true);
+        ImFontConfig fontConfig = new ImFontConfig();
+        fontConfig.setFontBuilderFlags(ImGuiFreeTypeBuilderFlags.ForceAutoHint | ImGuiFreeTypeBuilderFlags.LightHinting);
+        fontConfig.setOversampleH(1);
+        fontConfig.setOversampleV(1);
+        fontConfig.setPixelSnapH(true);
+        io.getFonts().addFontFromFileTTF("/home/tejas/Projects/RedBall/resources/Inter_18pt-Regular.ttf", 15.0f, fontConfig);
 
+        ImFontConfig iconConfig = new ImFontConfig();
+        iconConfig.setMergeMode(true);
+        iconConfig.setPixelSnapH(false);
+        iconConfig.setOversampleH(2);
+        iconConfig.setOversampleV(2);
         short[] iconRanges = {(short) 0xF000, (short) 0xF8FF, 0};
+        io.getFonts().addFontFromFileTTF("/home/tejas/Projects/RedBall/resources/Font Awesome 7 Free-Solid-900.otf", 30.0f, iconConfig, iconRanges);
 
-        io.getFonts().addFontFromFileTTF("/home/tejas/Projects/RedBall/resources/Font Awesome 7 Free-Solid-900.otf", 32.0f, config, iconRanges);
         io.getFonts().build();
 
+
         ImGuiStyle style = ImGui.getStyle();
-        style.setColor(ImGuiCol.WindowBg, 0.08f, 0.08f, 0.12f, 1.00f);
-        style.setColor(ImGuiCol.ChildBg, 0.10f, 0.10f, 0.15f, 1.00f);
-        style.setColor(ImGuiCol.Header, 0.55f, 0.32f, 0.10f, 1.00f);
-        style.setColor(ImGuiCol.HeaderHovered, 0.75f, 0.45f, 0.15f, 1.00f);
-        style.setColor(ImGuiCol.HeaderActive, 0.95f, 0.58f, 0.20f, 1.00f);
-        style.setColor(ImGuiCol.TitleBg, 1.37f, 0.74f, 0.39f, 1.00f);
-        style.setColor(ImGuiCol.TitleBgActive, 1.17f, 0.63f, 0.33f, 1.00f);
-        style.setColor(ImGuiCol.FrameBg, 0.14f, 0.14f, 0.20f, 1.00f);
-        style.setColor(ImGuiCol.Button, 0.20f, 0.20f, 0.30f, 1.00f);
+
+        // === Backgrounds — push darker ===
+        style.setColor(ImGuiCol.WindowBg, 0.110f, 0.110f, 0.110f, 1.00f); // #1C1C1C — main panels
+        style.setColor(ImGuiCol.ChildBg, 0.090f, 0.090f, 0.090f, 1.00f); // #171717 — nested areas
+        style.setColor(ImGuiCol.PopupBg, 0.122f, 0.122f, 0.122f, 1.00f); // #1F1F1F — popups/dropdowns
+
+        // === Borders ===
+        style.setColor(ImGuiCol.Border, 0.137f, 0.137f, 0.137f, 1.00f); // #232323
+        style.setColor(ImGuiCol.BorderShadow, 0.000f, 0.000f, 0.000f, 0.00f); // transparent
+
+        // === Frames (inputs, search bar) ===
+        style.setColor(ImGuiCol.FrameBg, 0.098f, 0.098f, 0.098f, 1.00f); // #191919
+        style.setColor(ImGuiCol.FrameBgHovered, 0.157f, 0.157f, 0.157f, 1.00f); // #282828
+        style.setColor(ImGuiCol.FrameBgActive, 0.188f, 0.188f, 0.188f, 1.00f); // #303030
+
+        // === Title bars — your orange accent ===
+        style.setColor(ImGuiCol.TitleBg, 0.55f, 0.32f, 0.10f, 1.00f); // your original
+        style.setColor(ImGuiCol.TitleBgActive, 0.75f, 0.45f, 0.15f, 1.00f); // your original
+        style.setColor(ImGuiCol.TitleBgCollapsed, 0.157f, 0.157f, 0.157f, 1.00f); // #282828
+
+        // === Menu bar ===
+        style.setColor(ImGuiCol.MenuBarBg, 0.067f, 0.067f, 0.067f, 1.00f); // #111111
+
+        // === Scrollbars ===
+        style.setColor(ImGuiCol.ScrollbarBg, 0.078f, 0.078f, 0.078f, 1.00f); // #141414
+        style.setColor(ImGuiCol.ScrollbarGrab, 0.373f, 0.373f, 0.373f, 1.00f); // #5F5F5F
+        style.setColor(ImGuiCol.ScrollbarGrabHovered, 0.408f, 0.408f, 0.408f, 1.00f); // #686868
+        style.setColor(ImGuiCol.ScrollbarGrabActive, 0.55f, 0.32f, 0.10f, 1.00f); // orange accent on drag
+
+        // === Checkmark & sliders ===
+        style.setColor(ImGuiCol.CheckMark, 0.95f, 0.58f, 0.20f, 1.00f); // orange accent
+        style.setColor(ImGuiCol.SliderGrab, 0.75f, 0.45f, 0.15f, 1.00f); // orange accent
+        style.setColor(ImGuiCol.SliderGrabActive, 0.95f, 0.58f, 0.20f, 1.00f); // orange accent bright
+
+        // === Buttons — your original + hover states ===
+        style.setColor(ImGuiCol.Button, 0.20f, 0.20f, 0.30f, 1.00f); // your original
+        style.setColor(ImGuiCol.ButtonHovered, 0.55f, 0.32f, 0.10f, 1.00f); // orange on hover
+        style.setColor(ImGuiCol.ButtonActive, 0.95f, 0.58f, 0.20f, 1.00f); // bright orange on click
+
+        // === Headers (collapsing headers, hierarchy rows) — your orange accent ===
+        style.setColor(ImGuiCol.Header, 0.55f, 0.32f, 0.10f, 1.00f); // your original
+        style.setColor(ImGuiCol.HeaderHovered, 0.75f, 0.45f, 0.15f, 1.00f); // your original
+        style.setColor(ImGuiCol.HeaderActive, 0.95f, 0.58f, 0.20f, 1.00f); // your original
+
+        // === Separators ===
+        style.setColor(ImGuiCol.Separator, 0.137f, 0.137f, 0.137f, 1.00f); // #232323
+        style.setColor(ImGuiCol.SeparatorHovered, 0.75f, 0.45f, 0.15f, 1.00f); // orange
+        style.setColor(ImGuiCol.SeparatorActive, 0.95f, 0.58f, 0.20f, 1.00f); // orange
+
+        // === Resize grip ===
+        style.setColor(ImGuiCol.ResizeGrip, 0.55f, 0.32f, 0.10f, 0.40f); // orange faded
+        style.setColor(ImGuiCol.ResizeGripHovered, 0.75f, 0.45f, 0.15f, 0.70f); // orange
+        style.setColor(ImGuiCol.ResizeGripActive, 0.95f, 0.58f, 0.20f, 1.00f); // orange bright
+
+        // === Tabs ===
+        style.setColor(ImGuiCol.Tab, 0.157f, 0.157f, 0.157f, 1.00f); // #282828
+        style.setColor(ImGuiCol.TabHovered, 0.55f, 0.32f, 0.10f, 1.00f); // orange
+        style.setColor(ImGuiCol.TabActive, 0.75f, 0.45f, 0.15f, 1.00f); // orange bright
+        style.setColor(ImGuiCol.TabUnfocused, 0.122f, 0.122f, 0.122f, 1.00f); // #1F1F1F
+        style.setColor(ImGuiCol.TabUnfocusedActive, 0.55f, 0.32f, 0.10f, 0.70f); // orange dimmed
+
+        // === Docking ===
+        style.setColor(ImGuiCol.DockingPreview, 0.75f, 0.45f, 0.15f, 0.70f); // orange
+        style.setColor(ImGuiCol.DockingEmptyBg, 0.118f, 0.118f, 0.118f, 1.00f); // #1E1E1E
+
+        // === Text ===
+        style.setColor(ImGuiCol.Text, 0.824f, 0.824f, 0.824f, 1.00f); // #D2D2D2
+        style.setColor(ImGuiCol.TextDisabled, 0.400f, 0.400f, 0.400f, 1.00f); // #666666
+        style.setColor(ImGuiCol.TextSelectedBg, 0.55f, 0.32f, 0.10f, 0.55f); // orange selection
+
+        // === Metrics — unchanged from your original ===
+        style.setWindowRounding(2.0f);
+        style.setFrameRounding(2.0f);
+        style.setScrollbarRounding(2.0f);
+        style.setGrabRounding(2.0f);
+        style.setTabRounding(2.0f);
+        style.setFramePadding(4.0f, 3.0f);
+        style.setItemSpacing(4.0f, 4.0f);
     }
 
     public void initComponentList() {
@@ -99,7 +182,7 @@ public class EditorLayer {
             subclasses.add((Class<? extends Component>) ScriptManager.getClassMap().get(className));
         }
 
-        componentList = new String[subclasses.size()-1];
+        componentList = new String[subclasses.size() - 1];
         int index = 0;
         for (Class<? extends Component> cls : subclasses) {
             if (cls.isAssignableFrom(Transform.class)) {
@@ -116,14 +199,7 @@ public class EditorLayer {
 
     // Creates dockable space
     void createDockSpace() {
-        int windowFlags = ImGuiWindowFlags.MenuBar
-                | ImGuiWindowFlags.NoDocking
-                | ImGuiWindowFlags.NoTitleBar
-                | ImGuiWindowFlags.NoCollapse
-                | ImGuiWindowFlags.NoResize
-                | ImGuiWindowFlags.NoMove
-                | ImGuiWindowFlags.NoBringToFrontOnFocus
-                | ImGuiWindowFlags.NoNavFocus;
+        int windowFlags = ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
         ImGuiViewport viewport = ImGui.getMainViewport();
         ImGui.setNextWindowPos(viewport.getPosX(), viewport.getPosY());
@@ -144,53 +220,43 @@ public class EditorLayer {
         ImGui.end();
     }
 
-    public void renderDebug() throws InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException, NoSuchMethodException {
+    public void renderDebug() throws Exception {
         imGuiGlfw.newFrame();
         imGuiGl3.newFrame();
         ImGui.newFrame();
         createDockSpace();
 
         renderMenuBar();
-
-        ImGui.begin("Hierarchy");
-        if (ImGui.button("Create GameObject")) {
-            GameObject g = ECSWorld.createGameObject("GameObject");
-            g.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
-        }
-        for (GameObject go : ECSWorld.getGameObjects()) {
-            if (ImGui.button(go.getName())) {
-                selected = go.getName();
-            }
-            if (ImGui.beginDragDropSource()) {
-                ImGui.setDragDropPayload("GAME_OBJECT", go);
-                ImGui.text(go.getName());
-                ImGui.endDragDropSource();
-            }
-            if (ImGui.beginDragDropTarget()) {
-                Object payload = ImGui.acceptDragDropPayload("String");
-                if (payload instanceof String dropped) {
-                    Component component = go.addComponent(getComponent(dropped));
-                    if (component != null) {
-                        try {
-                            component.start();
-                        } catch (Exception e) {
-                            log.error("e: ", e);
-                        }
-                    }
-                }
-                ImGui.endDragDropTarget();
-            }
-        }
-        ImGui.end();
-
+        renderHierarchy();
         renderViewPort();
 
         ImGui.begin("Inspector");
         GameObject go = ECSWorld.findGameObjectByName(selected);
         if (go != null) {
+            if (!selected.equals(prevSelected)) {
+                nameBuffer = new ImString(go.getName(), 256);
+                prevSelected = selected;
+            }
             ImGui.text("Name");
             ImGui.sameLine();
-            ImGui.inputText("##Name", new ImString(go.getName()));
+            if (ImGui.inputText("##Name", nameBuffer)) {
+                if (!nameBuffer.get().isEmpty()) {
+                    int count = countDuplicates(nameBuffer.get());
+                    if (count < 1) {
+                        go.setName(nameBuffer.get());
+                        selected = nameBuffer.get();
+                        prevSelected = nameBuffer.get();
+                    } else {
+                        int suffix = count;
+                        while (countDuplicates(nameBuffer.get() + " (" + suffix + ")") > 0) {
+                            suffix++;
+                        }
+                        go.setName(nameBuffer.get() + " (" + suffix + ")");
+                        prevSelected = go.getName();
+                        selected = go.getName();
+                    }
+                }
+            }
             tagComponent(go);
             transformComponent(go);
             rigidBodyComponent(go);
@@ -227,6 +293,96 @@ public class EditorLayer {
         renderSceneManager();
         ImGui.render();
         imGuiGl3.renderDrawData(ImGui.getDrawData());
+    }
+
+    private void renderHierarchy() throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        ImGui.begin("Hierarchy");
+
+        ImGui.pushStyleColor(ImGuiCol.FrameBg, 0.12f, 0.12f, 0.18f, 1.0f);
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX());
+        if (searchBuffer == null) searchBuffer = new ImString(256);
+        ImGui.inputTextWithHint("##Search", "Search...", searchBuffer);
+        ImGui.popStyleColor();
+        ImGui.spacing();
+
+        if (ImGui.isMouseClicked(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
+            ImGui.openPopup("HierarchyEdit");
+        }
+
+        if (ImGui.beginPopup("HierarchyEdit")) {
+            if (ImGui.menuItem("Create GameObject")) {
+                int count = countDuplicates("GameObject");
+                String name;
+                if (count < 1) {
+                    name = "GameObject";
+                } else {
+                    int suffix = count;
+                    while (countDuplicates("GameObject" + " (" + suffix + ")") > 0) {
+                        suffix++;
+                    }
+                    name = "GameObject" + " (" + suffix + ")";
+                }
+                GameObject g = ECSWorld.createGameObject(name);
+                g.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
+            }
+            ImGui.endMenu();
+        }
+
+        Iterator<GameObject> gameObjectIterator = ECSWorld.getGameObjects().listIterator();
+        while (gameObjectIterator.hasNext()) {
+            String search = searchBuffer.get().toLowerCase();
+            GameObject go = gameObjectIterator.next();
+            if (!search.isEmpty() && !go.getName().toLowerCase().contains(search)) continue;
+
+            float itemHeight = 14;
+            float x = ImGui.getCursorScreenPosX();
+            float y = ImGui.getCursorScreenPosY();
+
+            boolean isSelected = selected != null && selected.equals(go.getName());
+            if (ImGui.selectable("##" + go.getName(), isSelected, ImGuiSelectableFlags.None, 0, itemHeight)) {
+                selected = go.getName();
+            }
+
+// draw text centered manually over the selectable
+            float textY = y + (itemHeight - ImGui.getTextLineHeight()) / 2;
+            ImGui.getWindowDrawList().addText(x + 8, textY, ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1.0f), go.getName());
+
+            if (ImGui.isItemClicked(ImGuiMouseButton.Right)) {
+                selected = go.getName();
+                ImGui.openPopup("GameObjectContext##" + go.getName());
+            }
+            if (ImGui.beginPopup("GameObjectContext##" + go.getName())) {
+                if (ImGui.menuItem("Delete")) {
+                    gameObjectIterator.remove();
+                    if (selected != null && selected.equals(go.getName())) {
+                        selected = null;
+                        prevSelected = null;
+                    }
+                    RenderManager.rebuild();
+                }
+                ImGui.endPopup();
+            }
+            if (ImGui.beginDragDropSource()) {
+                ImGui.setDragDropPayload("GAME_OBJECT", go);
+                ImGui.text(go.getName());
+                ImGui.endDragDropSource();
+            }
+            if (ImGui.beginDragDropTarget()) {
+                Object payload = ImGui.acceptDragDropPayload("String");
+                if (payload instanceof String dropped) {
+                    Component component = go.addComponent(getComponent(dropped));
+                    if (component != null) {
+                        try {
+                            component.start();
+                        } catch (Exception e) {
+                            log.error("e: ", e);
+                        }
+                    }
+                }
+                ImGui.endDragDropTarget();
+            }
+        }
+        ImGui.end();
     }
 
     void renderViewPort() {
@@ -271,7 +427,7 @@ public class EditorLayer {
         ImGui.end();
     }
 
-    private void renderMenuBar() {
+    private void renderMenuBar() throws Exception {
         if (ImGui.beginMainMenuBar()) {
             if (ImGui.beginMenu("File")) {
                 if (ImGui.menuItem("New")) {
@@ -302,9 +458,9 @@ public class EditorLayer {
         }
     }
 
-    private void build() {
+    private void build() throws Exception {
         PakWriter.writePak(AssetManager.getINSTANCE().getWorkingDirectory());
-
+        PakWriter.resetCounter();
     }
 
     private Component getComponent(int n) throws InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -601,7 +757,7 @@ public class EditorLayer {
         }
 
         if (ImGui.beginPopup("FileEditPopup")) {
-            if (ImGui.beginMenu("Create"))  {
+            if (ImGui.beginMenu("Create")) {
                 if (ImGui.menuItem("Folder")) {
                     System.out.println("Clicked folder");
                 }
@@ -682,8 +838,7 @@ public class EditorLayer {
                 if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
                     renamingFile = null;
                 }
-            }
-            else {
+            } else {
                 ImGui.textWrapped(name);
             }
 
@@ -730,8 +885,7 @@ public class EditorLayer {
                 ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.0f, 0.0f, 1.0f);
                 ImGui.text(line.getMessage());
                 ImGui.popStyleColor();
-            }
-            else {
+            } else {
                 ImGui.text(line.getMessage());
             }
         }
@@ -750,7 +904,7 @@ public class EditorLayer {
                 for (Entry<Integer, String> entry : SceneManager.getSceneList().entrySet()) {
                     int sceneIndex = entry.getKey();
                     String scenePath = entry.getValue();
-                    ImGui.text(scenePath.substring(scenePath.lastIndexOf("/")+1));
+                    ImGui.text(scenePath.substring(scenePath.lastIndexOf("/") + 1));
                     ImGui.sameLine();
 
                     float itemWidth = ImGui.calcTextSize(String.valueOf(sceneIndex)).x;
@@ -781,5 +935,17 @@ public class EditorLayer {
 
     public ImGuiImplGlfw getImGuiGlfw() {
         return imGuiGlfw;
+    }
+
+    private int countDuplicates(String name) {
+        int count = 0;
+        for (GameObject go : ECSWorld.getGameObjects()) {
+            int index = go.getName().lastIndexOf("(");
+            String stripped = (index == -1 ? go.getName() : go.getName().substring(0, index - 1));
+            if (go.getName().equals(name) || stripped.equals(name)) {
+                count++;
+            }
+        }
+        return count;
     }
 }

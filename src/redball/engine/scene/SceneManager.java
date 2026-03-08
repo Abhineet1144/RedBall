@@ -16,8 +16,6 @@ public class SceneManager {
             for (String key : PakWriter.getManifestFile().keySet()) {
                 if (key.endsWith(".scene")) {
                     sceneList.put(index, PakWriter.getManifestFile().get(key));
-                    System.out.println(sceneList.get(index));
-                    System.out.println(key);
                     index++;
                 }
             }
@@ -34,12 +32,11 @@ public class SceneManager {
     }
 
     public static void loadDefault() {
-        SaveManager.loadScene(sceneList.get(2));
-        AssetManager.getINSTANCE().currentWorkingScene = sceneList.get(2);
+        SaveManager.loadScene(sceneList.get(0));
+        AssetManager.getINSTANCE().currentWorkingScene = sceneList.get(0);
     }
 
     public static void switchScenes(int index) {
-        // need to check for null
         SaveManager.loadScene(sceneList.get(index));
     }
 

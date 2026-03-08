@@ -16,16 +16,20 @@ public class PakWriter {
     private static final JsonArray manifest = new JsonArray();
     private static final Map<String, String> manifestFile = new HashMap<>();
 
-    public static void writePak(String fromPath) {
+    public static void writePak(String path) throws Exception {
+        if (AssetManager.getINSTANCE().getWorkingDirectory().equals(path)) {
+            if (!ScriptManager.compileAll(AssetManager.getINSTANCE().getScriptDirectory())) {
+                System.err.println("Build failed fix errors");
+                return;
+            }
+        }
         Gson gson = new Gson();
-
-        File root = new File(fromPath);
+        File root = new File(path);
         for (File file : root.listFiles()) {
             if (file.getName().equals("build")) continue;
             if (file.isDirectory()) {
                 writePak(file.getPath());
-            }
-            else {
+            } else {
                 JsonObject meta = new JsonObject();
                 byte[] fileBytes = new byte[(int) file.length()];
                 try (FileInputStream fis = new FileInputStream(file)) {
@@ -42,6 +46,9 @@ public class PakWriter {
                 }
                 counter++;
             }
+        }
+        if (AssetManager.getINSTANCE().getWorkingDirectory().equals(path)) {
+            System.out.println("Successfully Built!!");
         }
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(AssetManager.getINSTANCE().getBuildDirectory() + "manifest.meta"))) {
             String json = gson.toJson(manifest);
@@ -75,5 +82,9 @@ public class PakWriter {
 
     public static Map<String, String> getManifestFile() {
         return manifestFile;
+    }
+
+    public static void resetCounter() {
+        PakWriter.counter = 0;
     }
 }

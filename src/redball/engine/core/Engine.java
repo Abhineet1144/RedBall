@@ -68,9 +68,7 @@ public class Engine {
             PakWriter.loadPak();
         }
 
-        if (!build) {
-            EditorLayer.init(windowManager.getWindow());
-        }
+        EditorLayer.init(windowManager.getWindow());
 
         KeyboardInput.init(windowManager.getWindow(), EditorLayer.getINSTANCE().getImGuiGlfw());
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());

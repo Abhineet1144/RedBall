@@ -15,6 +15,7 @@ import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.texture.TextureManager;
+import redball.engine.scene.SceneManager;
 import redball.engine.utils.PakWriter;
 
 import java.io.*;
@@ -32,10 +33,8 @@ public class SaveManager {
     }
 
     public static void loadScene(String scene) {
-        System.out.println("sss" + scene);
         try (BufferedInputStream sceneIn = new BufferedInputStream(new FileInputStream(scene))) {
             SaveObject saveObject = SaveObject.parseFrom(IOUtils.toByteArray(sceneIn));
-            AssetManager.getINSTANCE().currentWorkingScene = scene;
 
             if (PhysicsSystem.getWorld() != null) {
                 PhysicsSystem.clear();
@@ -65,6 +64,8 @@ public class SaveManager {
             }
 
             RenderManager.prepare(ECSWorld.findGameObjectByTag("Camera"));
+            ECSWorld.start();
+            AssetManager.getINSTANCE().currentWorkingScene = scene;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
