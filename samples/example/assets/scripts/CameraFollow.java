@@ -4,6 +4,8 @@ import redball.engine.core.Engine;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.Component;
 import redball.engine.entity.components.Transform;
+import redball.engine.input.KeyboardInput;
+import redball.engine.scene.SceneManager;
 
 import java.io.IOException;
 import java.io.Serial;

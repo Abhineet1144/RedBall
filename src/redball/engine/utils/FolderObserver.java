@@ -11,6 +11,7 @@ public class FolderObserver {
 
     public static void start() throws Exception {
         File directory = new File(AssetManager.getINSTANCE().getScriptDirectory());
+        System.out.println(directory.getPath());
 
         FileAlterationObserver observer = new FileAlterationObserver(directory);
 
