@@ -7,7 +7,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="Reball" />
+    <orderEntry type="module" module-name="Redball" />
     <orderEntry type="library" name="lib" level="project" />
   </component>
 </module>
