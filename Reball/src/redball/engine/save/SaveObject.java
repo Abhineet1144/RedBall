@@ -13,7 +13,6 @@ import java.util.List;
 
 public class SaveObject implements Serializable {
     private final ArrayList<GameObject> gameObjects;
-
     private List<String> textures;
 
     public SaveObject() {

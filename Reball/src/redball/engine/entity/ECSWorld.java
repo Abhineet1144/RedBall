@@ -1,16 +1,26 @@
 package redball.engine.entity;
 
-import redball.engine.entity.components.Component;
-import redball.engine.entity.components.Tag;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.SerializationUtils;
+import org.joml.Vector2f;
+import redball.engine.core.Engine;
+import redball.engine.entity.components.*;
 import redball.engine.renderer.BatchRenderer;
 import redball.engine.renderer.RenderManager;
+import redball.engine.renderer.texture.TextureManager;
+import redball.engine.save.SaveObject;
+import redball.engine.utils.PakWriter;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ECSWorld {
     // List of all gameobjects
     private static List<GameObject> gameObjects = new ArrayList<>();
+    private static final List<GameObject> pendingAdd = new ArrayList<>();
 
     public ECSWorld() {}
 
@@ -114,6 +124,11 @@ public class ECSWorld {
         for (GameObject g : gameObjects) {
             g.update(dt);
         }
+        if (!pendingAdd.isEmpty()) {
+            gameObjects.addAll(pendingAdd);
+            pendingAdd.clear();
+            RenderManager.rebuild();
+        }
     }
 
     public static void start() {
@@ -130,12 +145,43 @@ public class ECSWorld {
         ECSWorld.gameObjects = gameObjects;
     }
 
-    public static void initAll() {
-        for (GameObject go : gameObjects) {
-            // This calls Rigidbody.start() which re-creates and adds the body
-            for (Component component : go.getComponents()) {
-                component.start();
+    public static void instantiate(GameObject prefab) {
+        GameObject go = SerializationUtils.deserialize(SerializationUtils.serialize(prefab));
+        SpriteRenderer sr = go.getComponent(SpriteRenderer.class);
+        Rigidbody rb = go.getComponent(Rigidbody.class);
+        if (rb != null) {
+            rb.createBody();
+        }
+
+        if (sr != null && sr.getFilePath() != null) {
+            if (Engine.isBuild) {
+                sr.setTexture(TextureManager.getTexture(PakWriter.getManifestFile().get(sr.getFilePath())));
+            } else {
+                sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
             }
         }
+        go.start();
+        pendingAdd.add(go);
+    }
+
+    public static void instantiate(GameObject prefab, Vector2f position) {
+        GameObject go = SerializationUtils.deserialize(SerializationUtils.serialize(prefab));
+        go.getComponent(Transform.class).setXPosition(position.x);
+        go.getComponent(Transform.class).setYPosition(position.y);
+        SpriteRenderer sr = go.getComponent(SpriteRenderer.class);
+        Rigidbody rb = go.getComponent(Rigidbody.class);
+        if (rb != null) {
+            rb.createBody();
+        }
+
+        if (sr != null && sr.getFilePath() != null) {
+            if (Engine.isBuild) {
+                sr.setTexture(TextureManager.getTexture(PakWriter.getManifestFile().get(sr.getFilePath())));
+            } else {
+                sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
+            }
+        }
+        go.start();
+        pendingAdd.add(go);
     }
 }

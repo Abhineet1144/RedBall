@@ -8,6 +8,8 @@ import imgui.type.ImBoolean;
 import imgui.type.ImInt;
 import imgui.type.ImString;
 import imgui.flag.ImGuiCol;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.SerializationUtils;
 import org.joml.Vector3f;
 import org.reflections.Reflections;
 import redball.engine.core.Engine;
@@ -20,12 +22,13 @@ import redball.engine.entity.components.Component;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.texture.Texture;
 import redball.engine.save.SaveManager;
+import redball.engine.save.SaveObject;
 import redball.engine.scene.AssetManager;
 import redball.engine.scene.SceneManager;
 import redball.engine.utils.PakWriter;
 import redball.engine.utils.ScriptManager;
 
-import java.io.File;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -364,6 +367,13 @@ public class EditorLayer {
                     }
                     RenderManager.rebuild();
                 }
+                if (ImGui.menuItem("Create Prefab")) {
+                    try (BufferedOutputStream sceneOut = new BufferedOutputStream(new FileOutputStream(AssetManager.getINSTANCE().prefabDirectory + go.getName() + ".prefab"))) {
+                        IOUtils.write(SerializationUtils.serialize(go), sceneOut);
+                    } catch (IOException e) {
+                        System.out.println("ERROR:" + e);
+                    }
+                }
                 ImGui.endPopup();
             }
             if (ImGui.beginDragDropSource()) {
@@ -386,6 +396,24 @@ public class EditorLayer {
                 ImGui.endDragDropTarget();
             }
         }
+
+        float availX = ImGui.getContentRegionAvailX();
+        float availY = ImGui.getContentRegionAvailY();
+        ImGui.dummy(availX == 0 ? 1.0f : availX, availY == 0 ? 1.0f : availY);
+
+        if (ImGui.beginDragDropTarget()) {
+            Object stringPayload = ImGui.acceptDragDropPayload("String");
+            if (stringPayload instanceof String dropped) {
+                try (BufferedInputStream prefab = new BufferedInputStream(new FileInputStream(dropped))) {
+                    // needs fix
+                    ECSWorld.instantiate(SerializationUtils.deserialize(IOUtils.toByteArray(prefab)));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            ImGui.endDragDropTarget();
+        }
+
         ImGui.end();
     }
 
@@ -485,7 +513,6 @@ public class EditorLayer {
             if (cls.getSimpleName().equals(name)) {
                 Constructor<?> constructor = cls.getConstructors()[0];
                 Object[] params = new Object[constructor.getParameterCount()];
-                // params are already null by default
                 Component instance = (Component) constructor.newInstance(params);
                 return instance;
             }
@@ -718,6 +745,16 @@ public class EditorLayer {
                             Object payload = ImGui.acceptDragDropPayload("GAME_OBJECT");
                             if (payload instanceof GameObject dropped) {
                                 field.set(component, dropped);
+                            }
+
+                            Object stringPayload = ImGui.acceptDragDropPayload("String");
+                            if (stringPayload instanceof String dropped) {
+                                try (BufferedInputStream prefab = new BufferedInputStream(new FileInputStream(dropped))) {
+                                    GameObject go = SerializationUtils.deserialize(IOUtils.toByteArray(prefab));
+                                    field.set(component, go);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
                             }
                             ImGui.endDragDropTarget();
                         }

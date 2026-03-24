@@ -44,7 +44,7 @@ public class BatchRenderer {
     private int verticesAdded = 0;
     private List<GameObject> entities;
     private float[] verticesData = new float[OVERALL_SIZE * MAX_ENTITIES * 4];
-    private int[] vertexIndex = new int[OVERALL_SIZE * 6];
+    private int[] vertexIndex = new int[MAX_ENTITIES * 6];
     private int hightest = 0;
     private int vao;
     int vbo;
@@ -113,6 +113,7 @@ public class BatchRenderer {
         glEnableVertexAttribArray(3);
 
         indexCount = verticesAdded;
+        verticesAdded = 0;
         return vao;
     }
 

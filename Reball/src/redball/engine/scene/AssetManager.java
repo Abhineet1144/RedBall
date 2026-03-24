@@ -11,6 +11,7 @@ public class AssetManager {
     public String scriptDirectory;
     public String compileDirectory;
     public String buildDirectory;
+    public String prefabDirectory;
     private File file;
     public String currentWorkingScene = "";
 
@@ -20,6 +21,7 @@ public class AssetManager {
         scriptDirectory = workingDirectory + File.separatorChar + "assets/scripts" + File.separatorChar;
         compileDirectory = workingDirectory + File.separatorChar + "out" + File.separatorChar;
         buildDirectory = workingDirectory + File.separatorChar + "build" + File.separatorChar;
+        prefabDirectory = workingDirectory + File.separatorChar + "assets/prefabs" + File.separatorChar;
         file = new File(workingDirectory);
     }
 
