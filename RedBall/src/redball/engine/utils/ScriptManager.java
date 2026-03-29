@@ -103,6 +103,7 @@ public class ScriptManager implements Runnable {
             };
 
             loaderMap.put(fullName, loader);
+            System.out.printf(fullName);
             Class<?> clazz = loader.loadClass(fullName);
             classMap.put(fullName, clazz);
         }

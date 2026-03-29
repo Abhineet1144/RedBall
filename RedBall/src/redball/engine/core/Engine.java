@@ -68,13 +68,12 @@ public class Engine {
             PakWriter.loadPak();
         }
 
-        EditorLayer.init(windowManager.getWindow());
-
-        KeyboardInput.init(windowManager.getWindow(), EditorLayer.getINSTANCE().getImGuiGlfw());
+//        EditorLayer.init(windowManager.getWindow());
+        KeyboardInput.init(windowManager.getWindow(), EditorLayer.getINSTANCE());
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
 
         ScriptManager.compileAll(AssetManager.getINSTANCE().getScriptDirectory());
-        EditorLayer.getINSTANCE().initComponentList();
+//        EditorLayer.getINSTANCE().initComponentList();
 
         windowManager.loop(shader, build);
     }

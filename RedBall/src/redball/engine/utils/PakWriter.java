@@ -63,7 +63,6 @@ public class PakWriter {
         JsonArray jsonArray;
         try (BufferedReader br = new BufferedReader(new FileReader("manifest.meta"))) {
             jsonArray = gson.fromJson(br, JsonArray.class);
-            System.out.println(jsonArray);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -76,8 +75,6 @@ public class PakWriter {
                 manifestFile.put(key, value);
             }
         }
-        PakWriter.getManifestFile().forEach((k, v) -> System.out.println("KEY: " + k + " → " + v));
-
     }
 
     public static Map<String, String> getManifestFile() {
