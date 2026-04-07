@@ -1,6 +1,7 @@
 package redball.engine.utils;
 
 import org.apache.commons.io.monitor.*;
+import redball.engine.editor.EditorLayer;
 import redball.engine.scene.AssetManager;
 
 import java.io.File;
@@ -21,12 +22,29 @@ public class FolderObserver {
                 System.out.println("File changed: " + file.getName());
                 ScriptManager.scheduleReload(file);
             }
+
+            @Override
+            public void onFileCreate(File file) {
+                try {
+                    ScriptManager.compileAll(AssetManager.getINSTANCE().getScriptDirectory());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void onFileDelete(File file) {
+                try {
+                    ScriptManager.compileAll(AssetManager.getINSTANCE().getScriptDirectory());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
         });
 
         long pollingInterval = 1000;
         monitor = new FileAlterationMonitor(pollingInterval, observer);
         monitor.start();
-
         System.out.println("Watching: " + directory.getAbsolutePath());
     }
 

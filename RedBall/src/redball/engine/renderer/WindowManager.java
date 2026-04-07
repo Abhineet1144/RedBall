@@ -81,8 +81,7 @@ public class WindowManager {
         shader.use();
         SceneManager.init();
         SceneManager.loadDefault();
-        if (build)
-        {
+        if (build) {
             ECSWorld.start();
         }
 
@@ -113,15 +112,17 @@ public class WindowManager {
             // SWAP
             glfwPollEvents();
             glfwSwapBuffers(window);
+
             // FPS Counter
-            if (time - lastSecond >= 1.0) {
-                setTitle("Red Ball " + AssetManager.getINSTANCE().currentWorkingScene + " FPS: " + fps);
-                fps = 0;
-                lastSecond += 1.0;
-            }
             fps++;
+            if (time - lastSecond >= 1.0) {
+                setTitle("RedBall Engine " + AssetManager.getINSTANCE().currentWorkingScene);
+                EditorLayer.setFps((int) (fps ));
+                fps = 0;
+                lastSecond = time;
+            }
         }
-        EditorLayer.getINSTANCE().dispose();
+        if (!Engine.isBuild) EditorLayer.getINSTANCE().dispose();
         glfwTerminate();
         FolderObserver.stop();
     }

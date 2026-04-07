@@ -1,27 +1,20 @@
 package redball.engine.save;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.joml.Vector3f;
 import redball.engine.core.Engine;
 import redball.engine.entity.components.*;
-import redball.engine.renderer.texture.Texture;
 import redball.engine.scene.AssetManager;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.texture.TextureManager;
-import redball.engine.scene.SceneManager;
 import redball.engine.utils.PakWriter;
+import redball.engine.utils.ScriptManager;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 public class SaveManager {
     public static void save() {
@@ -56,7 +49,7 @@ public class SaveManager {
 
                 if (sr != null && sr.getFilePath() != null) {
                     if (Engine.isBuild) {
-                        sr.setTexture(TextureManager.getTexture(PakWriter.getManifestFile().get(sr.getFilePath())));
+                        sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
                     } else {
                         sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
                     }
@@ -83,6 +76,38 @@ public class SaveManager {
             IOUtils.write(new SaveObject(gameObjects).toByteArray(), sceneOut);
         } catch (IOException e) {
             System.out.println("ERROR:" + e);
+        }
+    }
+
+    public static void newScript(String scriptName) throws IOException {
+
+        String template = "package car.assets.scripts;\n" +
+                "\n" +
+                "import redball.engine.entity.components.Component;\n" +
+                "\n" +
+                "import java.io.Serial;\n" +
+                "\n" +
+                "public class " + scriptName + " extends Component {\n" +
+                "    @Serial\n" +
+                "    private static final long serialVersionUID = 1L;\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public void start() {\n" +
+                "        super.start();\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public void update(float dt) {\n" +
+                "\n" +
+                "    }\n" +
+                "}\n";
+
+        FileOutputStream fileOutputStream = new FileOutputStream(AssetManager.getINSTANCE().getScriptDirectory() + File.separator + scriptName + ".java");
+        fileOutputStream.write(template.getBytes());
+        try {
+            ScriptManager.compileAll(AssetManager.getINSTANCE().getScriptDirectory());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

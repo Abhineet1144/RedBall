@@ -23,6 +23,16 @@ public class TextureManager {
         }
     }
 
+    public static Texture getTexture(String name, byte[] data) {
+        if (textureMap.containsKey(name)) {
+            return textureMap.get(name);
+        } else {
+            Texture tex = new Texture(name, data);
+            textureMap.put(name, tex);
+            return tex;
+        }
+    }
+
     public static Collection<String> listBoundTextures() {
         return textureMap.keySet();
     }

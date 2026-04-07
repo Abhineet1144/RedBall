@@ -1,6 +1,6 @@
 package redball.engine.core;
 
-import redball.engine.Logger.LogCapture;
+import redball.engine.logger.LogCapture;
 import redball.engine.editor.EditorLayer;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
@@ -65,7 +65,7 @@ public class Engine {
         windowManager.init();
 
         if (build) {
-            PakWriter.loadPak();
+            PakWriter.buildIndex();
         }
 
         EditorLayer.init(windowManager.getWindow());

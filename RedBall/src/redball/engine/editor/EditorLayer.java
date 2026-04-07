@@ -13,8 +13,8 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.joml.Vector3f;
 import org.reflections.Reflections;
 import redball.engine.core.Engine;
-import redball.engine.Logger.LogCapture;
-import redball.engine.Logger.LogLine;
+import redball.engine.logger.LogCapture;
+import redball.engine.logger.LogLine;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.*;
@@ -22,7 +22,6 @@ import redball.engine.entity.components.Component;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.texture.Texture;
 import redball.engine.save.SaveManager;
-import redball.engine.save.SaveObject;
 import redball.engine.scene.AssetManager;
 import redball.engine.scene.SceneManager;
 import redball.engine.utils.PakWriter;
@@ -54,20 +53,23 @@ public class EditorLayer {
     private File renamingFile = null;
     private String spriteName = "";
     private boolean showNewScenePopup = false;
+    private boolean showNewScriptPopup = false;
     private ImString sceneName = new ImString(256);
+    private ImString scriptName = new ImString(256);
     private ImBoolean showSceneManager = new ImBoolean(false);
 
-    private String[] componentList = null;
-    private Set<Class<? extends Component>> subclasses;
+    private static boolean compileSuccess = false;
+    private static int fps = 0;
+
+    private static String[] componentList = null;
+    private static Set<Class<? extends Component>> subclasses;
 
     private ImString nameBuffer = null;
     private String prevSelected = null;
 
     private ImString searchBuffer = null;
     ImInt fixtureSelectedIndex = new ImInt(0);
-    String[] bodyFixtures = Arrays.stream(BodyFixture.values())
-            .map(Enum::name)
-            .toArray(String[]::new);
+    String[] bodyFixtures = Arrays.stream(BodyFixture.values()).map(Enum::name).toArray(String[]::new);
 
     public static void init(Long window) {
         INSTANCE = new EditorLayer(window);
@@ -183,7 +185,8 @@ public class EditorLayer {
         style.setItemSpacing(4.0f, 4.0f);
     }
 
-    public void initComponentList() {
+    public static void initComponentList() {
+        System.out.println("Checking");
         Reflections reflections = new Reflections("redball.engine");
         subclasses = reflections.getSubTypesOf(Component.class);
         for (String className : ScriptManager.getClassMap().keySet()) {
@@ -196,6 +199,7 @@ public class EditorLayer {
             if (cls.isAssignableFrom(Transform.class)) {
                 continue;
             }
+            System.out.println(cls.getSimpleName());
             componentList[index] = cls.getSimpleName();
             index++;
         }
@@ -203,6 +207,14 @@ public class EditorLayer {
 
     public static EditorLayer getINSTANCE() {
         return INSTANCE;
+    }
+
+    public static boolean isCompileSuccess() {
+        return compileSuccess;
+    }
+
+    public static void setCompileSuccess(boolean compileSuccess) {
+        EditorLayer.compileSuccess = compileSuccess;
     }
 
     // Creates dockable space
@@ -232,6 +244,9 @@ public class EditorLayer {
         imGuiGlfw.newFrame();
         imGuiGl3.newFrame();
         ImGui.newFrame();
+
+        renderStatusBar();
+
         createDockSpace();
 
         renderMenuBar();
@@ -299,8 +314,10 @@ public class EditorLayer {
         assetBrowser();
         renderConsole();
         renderSceneManager();
+
         ImGui.render();
         imGuiGl3.renderDrawData(ImGui.getDrawData());
+
     }
 
     private void renderHierarchy() throws InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -492,7 +509,6 @@ public class EditorLayer {
 
     private void build() throws Exception {
         PakWriter.writePak(AssetManager.getINSTANCE().getWorkingDirectory());
-        PakWriter.resetCounter();
     }
 
     private Component getComponent(int n) throws InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -766,7 +782,7 @@ public class EditorLayer {
         }
     }
 
-    private void assetBrowser() {
+    private void assetBrowser() throws IOException {
         ImGui.begin("AssetBrowser");
         float thumbnailSize = 64;
         float padding = 8;
@@ -776,7 +792,6 @@ public class EditorLayer {
         int columnCount = Math.max(1, (int) (panelWidth / cellSize));
         currentFolder = AssetManager.getINSTANCE().getFile().getPath();
         breadCrumbs = currentFolder.split("/");
-
 
         for (int i = 0; i < breadCrumbs.length; i++) {
             if (i != 0) {
@@ -810,8 +825,12 @@ public class EditorLayer {
                 if (ImGui.menuItem("Folder")) {
                     System.out.println("Clicked folder");
                 }
-                if (ImGui.menuItem("Script")) {
-                    System.out.println("Clicked script");
+                if (currentFolder.contains("scripts")) {
+                    if (ImGui.menuItem("Script")) {
+                        System.out.println("Clicked script");
+                        showNewScriptPopup = true;
+                        scriptName.set("");
+                    }
                 }
                 if (ImGui.menuItem("Scene")) {
                     showNewScenePopup = true;
@@ -822,9 +841,12 @@ public class EditorLayer {
             ImGui.endPopup();
         }
 
-        // outside the menu, in your main imgui render
         if (showNewScenePopup) {
             ImGui.openPopup("New Scene");
+        }
+
+        if (showNewScriptPopup) {
+            ImGui.openPopup("New Script");
         }
 
         if (ImGui.beginPopupModal("New Scene")) {
@@ -839,6 +861,24 @@ public class EditorLayer {
             ImGui.sameLine();
             if (ImGui.button("Cancel")) {
                 showNewScenePopup = false;
+                ImGui.closeCurrentPopup();
+            }
+            ImGui.endPopup();
+        }
+
+        if (ImGui.beginPopupModal("New Script")) {
+            ImGui.inputTextWithHint("##Script Name", "Enter script name...", scriptName);
+
+            if (ImGui.button("Create")) {
+                SaveManager.newScript(scriptName.get());
+                initComponentList();
+                showNewScriptPopup = false;
+                SceneManager.init();
+                ImGui.closeCurrentPopup();
+            }
+            ImGui.sameLine();
+            if (ImGui.button("Cancel")) {
+                showNewScriptPopup = false;
                 ImGui.closeCurrentPopup();
             }
             ImGui.endPopup();
@@ -967,6 +1007,48 @@ public class EditorLayer {
         }
     }
 
+    void renderStatusBar() {
+        float height = 22.0f;
+        ImGui.setNextWindowPos(0, io.getDisplaySizeY() - height);
+        ImGui.setNextWindowSize(io.getDisplaySizeX(), height);
+
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, 0f);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowBorderSize, 1f);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 8f, 3f);
+
+        ImGui.begin("##StatusBar", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoBringToFrontOnFocus);
+
+        if (!Engine.isPlaying) {
+            ImGui.textColored(0.3f, 0.7f, 1.0f, 1.0f, "EDIT MODE");
+        } else {
+            ImGui.textColored(0.8f, 0.8f, 0.3f, 1.0f, "PLAY MODE");
+        }
+
+        ImGui.sameLine();
+        String sceneName = AssetManager.getINSTANCE().currentWorkingScene;
+        sceneName = sceneName.substring(sceneName.lastIndexOf("/") + 1);
+        ImGui.text(sceneName);
+
+        ImGui.sameLine();
+        if (compileSuccess) {
+            ImGui.textColored(0.4f, 0.8f, 0.4f, 1.0f, "Ready");
+        } else {
+            ImGui.textColored(0.9f, 0.3f, 0.3f, 1.0f, "Failed");
+        }
+
+        ImGui.sameLine();
+        String rightText = fps + " FPS | Errors: " + ScriptManager.getErrorCount();
+        float windowWidth = ImGui.getWindowSizeX();
+        float textWidth = ImGui.calcTextSize(rightText).x;
+
+        ImGui.sameLine();
+        ImGui.setCursorPosX(windowWidth - textWidth - 10);
+        ImGui.text(rightText);
+
+        ImGui.end();
+        ImGui.popStyleVar(3);
+    }
+
     public String getIcon(String icon) {
         return switch (icon) {
             case "folder" -> "\uF07B";
@@ -996,5 +1078,9 @@ public class EditorLayer {
             }
         }
         return count;
+    }
+
+    public static void setFps(int fps) {
+        EditorLayer.fps = fps;
     }
 }

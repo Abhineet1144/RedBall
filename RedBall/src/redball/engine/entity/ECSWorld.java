@@ -1,19 +1,13 @@
 package redball.engine.entity;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.joml.Vector2f;
 import redball.engine.core.Engine;
 import redball.engine.entity.components.*;
-import redball.engine.renderer.BatchRenderer;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.texture.TextureManager;
-import redball.engine.save.SaveObject;
 import redball.engine.utils.PakWriter;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -155,7 +149,7 @@ public class ECSWorld {
 
         if (sr != null && sr.getFilePath() != null) {
             if (Engine.isBuild) {
-                sr.setTexture(TextureManager.getTexture(PakWriter.getManifestFile().get(sr.getFilePath())));
+                sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
             } else {
                 sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
             }
@@ -176,7 +170,7 @@ public class ECSWorld {
 
         if (sr != null && sr.getFilePath() != null) {
             if (Engine.isBuild) {
-                sr.setTexture(TextureManager.getTexture(PakWriter.getManifestFile().get(sr.getFilePath())));
+                sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
             } else {
                 sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
             }

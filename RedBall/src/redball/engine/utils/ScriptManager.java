@@ -1,6 +1,7 @@
 package redball.engine.utils;
 
 import redball.engine.core.Engine;
+import redball.engine.editor.EditorLayer;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.Component;
@@ -9,27 +10,25 @@ import redball.engine.scene.AssetManager;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class ScriptManager implements Runnable {
     private static final Map<String, ClassLoader> loaderMap = new ConcurrentHashMap<>();
     private static final Map<String, Class<?>> classMap = new ConcurrentHashMap<>();
     private static final ConcurrentLinkedQueue<File> reloadQueue = new ConcurrentLinkedQueue<>();
     private static final String OUTPUT_DIR = ScriptManager.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-    public static volatile boolean reloaded = false;
-    private static int res = 0;
+    private static volatile boolean reloaded = false;
+    private static int errorCount = 0;
 
     @Override
     public void run() {
@@ -40,27 +39,24 @@ public class ScriptManager implements Runnable {
         }
     }
 
-    public static boolean compileAll(String scriptsDir) throws Exception {
+    public static void compileAll(String scriptsDir) throws Exception {
         if (Engine.isBuild) {
             loadAllFromPak();
-            return true;
         }
 
         File dir = new File(scriptsDir);
         File[] javaFiles = dir.listFiles((f, name) -> name.endsWith(".java"));
-        if (javaFiles == null || javaFiles.length == 0) return false;
+        if (javaFiles == null || javaFiles.length == 0) return;
         for (File file : javaFiles) {
             compile(file);
         }
-        if (res != 0) {
-            res = 0;
-            return false;
-        }
-        return true;
     }
 
     private static void loadAllFromPak() throws Exception {
-        for (String key : PakWriter.getManifestFile().keySet()) {
+        // only get the index (names), not the actual bytes
+        Set<String> keys = PakWriter.getIndex().keySet();
+
+        for (String key : keys) {
             if (!key.endsWith(".class")) continue;
 
             String fullName = key
@@ -71,7 +67,6 @@ public class ScriptManager implements Runnable {
             ClassLoader old = loaderMap.get(fullName);
             if (old instanceof URLClassLoader ucl) ucl.close();
 
-            String finalFullName = fullName;
             ClassLoader loader = new ClassLoader(ScriptManager.class.getClassLoader()) {
                 @Override
                 protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
@@ -88,22 +83,19 @@ public class ScriptManager implements Runnable {
                 @Override
                 protected Class<?> findClass(String name) throws ClassNotFoundException {
                     String classFile = name.replace(".", "/") + ".class";
-                    String pakPath = PakWriter.getManifestFile().entrySet().stream()
-                            .filter(e -> e.getKey().endsWith(classFile))
-                            .map(Map.Entry::getValue)
-                            .findFirst()
-                            .orElseThrow(() -> new ClassNotFoundException(name));
-                    try {
-                        byte[] bytes = new FileInputStream(pakPath).readAllBytes();
-                        return defineClass(name, bytes, 0, bytes.length);
-                    } catch (IOException e) {
-                        throw new ClassNotFoundException(name, e);
+
+                    // find the matching key in index
+                    for (String k : PakWriter.getIndex().keySet()) {
+                        if (k.endsWith(classFile)) {
+                            return defineClass(name, PakWriter.getAsset(k), 0, PakWriter.getAsset(k).length);
+                        }
                     }
+                    throw new ClassNotFoundException(name);
                 }
             };
 
             loaderMap.put(fullName, loader);
-            System.out.printf(fullName);
+            System.out.println(fullName);
             Class<?> clazz = loader.loadClass(fullName);
             classMap.put(fullName, clazz);
         }
@@ -122,11 +114,14 @@ public class ScriptManager implements Runnable {
                 "-d", AssetManager.getINSTANCE().getCompileDirectory(),
                 file.getPath()
         );
-        if (res == 0) {
-            res = result;
+        if (result == 0) {
+            EditorLayer.setCompileSuccess(true);
+            errorCount = 0;
         }
         if (result != 0) {
             System.err.println("Compilation failed — check stderr above");
+            EditorLayer.setCompileSuccess(false);
+            errorCount++;
         }
 
         String fullName = getFullyQualifiedName(file);
@@ -205,5 +200,9 @@ public class ScriptManager implements Runnable {
 
     public static Map<String, Class<?>> getClassMap() {
         return classMap;
+    }
+
+    public static int getErrorCount() {
+        return errorCount;
     }
 }

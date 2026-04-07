@@ -22,7 +22,7 @@ public class AssetManager {
         compileDirectory = workingDirectory + File.separatorChar + "out" + File.separatorChar;
         buildDirectory = workingDirectory + File.separatorChar + "build" + File.separatorChar;
         prefabDirectory = workingDirectory + File.separatorChar + "assets/prefabs" + File.separatorChar;
-        file = new File(workingDirectory);
+        file = new File(workingDirectory + "/assets/");
     }
 
     public String getScenesDirectory() {

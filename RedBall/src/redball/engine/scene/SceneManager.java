@@ -13,9 +13,9 @@ public class SceneManager {
     public static void init() {
         int index = 0;
         if (Engine.isBuild) {
-            for (String key : PakWriter.getManifestFile().keySet()) {
+            for (String key : PakWriter.getIndex().keySet()) {
                 if (key.endsWith(".scene")) {
-                    sceneList.put(index, PakWriter.getManifestFile().get(key));
+                    sceneList.put(index, key);
                     index++;
                 }
             }
