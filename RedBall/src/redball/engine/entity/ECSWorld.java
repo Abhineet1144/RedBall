@@ -91,9 +91,6 @@ public class ECSWorld {
             RenderManager.rebuild();
         }
         if (!pendingRemove.isEmpty()) {
-            for (GameObject gameObject : pendingRemove) {
-                PhysicsSystem.getWorld().removeBody(gameObject.getComponent(Rigidbody.class).getBody());
-            }
             gameObjects.removeAll(pendingRemove);
             pendingRemove.clear();
             RenderManager.rebuild();

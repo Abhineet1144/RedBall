@@ -16,6 +16,11 @@ import redball.engine.utils.AssetPool;
 import redball.engine.utils.PakWriter;
 import redball.engine.utils.ScriptManager;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -75,6 +80,7 @@ public class Engine {
         if (build) {
             PakWriter.buildIndex();
         } else {
+            loadConfig();
             LogCapture.start();
             EditorLayer.init(windowManager.getWindow());
         }
@@ -89,7 +95,6 @@ public class Engine {
 
         windowManager.loop(shader, build);
     }
-
 
     public static WindowManager getWindowManager() {
         return windowManager;
@@ -113,8 +118,24 @@ public class Engine {
         if (isBuild) {
             glfwSetWindowTitle(getWindowManager().getWindow(), Engine.getProjectName());
         } else {
-            glfwSetWindowTitle(getWindowManager().getWindow(), "RedBall Engine " + AssetManager.getINSTANCE().currentWorkingScene);
+            Properties props = new Properties();
+            props.setProperty("projectName", projectName);
+            try (FileOutputStream out = new FileOutputStream(AssetManager.getINSTANCE().getCompileDirectory() + "config.properties")) {
+                props.store(out, "config");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
+    }
+
+    private static void loadConfig() {
+        Properties props = new Properties();
+        try (FileInputStream in = new FileInputStream(AssetManager.getINSTANCE().getCompileDirectory() + "config.properties")) {
+            props.load(in);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Engine.projectName = props.getProperty("projectName");
     }
 
     public static String getProjectName() {

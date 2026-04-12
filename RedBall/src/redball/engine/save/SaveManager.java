@@ -27,6 +27,7 @@ public class SaveManager {
     }
 
     public static void loadScene(String scene) throws IOException {
+        System.gc();
         SaveObject saveObject = null;
         BufferedInputStream sceneIn = null;
         if (Engine.isBuild) {
@@ -35,7 +36,6 @@ public class SaveManager {
             sceneIn = new BufferedInputStream(new FileInputStream(scene));
             saveObject = SaveObject.parseFrom(IOUtils.toByteArray(sceneIn));
         }
-
 
         if (PhysicsSystem.getWorld() != null) {
             PhysicsSystem.clear();

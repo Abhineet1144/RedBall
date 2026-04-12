@@ -88,7 +88,7 @@ public class WindowManager {
         if (build) {
             ECSWorld.start();
         } else {
-            Engine.setProjectName("RedBall Engine " + AssetManager.getINSTANCE().currentWorkingScene);
+            glfwSetWindowTitle(window, "RedBall Engine " + AssetManager.getINSTANCE().currentWorkingScene);
         }
 
         while (!GLFW.glfwWindowShouldClose(window)) {
