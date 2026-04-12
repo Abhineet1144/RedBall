@@ -1,5 +1,6 @@
 package redball.engine.utils;
 
+import redball.engine.core.Engine;
 import redball.engine.scene.AssetManager;
 
 import java.io.*;
@@ -31,6 +32,10 @@ public class PakWriter {
         System.out.println(files);
         long offset = 0;
         try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(AssetManager.getINSTANCE().getBuildDirectory() + "assets.pak")))) {
+            // Project Name
+            out.writeInt(Engine.getProjectName().length());
+            out.writeBytes(Engine.getProjectName());
+            offset += Engine.getProjectName().length() + 4;
             // Number of chunks
             out.writeInt(files.size());
             offset += 4;
@@ -70,8 +75,13 @@ public class PakWriter {
         try (DataInputStream in = new DataInputStream(
                 new BufferedInputStream(new FileInputStream("/home/tejas/Projects/RedBall/samples/src/car/build/assets.pak")))) {
 
+            int projectNameLen = in.readInt();
+            byte[] projectNameBytes = new byte[projectNameLen];
+            in.readFully(projectNameBytes);
+            String projectName = new String(projectNameBytes);
+            Engine.setProjectName(projectName);
             int chunkCount = in.readInt();
-            long offset = 4;
+            long offset = 4 + 4 + projectNameLen;
 
             for (int i = 0; i < chunkCount; i++) {
                 // Read name

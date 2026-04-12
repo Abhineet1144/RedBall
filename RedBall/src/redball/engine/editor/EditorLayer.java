@@ -11,6 +11,7 @@ import imgui.type.ImBoolean;
 import imgui.type.ImInt;
 import imgui.type.ImString;
 import imgui.flag.ImGuiCol;
+import javassist.util.proxy.ProxyObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.joml.Vector3f;
@@ -37,14 +38,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.Map.Entry;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
-import static org.reflections.Reflections.log;
 
 public class EditorLayer {
     private static EditorLayer INSTANCE;
@@ -66,6 +64,8 @@ public class EditorLayer {
     private ImString sceneName = new ImString(256);
     private ImString scriptName = new ImString(256);
     private ImBoolean showSceneManager = new ImBoolean(false);
+    private ImBoolean showProjectSettings = new ImBoolean(false);
+    private ImString projectNameBuffer = null;
 
     private static boolean compileSuccess = false;
     private static int fps = 0;
@@ -274,6 +274,8 @@ public class EditorLayer {
 
         ImGui.begin("Inspector");
         selectedGameObject = ECSWorld.findGameObjectByName(selected);
+        projectNameBuffer = new ImString(Engine.getProjectName(), 256);
+
 
         if (selectedGameObject != null) {
             if (!selected.equals(prevSelected)) {
@@ -330,6 +332,7 @@ public class EditorLayer {
         assetBrowser();
         renderConsole();
         renderSceneManager();
+        renderProjectSettings();
 
         ImGui.render();
         imGuiGl3.renderDrawData(ImGui.getDrawData());
@@ -570,10 +573,17 @@ public class EditorLayer {
                     System.out.println("New Clicked!!");
                 }
                 if (ImGui.menuItem("Save")) {
-                    System.out.println("Save Clicked!!");
+                    if (!Engine.isPlaying()) {
+                        SaveManager.save();
+                    }
+                    clickTime = glfwGetTime();
+                    saveClicked = !saveClicked;
                 }
                 if (ImGui.menuItem("Scene Manager")) {
                     showSceneManager.set(true);
+                }
+                if (ImGui.menuItem("Project Settings")) {
+                    showProjectSettings.set(true);
                 }
                 if (ImGui.menuItem("Build")) {
                     build();
@@ -1132,6 +1142,20 @@ public class EditorLayer {
                 }
 
                 ImGui.endChild();
+            }
+            ImGui.end();
+        }
+    }
+
+    private void renderProjectSettings() {
+        if (showProjectSettings.get()) {
+            ImGui.setNextWindowSize(280, 350, ImGuiCond.FirstUseEver);
+            if (ImGui.begin("Project Settings", showProjectSettings)) {
+                ImGui.text("Project Name");
+                ImGui.sameLine();
+                if (ImGui.inputText("##Project Name", projectNameBuffer)) {
+                    Engine.setProjectName(projectNameBuffer.get());
+                }
             }
             ImGui.end();
         }

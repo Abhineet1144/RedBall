@@ -18,8 +18,7 @@ import redball.engine.utils.ScriptManager;
 
 import java.util.concurrent.Executors;
 
-import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
-import static org.lwjgl.glfw.GLFW.glfwTerminate;
+import static org.lwjgl.glfw.GLFW.*;
 
 public class Engine {
     private static boolean started = false;
@@ -28,6 +27,7 @@ public class Engine {
     public static boolean isPlaying = false;
     private static byte[] savedScene;
     public static boolean isBuild;
+    private static String projectName;
 
     public static void onPlay() {
         // save current scene to memory
@@ -106,5 +106,18 @@ public class Engine {
     public static void quit() {
         glfwDestroyWindow(getWindowManager().getWindow());
         glfwTerminate();
+    }
+
+    public static void setProjectName(String projectName) {
+        Engine.projectName = projectName;
+        if (isBuild) {
+            glfwSetWindowTitle(getWindowManager().getWindow(), Engine.getProjectName());
+        } else {
+            glfwSetWindowTitle(getWindowManager().getWindow(), "RedBall Engine " + AssetManager.getINSTANCE().currentWorkingScene);
+        }
+    }
+
+    public static String getProjectName() {
+        return projectName;
     }
 }

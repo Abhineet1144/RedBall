@@ -87,6 +87,8 @@ public class WindowManager {
 
         if (build) {
             ECSWorld.start();
+        } else {
+            Engine.setProjectName("RedBall Engine " + AssetManager.getINSTANCE().currentWorkingScene);
         }
 
         while (!GLFW.glfwWindowShouldClose(window)) {
@@ -119,8 +121,7 @@ public class WindowManager {
             // FPS Counter
             fps++;
             if (time - lastSecond >= 1.0) {
-                setTitle("RedBall Engine " + AssetManager.getINSTANCE().currentWorkingScene);
-                EditorLayer.setFps((int) (fps));
+                EditorLayer.setFps(fps);
                 fps = 0;
                 lastSecond = time;
             }
@@ -135,10 +136,6 @@ public class WindowManager {
 
     public void setVSync(int val) {
         glfwSwapInterval(val);
-    }
-
-    public void setTitle(String name) {
-        glfwSetWindowTitle(window, name);
     }
 
     public long getWindow() {
