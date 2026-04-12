@@ -8,6 +8,7 @@ import redball.engine.editor.EditorLayer;
 import redball.engine.core.Engine;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
+import redball.engine.entity.components.CameraComponent;
 import redball.engine.logger.LogCapture;
 import redball.engine.renderer.texture.Texture;
 import redball.engine.scene.AssetManager;
@@ -69,8 +70,10 @@ public class WindowManager {
 
         glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
             glViewport(0, 0, w, h);
-            width = w;
-            height = h;
+            this.width = w;
+            this.height = h;
+            FrameBuffer.getINSTANCE().resize(w, h);
+            Objects.requireNonNull(ECSWorld.findGameObjectByTag("Camera")).getComponent(CameraComponent.class).getCamera().adjustProjection(w, h);
         });
     }
 

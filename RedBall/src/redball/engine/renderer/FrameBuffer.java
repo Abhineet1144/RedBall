@@ -60,6 +60,32 @@ public class FrameBuffer {
         glViewport(0, 0, width, height);
     }
 
+    public void resize(int newWidth, int newHeight) {
+        this.width = newWidth;
+        this.height = newHeight;
+
+        // Delete old resources
+        glDeleteTextures(fboTexture);
+        glDeleteRenderbuffers(rbo);
+
+        // Recreate color texture
+        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+        fboTexture = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, fboTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, (ByteBuffer) null);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexture, 0);
+
+        // Recreate depth renderbuffer
+        rbo = glGenRenderbuffers();
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
     public void unbind() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }

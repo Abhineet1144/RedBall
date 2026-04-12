@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils;
 import org.joml.Vector3f;
 import redball.engine.core.Engine;
 import redball.engine.entity.components.*;
+import redball.engine.renderer.FrameBuffer;
 import redball.engine.scene.AssetManager;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
@@ -16,6 +17,7 @@ import redball.engine.utils.ScriptManager;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.IllegalFormatCodePointException;
+import java.util.Objects;
 
 public class SaveManager {
     public static void save() {

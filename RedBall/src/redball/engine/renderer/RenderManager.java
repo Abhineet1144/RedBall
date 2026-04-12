@@ -67,7 +67,7 @@ public class RenderManager {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBlitFramebuffer(
                 0, 0, frameBuffer.getWidth(), frameBuffer.getHeight(),
-                0, 0, frameBuffer.getWidth(), frameBuffer.getHeight(),
+                0, 0, Engine.getWindowManager().getWidth(), Engine.getWindowManager().getHeight(),
                 GL_COLOR_BUFFER_BIT, GL_NEAREST
         );
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

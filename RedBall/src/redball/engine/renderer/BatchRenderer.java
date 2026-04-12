@@ -9,6 +9,8 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
+import redball.engine.core.Engine;
+import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.BodyType;
 import redball.engine.entity.components.Rigidbody;
