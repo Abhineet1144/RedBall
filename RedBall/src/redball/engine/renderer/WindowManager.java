@@ -73,7 +73,6 @@ public class WindowManager {
             this.width = w;
             this.height = h;
             FrameBuffer.getINSTANCE().resize(w, h);
-            Objects.requireNonNull(ECSWorld.findGameObjectByTag("Camera")).getComponent(CameraComponent.class).getCamera().adjustProjection(w, h);
         });
     }
 
