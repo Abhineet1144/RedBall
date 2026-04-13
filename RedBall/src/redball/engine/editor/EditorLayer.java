@@ -264,6 +264,25 @@ public class EditorLayer {
         ImGui.newFrame();
         ImGuizmo.beginFrame();
 
+        // ShortCuts
+        if (ImGui.getIO().getKeyCtrl() && ImGui.isKeyReleased(ImGuiKey.P)) {
+            if (!Engine.isPlaying()) {
+                Engine.onPlay();
+                saveClicked = false;
+            } else {
+                Engine.onStop();
+                saveClicked = false;
+            }
+        }
+
+        if (ImGui.getIO().getKeyCtrl() && ImGui.isKeyReleased(ImGuiKey.S)) {
+            if (!Engine.isPlaying()) {
+                SaveManager.save();
+            }
+            clickTime = glfwGetTime();
+            saveClicked = !saveClicked;
+        }
+
         renderStatusBar();
 
         createDockSpace();
@@ -569,10 +588,11 @@ public class EditorLayer {
     private void renderMenuBar() throws Exception {
         if (ImGui.beginMainMenuBar()) {
             if (ImGui.beginMenu("File")) {
-                if (ImGui.menuItem("New")) {
-                    System.out.println("New Clicked!!");
+                if (ImGui.menuItem("New Scene")) {
+                    showNewScenePopup = true;
+                    sceneName.set("");
                 }
-                if (ImGui.menuItem("Save")) {
+                if (ImGui.menuItem("Save", "Ctrl + S")) {
                     if (!Engine.isPlaying()) {
                         SaveManager.save();
                     }
@@ -1180,7 +1200,7 @@ public class EditorLayer {
         String sceneName = AssetManager.getINSTANCE().currentWorkingScene;
         sceneName = sceneName.substring(sceneName.lastIndexOf("/") + 1);
 
-        if (!Engine.isPlaying) {
+        if (!Engine.isPlaying()) {
             if (saveClicked) {
                 ImGui.textColored(editColor, "Edit Mode");
                 ImGui.sameLine();

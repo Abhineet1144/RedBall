@@ -29,7 +29,7 @@ public class Engine {
     private static boolean started = false;
     private static WindowManager windowManager = null;
     private static Shader shader = null;
-    public static boolean isPlaying = false;
+    private static boolean isPlaying = false;
     private static byte[] savedScene;
     public static boolean isBuild;
     private static String projectName;
@@ -109,8 +109,9 @@ public class Engine {
     }
 
     public static void quit() {
-        glfwDestroyWindow(getWindowManager().getWindow());
-        glfwTerminate();
+        if (isBuild) {
+            glfwSetWindowShouldClose(Engine.getWindowManager().getWindow(), true);
+        }
     }
 
     public static void setProjectName(String projectName) {
