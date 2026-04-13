@@ -1,7 +1,5 @@
 package redball.engine.renderer.texture;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.Serial;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -12,7 +10,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.stb.STBImage;
-import redball.engine.core.Engine;
 
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11.glBindTexture;

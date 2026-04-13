@@ -57,13 +57,11 @@ public class FrameBuffer {
 
     public void bind() {
         glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-        glViewport(0, 0, width, height);
     }
 
     public void resize(int newWidth, int newHeight) {
         this.width = newWidth;
         this.height = newHeight;
-
         // Delete old resources
         glDeleteTextures(fboTexture);
         glDeleteRenderbuffers(rbo);

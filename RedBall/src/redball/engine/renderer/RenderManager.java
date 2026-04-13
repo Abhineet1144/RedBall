@@ -19,6 +19,7 @@ public class RenderManager {
     private static FrameBuffer frameBuffer;
 
     public static void prepare(GameObject camera) {
+        batches.clear();
         frameBuffer = FrameBuffer.getINSTANCE();
         List<GameObject> gos = ECSWorld.getGameObjects();
 
