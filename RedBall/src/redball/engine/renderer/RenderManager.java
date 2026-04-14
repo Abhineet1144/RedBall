@@ -21,6 +21,9 @@ public class RenderManager {
     private static FrameBuffer frameBuffer;
 
     public static void prepare(GameObject camera) {
+        for (BatchRenderer batch : batches) {
+            batch.dispose();
+        }
         batches.clear();
         frameBuffer = FrameBuffer.getINSTANCE();
         List<GameObject> gos = ECSWorld.getGameObjects();
@@ -54,8 +57,6 @@ public class RenderManager {
         CameraComponent cameraComponent = camera.getComponent(CameraComponent.class);
         Engine.getShader().setMat4f("projection", cameraComponent.getProjectionMatrix());
         Engine.getShader().setMat4f("view", cameraComponent.getViewMatrix());
-
-        Engine.getShader().initTextureSamplers();
 
         frameBuffer.bind();
 

@@ -79,9 +79,7 @@ public class PakWriter {
     }
 
     public static void buildIndex() {
-        try (DataInputStream in = new DataInputStream(
-                new BufferedInputStream(new FileInputStream("/home/tejas/Projects/RedBall/samples/src/car/build/assets.pak")))) {
-
+        try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream("/home/tejas/Projects/RedBall/samples/src/car/build/assets.pak")))) {
             int projectNameLen = in.readInt();
             byte[] projectNameBytes = new byte[projectNameLen];
             in.readFully(projectNameBytes);

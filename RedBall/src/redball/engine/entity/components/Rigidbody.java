@@ -152,4 +152,8 @@ public class Rigidbody extends Component {
         physicsSystemSetFriction(friction);
         PhysicsSystem.getWorld().addBody(body);
     }
+
+    public void setBody(Body body) {
+        this.body = body;
+    }
 }

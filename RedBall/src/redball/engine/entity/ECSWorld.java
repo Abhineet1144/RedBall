@@ -8,14 +8,15 @@ import redball.engine.renderer.texture.TextureManager;
 import redball.engine.save.SaveObject;
 import redball.engine.utils.PakWriter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ECSWorld {
     // List of all gameobjects
     private static List<GameObject> gameObjects = new ArrayList<>();
     private static final List<GameObject> pendingAdd = new ArrayList<>();
     private static final List<GameObject> pendingRemove = new ArrayList<>();
+    private static Map<String, GameObject> pool = new HashMap<>();
+
 
     public ECSWorld() {}
 
@@ -66,7 +67,9 @@ public class ECSWorld {
         Rigidbody rb = gameObject.getComponent(Rigidbody.class);
         if (rb != null) {
             PhysicsSystem.getWorld().removeBody(rb.getBody());
+            rb.setBody(null);
         }
+        pool.put(gameObject.getName(), gameObject);
         pendingRemove.add(gameObject);
     }
 
@@ -137,5 +140,9 @@ public class ECSWorld {
 
     public static List<GameObject> getPendingAdd() {
         return pendingAdd;
+    }
+
+    public static Map<String, GameObject> getPool() {
+        return pool;
     }
 }

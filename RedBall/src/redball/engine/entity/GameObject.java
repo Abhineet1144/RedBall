@@ -154,24 +154,32 @@ public class GameObject implements Serializable {
     }
 
     public static void instantiate(GameObject prefab, Vector2f position) {
-        GameObject instance = prefab.deepCopy();
+        GameObject instance;
+        if (ECSWorld.getPool().containsKey(prefab.getName())) {
+            instance = ECSWorld.getPool().get(prefab.getName());
+            instance.getComponent(Rigidbody.class).createBody();
+            ECSWorld.getPool().remove(prefab.getName());
+            System.out.println("reuse");
+        } else {
+            instance = prefab.deepCopy();
 
-        SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
-        Rigidbody rb = instance.getComponent(Rigidbody.class);
-        if (rb != null) {
-            rb.createBody();
+            SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
+            Rigidbody rb = instance.getComponent(Rigidbody.class);
+            if (rb != null) {
+                rb.createBody();
+            }
+
+            if (sr != null && sr.getFilePath() != null) {
+                if (Engine.isBuild) {
+                    sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
+                } else {
+                    sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
+                }
+            }
+            System.out.println("no");
         }
-
         instance.getComponent(Transform.class).setXPosition(position.x);
         instance.getComponent(Transform.class).setYPosition(position.y);
-
-        if (sr != null && sr.getFilePath() != null) {
-            if (Engine.isBuild) {
-                sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
-            } else {
-                sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
-            }
-        }
         ECSWorld.getPendingAdd().add(instance);
     }
 

@@ -91,6 +91,7 @@ public class WindowManager {
         } else {
             glfwSetWindowTitle(window, "RedBall Engine " + AssetManager.getINSTANCE().currentWorkingScene);
         }
+        Engine.getShader().initTextureSamplers();
 
         while (!GLFW.glfwWindowShouldClose(window)) {
             ScriptManager.processReloads();

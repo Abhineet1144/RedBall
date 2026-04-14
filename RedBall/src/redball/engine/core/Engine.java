@@ -71,7 +71,9 @@ public class Engine {
 
         started = true;
         isBuild = build;
-        AssetManager.init(path);
+        if (!isBuild) {
+            AssetManager.init(path);
+        }
 
         windowManager = new WindowManager();
         windowManager.init();
@@ -87,7 +89,11 @@ public class Engine {
 
         KeyboardInput.init(windowManager.getWindow(), EditorLayer.getINSTANCE());
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
-        ScriptManager.compileAll(AssetManager.getINSTANCE().getScriptDirectory());
+        if (isBuild) {
+            ScriptManager.compileAll("");
+        } else {
+            ScriptManager.compileAll(AssetManager.getINSTANCE().getScriptDirectory());
+        }
 
         if (!build) {
             EditorLayer.initComponentList();

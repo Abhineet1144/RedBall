@@ -44,7 +44,6 @@ public class SaveObject implements Serializable {
         }
     }
 
-
     public byte[] toByteArray() {
         return SerializationUtils.serialize(this);
     }

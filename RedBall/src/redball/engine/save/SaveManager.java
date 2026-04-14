@@ -29,7 +29,6 @@ public class SaveManager {
     }
 
     public static void loadScene(String scene) throws IOException {
-        System.gc();
         SaveObject saveObject = null;
         BufferedInputStream sceneIn = null;
         if (Engine.isBuild) {
@@ -68,7 +67,9 @@ public class SaveManager {
 
         RenderManager.prepare(ECSWorld.findGameObjectByTag("Camera"));
         ECSWorld.start();
-        AssetManager.getINSTANCE().currentWorkingScene = scene;
+        if (!Engine.isBuild) {
+            AssetManager.getINSTANCE().currentWorkingScene = scene;
+        }
     }
 
     public static void newScene(String sceneName) {

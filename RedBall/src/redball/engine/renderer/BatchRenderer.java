@@ -34,7 +34,7 @@ public class BatchRenderer {
     private static final int TEXTURE_ID_SIZE = 1;
     private static final int OVERALL_SIZE = POS_SIZE + COLOR_SIZE + TEXTURE_COORDS_SIZE + TEXTURE_ID_SIZE;
     private static final int OVERALL_STRIDE = OVERALL_SIZE * Float.BYTES;
-    private static int EBO;
+    private static int ebo;
 
     public int entityCount = 0;
     private int verticesAdded = 0;
@@ -44,7 +44,6 @@ public class BatchRenderer {
     private int hightest = 0;
     private int vao;
     int vbo;
-    private int ebo;
 
     private final Matrix4f matrix = new Matrix4f();
     private Vector4f result = new Vector4f();
@@ -90,16 +89,15 @@ public class BatchRenderer {
             hightest = h + 1;
         }
 
-        int vao = glGenVertexArrays();
+        vao = glGenVertexArrays();
         vbo = glGenBuffers();
-        EBO = glGenBuffers();
+        ebo = glGenBuffers();
 
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, verticesData, GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexIndex, GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
         glVertexAttribPointer(0, 3, GL_FLOAT, false, OVERALL_STRIDE, 0);
         glEnableVertexAttribArray(0);
