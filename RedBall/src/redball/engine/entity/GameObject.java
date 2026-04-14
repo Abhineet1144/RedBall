@@ -1,12 +1,19 @@
 package redball.engine.entity;
 
+import org.apache.commons.lang3.SerializationUtils;
+import org.joml.Vector2f;
+import redball.engine.core.Engine;
 import redball.engine.entity.components.Component;
 import redball.engine.entity.components.Rigidbody;
+import redball.engine.entity.components.SpriteRenderer;
+import redball.engine.entity.components.Transform;
+import redball.engine.renderer.texture.TextureManager;
+import redball.engine.utils.PakWriter;
+import redball.engine.utils.ScriptManager;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+
 
 public class GameObject implements Serializable {
     // Name of the gameobject
@@ -126,5 +133,65 @@ public class GameObject implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public static void instantiate(GameObject prefab) {
+        GameObject instance = prefab.deepCopy();
+        SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
+        Rigidbody rb = instance.getComponent(Rigidbody.class);
+        if (rb != null) {
+            rb.createBody();
+        }
+
+        if (sr != null && sr.getFilePath() != null) {
+            if (Engine.isBuild) {
+                sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
+            } else {
+                sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
+            }
+        }
+        ECSWorld.getPendingAdd().add(instance);
+    }
+
+    public static void instantiate(GameObject prefab, Vector2f position) {
+        GameObject instance = prefab.deepCopy();
+
+        SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
+        Rigidbody rb = instance.getComponent(Rigidbody.class);
+        if (rb != null) {
+            rb.createBody();
+        }
+
+        instance.getComponent(Transform.class).setXPosition(position.x);
+        instance.getComponent(Transform.class).setYPosition(position.y);
+
+        if (sr != null && sr.getFilePath() != null) {
+            if (Engine.isBuild) {
+                sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
+            } else {
+                sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
+            }
+        }
+        ECSWorld.getPendingAdd().add(instance);
+    }
+
+    public GameObject deepCopy() {
+        byte[] bytes = SerializationUtils.serialize(this);
+
+        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes)) {
+            @Override
+            protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+                ClassLoader loader = ScriptManager.getScriptClassLoader(desc.getName());
+                try {
+                    return Class.forName(desc.getName(), false, loader);
+                } catch (ClassNotFoundException e) {
+                    return super.resolveClass(desc);
+                }
+            }
+        }) {
+            return (GameObject) ois.readObject();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to deserialize scene: " + e.getMessage(), e);
+        }
     }
 }

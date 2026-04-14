@@ -1,10 +1,12 @@
 package redball.engine.renderer;
 
+import org.apache.commons.lang3.SerializationUtils;
 import redball.engine.core.Engine;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.CameraComponent;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,8 +33,13 @@ public class RenderManager {
         }
     }
 
+    // TODO: rebuild only required objects
     public static void rebuild() {
+        for (BatchRenderer batch : batches) {
+            batch.dispose();
+        }
         batches.clear();
+
         List<GameObject> gos = ECSWorld.getGameObjects();
 
         for (int i = 0; i < gos.size(); i += MAX_ENTITIES) {

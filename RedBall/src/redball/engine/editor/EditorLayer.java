@@ -455,8 +455,8 @@ public class EditorLayer {
             Object stringPayload = ImGui.acceptDragDropPayload("String");
             if (stringPayload instanceof String dropped) {
                 try (BufferedInputStream prefab = new BufferedInputStream(new FileInputStream(dropped))) {
-                    // needs fix
-                    ECSWorld.instantiate(SerializationUtils.deserialize(IOUtils.toByteArray(prefab)));
+                    SaveObject saveObject = SaveObject.parseFrom(IOUtils.toByteArray(prefab));
+                    ECSWorld.addPrefab(saveObject.getGameObjects().getFirst());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -599,12 +599,6 @@ public class EditorLayer {
                     clickTime = glfwGetTime();
                     saveClicked = !saveClicked;
                 }
-                if (ImGui.menuItem("Scene Manager")) {
-                    showSceneManager.set(true);
-                }
-                if (ImGui.menuItem("Project Settings")) {
-                    showProjectSettings.set(true);
-                }
                 if (ImGui.menuItem("Build")) {
                     build();
                 }
@@ -615,6 +609,12 @@ public class EditorLayer {
                 ImGui.endMenu();
             }
             if (ImGui.beginMenu("Edit")) {
+                if (ImGui.menuItem("Scene Manager")) {
+                    showSceneManager.set(true);
+                }
+                if (ImGui.menuItem("Project Settings")) {
+                    showProjectSettings.set(true);
+                }
                 if (ImGui.menuItem("Add Component")) {
                     System.out.println("Add clicked!!");
                 }
@@ -889,7 +889,6 @@ public class EditorLayer {
 
                             Object stringPayload = ImGui.acceptDragDropPayload("String");
                             if (stringPayload instanceof String dropped) {
-
                                 try (BufferedInputStream prefab = new BufferedInputStream(new FileInputStream(dropped))) {
                                     SaveObject saveObject = SaveObject.parseFrom(IOUtils.toByteArray(prefab));
                                     GameObject go = saveObject.getGameObjects().getFirst();

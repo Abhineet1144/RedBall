@@ -1,7 +1,5 @@
 package redball.engine.entity;
 
-import org.apache.commons.lang3.SerializationUtils;
-import org.joml.Vector2f;
 import redball.engine.core.Engine;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.components.*;
@@ -65,6 +63,10 @@ public class ECSWorld {
      * @return true if found else false
      */
     public static void removeGameObject(GameObject gameObject) {
+        Rigidbody rb = gameObject.getComponent(Rigidbody.class);
+        if (rb != null) {
+            PhysicsSystem.getWorld().removeBody(rb.getBody());
+        }
         pendingRemove.add(gameObject);
     }
 
@@ -86,6 +88,9 @@ public class ECSWorld {
             g.update(dt);
         }
         if (!pendingAdd.isEmpty()) {
+            for (GameObject gameObject : pendingAdd) {
+                gameObject.start();
+            }
             gameObjects.addAll(pendingAdd);
             pendingAdd.clear();
             RenderManager.rebuild();
@@ -111,37 +116,14 @@ public class ECSWorld {
         ECSWorld.gameObjects = gameObjects;
     }
 
-    public static void instantiate(GameObject prefab) {
-        GameObject go = SerializationUtils.deserialize(SerializationUtils.serialize(prefab));
-        SpriteRenderer sr = go.getComponent(SpriteRenderer.class);
-        Rigidbody rb = go.getComponent(Rigidbody.class);
-        if (rb != null) {
-            rb.createBody();
-        }
-
-        if (sr != null && sr.getFilePath() != null) {
-            if (Engine.isBuild) {
-                sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
-            } else {
-                sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
-            }
-        }
-        go.start();
-        pendingAdd.add(go);
-    }
-
-    public static void instantiate(GameObject prefab, Vector2f position) {
+    public static void addPrefab(GameObject prefab) {
         GameObject instance = SaveObject.parseFrom(new SaveObject(new ArrayList<>(List.of(prefab))).toByteArray()).getGameObjects().getFirst();
-
         SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
         Rigidbody rb = instance.getComponent(Rigidbody.class);
         if (rb != null) {
             rb.createBody();
         }
 
-        instance.getComponent(Transform.class).setXPosition(position.x);
-        instance.getComponent(Transform.class).setYPosition(position.y);
-
         if (sr != null && sr.getFilePath() != null) {
             if (Engine.isBuild) {
                 sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
@@ -149,7 +131,11 @@ public class ECSWorld {
                 sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
             }
         }
-        instance.start();
-        pendingAdd.add(instance);
+        gameObjects.add(instance);
+        RenderManager.rebuild();
+    }
+
+    public static List<GameObject> getPendingAdd() {
+        return pendingAdd;
     }
 }

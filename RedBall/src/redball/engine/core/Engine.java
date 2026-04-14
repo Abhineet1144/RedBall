@@ -72,7 +72,6 @@ public class Engine {
         started = true;
         isBuild = build;
         AssetManager.init(path);
-        Executors.newSingleThreadExecutor().execute(new ScriptManager());
 
         windowManager = new WindowManager();
         windowManager.init();
@@ -80,6 +79,7 @@ public class Engine {
         if (build) {
             PakWriter.buildIndex();
         } else {
+            Executors.newSingleThreadExecutor().execute(new ScriptManager());
             loadConfig();
             LogCapture.start();
             EditorLayer.init(windowManager.getWindow());
@@ -87,8 +87,8 @@ public class Engine {
 
         KeyboardInput.init(windowManager.getWindow(), EditorLayer.getINSTANCE());
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
-
         ScriptManager.compileAll(AssetManager.getINSTANCE().getScriptDirectory());
+
         if (!build) {
             EditorLayer.initComponentList();
         }

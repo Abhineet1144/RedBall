@@ -27,7 +27,6 @@ public class Test extends Component {
 
     @Override
     public void start() {
-        System.out.println("start call");
     }
 
     @Override
@@ -61,7 +60,7 @@ public class Test extends Component {
         int laneIndex = available.get(random.nextInt(available.size()));
         float x = LANES[laneIndex];
 
-        ECSWorld.instantiate(carPrefab, new Vector2f(x, 800f));
+        GameObject.instantiate(carPrefab, new Vector2f(x, 800f));
 
         laneCooldown[laneIndex] = true;
         laneCooldownTimer[laneIndex] = LANE_COOLDOWN;

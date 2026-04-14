@@ -14,6 +14,7 @@ public class EnemyCars extends Component {
 
     @Override
     public void start() {
+        System.out.println("start");
         transform = gameObject.getComponent(Transform.class);
     }
 

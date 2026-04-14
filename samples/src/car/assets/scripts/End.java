@@ -15,7 +15,6 @@ public class End extends Component {
 
     @Override
     public void start() {
-        super.start();
     }
 
     @Override
