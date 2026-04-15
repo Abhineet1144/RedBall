@@ -26,7 +26,7 @@ public class Transform extends Component {
 
     public void setXPosition(float xPos) {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
-        if (rb != null) {
+        if (rb != null && rb.getBody() != null) {
             rb.getBody().getTransform().setTranslationX(xPos / PPM);
         }
         this.position.x = xPos;
@@ -35,7 +35,7 @@ public class Transform extends Component {
 
     public void setYPosition(float yPos) {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
-        if (rb != null) {
+        if (rb != null && rb.getBody() != null) {
             rb.getBody().getTransform().setTranslationY(yPos / PPM);
         }
         this.position.y = yPos;
@@ -44,7 +44,7 @@ public class Transform extends Component {
 
     public void setRotation(float rotation) {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
-        if (rb != null) {
+        if (rb != null && rb.getBody() != null) {
             rb.getBody().getTransform().setRotation(rotation);
         }
         this.rotation = rotation;
@@ -53,7 +53,7 @@ public class Transform extends Component {
 
     public void setXScale(float xPos) {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
-        if (rb != null) {
+        if (rb != null && rb.getBody() != null) {
             BodyFixture bodyFixture = rb.getBodyFixture();
             rb.getBody().removeAllFixtures();
             rb.physiosSystemSetBodyFixture(bodyFixture);
@@ -64,7 +64,7 @@ public class Transform extends Component {
 
     public void setYScale(float yPos) {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
-        if (rb != null) {
+        if (rb != null && rb.getBody() != null) {
             BodyFixture bodyFixture = rb.getBodyFixture();
             rb.getBody().removeAllFixtures();
             rb.physiosSystemSetBodyFixture(bodyFixture);
@@ -80,7 +80,7 @@ public class Transform extends Component {
 
     public float getXPosition() {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
-        if (rb != null) {
+        if (rb != null && rb.getBody() != null) {
             return (float) rb.getBody().getTransform().getTranslationX() * PPM;
         }
         return position.x;
@@ -88,7 +88,7 @@ public class Transform extends Component {
 
     public float getYPosition() {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
-        if (rb != null) {
+        if (rb != null && rb.getBody() != null) {
             return (float) rb.getBody().getTransform().getTranslationY() * PPM;
         }
         return position.y;
@@ -96,7 +96,7 @@ public class Transform extends Component {
 
     public float getRotation() {
         Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
-        if (rb != null) {
+        if (rb != null && rb.getBody() != null) {
             return (float) rb.getBody().getTransform().getRotationAngle() * PPM;
         }
         return rotation;

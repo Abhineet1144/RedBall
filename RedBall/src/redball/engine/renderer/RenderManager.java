@@ -36,7 +36,6 @@ public class RenderManager {
         }
     }
 
-    // TODO: rebuild only required objects
     public static void rebuild() {
         for (BatchRenderer batch : batches) {
             batch.dispose();

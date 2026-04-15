@@ -1,7 +1,6 @@
 package car.assets.scripts;
 
 import org.joml.Vector2f;
-import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.Component;
 

@@ -136,18 +136,24 @@ public class GameObject implements Serializable {
     }
 
     public static void instantiate(GameObject prefab) {
-        GameObject instance = prefab.deepCopy();
-        SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
-        Rigidbody rb = instance.getComponent(Rigidbody.class);
-        if (rb != null) {
-            rb.createBody();
-        }
+        GameObject instance;
+        if (ECSWorld.getPool().containsKey(prefab.getName())) {
+            instance = ECSWorld.getPool().get(prefab.getName());
+            instance.getComponent(Rigidbody.class).createBody();
+        } else {
+            instance = prefab.deepCopy();
+            SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
+            Rigidbody rb = instance.getComponent(Rigidbody.class);
+            if (rb != null) {
+                rb.createBody();
+            }
 
-        if (sr != null && sr.getFilePath() != null) {
-            if (Engine.isBuild) {
-                sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
-            } else {
-                sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
+            if (sr != null && sr.getFilePath() != null) {
+                if (Engine.isBuild) {
+                    sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
+                } else {
+                    sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
+                }
             }
         }
         ECSWorld.getPendingAdd().add(instance);
@@ -159,7 +165,6 @@ public class GameObject implements Serializable {
             instance = ECSWorld.getPool().get(prefab.getName());
             instance.getComponent(Rigidbody.class).createBody();
             ECSWorld.getPool().remove(prefab.getName());
-            System.out.println("reuse");
         } else {
             instance = prefab.deepCopy();
 
@@ -176,14 +181,13 @@ public class GameObject implements Serializable {
                     sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
                 }
             }
-            System.out.println("no");
         }
         instance.getComponent(Transform.class).setXPosition(position.x);
         instance.getComponent(Transform.class).setYPosition(position.y);
         ECSWorld.getPendingAdd().add(instance);
     }
 
-    public GameObject deepCopy() {
+    private GameObject deepCopy() {
         byte[] bytes = SerializationUtils.serialize(this);
 
         try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes)) {
@@ -201,5 +205,9 @@ public class GameObject implements Serializable {
         } catch (Exception e) {
             throw new RuntimeException("Failed to deserialize scene: " + e.getMessage(), e);
         }
+    }
+
+    public void delete() {
+        ECSWorld.removeGameObject(this);
     }
 }

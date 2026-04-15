@@ -81,11 +81,13 @@ public class EditorLayer {
     private static String[] componentList = null;
     private static Set<Class<? extends Component>> subclasses;
 
-    double clickTime = 0.0; // Time when the button was clicked
+    double clickTime = 0.0;
     double waitSeconds = 2.0;
 
     private ImString nameBuffer = null;
     private String prevSelected = null;
+
+    private Map<String, SaveObject> prefabPool = new HashMap<>();
 
     private ImString searchBuffer = null;
     ImInt fixtureSelectedIndex = new ImInt(0);
@@ -454,11 +456,18 @@ public class EditorLayer {
         if (ImGui.beginDragDropTarget()) {
             Object stringPayload = ImGui.acceptDragDropPayload("String");
             if (stringPayload instanceof String dropped) {
-                try (BufferedInputStream prefab = new BufferedInputStream(new FileInputStream(dropped))) {
-                    SaveObject saveObject = SaveObject.parseFrom(IOUtils.toByteArray(prefab));
-                    ECSWorld.addPrefab(saveObject.getGameObjects().getFirst());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                if (dropped.endsWith(".prefab") && !Engine.isPlaying()) {
+                    if (prefabPool.containsKey(dropped)) {
+                        ECSWorld.addPrefab(prefabPool.get(dropped).getGameObjects().getFirst());
+                    } else {
+                        try (BufferedInputStream prefab = new BufferedInputStream(new FileInputStream(dropped))) {
+                            SaveObject saveObject = SaveObject.parseFrom(IOUtils.toByteArray(prefab));
+                            prefabPool.put(dropped, saveObject);
+                            ECSWorld.addPrefab(saveObject.getGameObjects().getFirst());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                 }
             }
             ImGui.endDragDropTarget();
@@ -1275,7 +1284,7 @@ public class EditorLayer {
         return imGuiGlfw;
     }
 
-    private int countDuplicates(String name) {
+    public static int countDuplicates(String name) {
         int count = 0;
         for (GameObject go : ECSWorld.getGameObjects()) {
             int index = go.getName().lastIndexOf("(");

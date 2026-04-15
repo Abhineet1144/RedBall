@@ -1,7 +1,6 @@
 package car.assets.scripts;
 
 import org.lwjgl.glfw.GLFW;
-import redball.engine.core.Engine;
 import redball.engine.entity.components.Component;
 import redball.engine.input.KeyboardInput;
 import redball.engine.scene.SceneManager;

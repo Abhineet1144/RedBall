@@ -2,6 +2,7 @@ package redball.engine.entity;
 
 import redball.engine.core.Engine;
 import redball.engine.core.PhysicsSystem;
+import redball.engine.editor.EditorLayer;
 import redball.engine.entity.components.*;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.texture.TextureManager;
@@ -92,6 +93,15 @@ public class ECSWorld {
         }
         if (!pendingAdd.isEmpty()) {
             for (GameObject gameObject : pendingAdd) {
+                int count = EditorLayer.countDuplicates(gameObject.getName());
+                if (count > 0) {
+                    int suffix = count;
+                    while (count > 0) {
+                        suffix++;
+                        count = EditorLayer.countDuplicates(gameObject.getName() + " (" + suffix + ")");
+                    }
+                    gameObject.setName(gameObject.getName() + " (" + suffix + ")");
+                }
                 gameObject.start();
             }
             gameObjects.addAll(pendingAdd);
@@ -121,6 +131,15 @@ public class ECSWorld {
 
     public static void addPrefab(GameObject prefab) {
         GameObject instance = SaveObject.parseFrom(new SaveObject(new ArrayList<>(List.of(prefab))).toByteArray()).getGameObjects().getFirst();
+        int count = EditorLayer.countDuplicates(prefab.getName());
+        if (count > 0) {
+            int suffix = count;
+            while (count > 0) {
+                suffix++;
+                count = EditorLayer.countDuplicates(instance.getName() + " (" + suffix + ")");
+            }
+            instance.setName(instance.getName() + " (" + suffix + ")");
+        }
         SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
         Rigidbody rb = instance.getComponent(Rigidbody.class);
         if (rb != null) {
