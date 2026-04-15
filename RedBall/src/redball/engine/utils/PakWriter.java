@@ -31,7 +31,6 @@ public class PakWriter {
 
     public static void writePak(String path) throws Exception {
         listFile(path);
-        System.out.println(files);
         long offset = 0;
         try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(AssetManager.getINSTANCE().getBuildDirectory() + "assets.pak")))) {
             // Project Name
@@ -57,7 +56,6 @@ public class PakWriter {
                 offset += data.length;
             }
         }
-        System.out.println(index);
     }
 
     public static byte[] getAsset(String file) {

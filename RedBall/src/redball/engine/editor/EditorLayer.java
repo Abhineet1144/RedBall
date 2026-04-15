@@ -70,6 +70,8 @@ public class EditorLayer {
     private static boolean compileSuccess = false;
     private static int fps = 0;
     boolean saveClicked = false;
+    boolean buildClicked = false;
+    boolean buildRes = false;
 
     private int currOpr = Operation.TRANSLATE;
     private boolean localSpace = false;
@@ -283,6 +285,10 @@ public class EditorLayer {
             }
             clickTime = glfwGetTime();
             saveClicked = !saveClicked;
+        }
+
+        if (ImGui.getIO().getKeyCtrl() && ImGui.isKeyReleased(ImGuiKey.B)) {
+            build();
         }
 
         renderStatusBar();
@@ -608,7 +614,7 @@ public class EditorLayer {
                     clickTime = glfwGetTime();
                     saveClicked = !saveClicked;
                 }
-                if (ImGui.menuItem("Build")) {
+                if (ImGui.menuItem("Build", "Ctrl + B")) {
                     build();
                 }
                 ImGui.separator();
@@ -633,8 +639,21 @@ public class EditorLayer {
         }
     }
 
-    private void build() throws Exception {
-        PakWriter.writePak(AssetManager.getINSTANCE().getWorkingDirectory());
+    private void build() {
+        if (ScriptManager.getErrorCount() == 0 && !Engine.isPlaying()) {
+            try {
+                clickTime = glfwGetTime();
+                buildClicked = true;
+                PakWriter.writePak(AssetManager.getINSTANCE().getWorkingDirectory());
+                buildRes = true;
+            } catch (Exception e) {
+                buildRes = false;
+            }
+        } else {
+            clickTime = glfwGetTime();
+            buildClicked = true;
+            buildRes = false;
+        }
     }
 
     private Component getComponent(int n) throws InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -1201,31 +1220,69 @@ public class EditorLayer {
         ImVec4 editColor = new ImVec4(0.3f, 0.7f, 1.0f, 1.0f);
         ImVec4 playColor = new ImVec4(1.0f, 0.722f, 0.424f, 1.0f);
         ImVec4 errorColor = new ImVec4(1.0f, 0.361f, 0.361f, 1.0f);
-        ImVec4 secondary = new ImVec4(0.604f, 0.604f, 0.604f, 1.0f);
+        ImVec4 secondaryColor = new ImVec4(0.604f, 0.604f, 0.604f, 1.0f);
+        ImVec4 primaryColor = new ImVec4(0.7f, 0.7f, 0.7f, 1.0f);
+        ImVec4 successColor = new ImVec4(0.4f, 0.85f, 0.5f, 1.0f);
+
 
         ImGui.begin("##StatusBar", ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoBringToFrontOnFocus);
 
         String sceneName = AssetManager.getINSTANCE().currentWorkingScene;
         sceneName = sceneName.substring(sceneName.lastIndexOf("/") + 1);
+        double currentTime;
 
         if (!Engine.isPlaying()) {
             if (saveClicked) {
                 ImGui.textColored(editColor, "Edit Mode");
                 ImGui.sameLine();
-                ImGui.textColored(secondary, " | Saved " + sceneName);
-                double currentTime = glfwGetTime();
+                if (buildClicked) {
+                    if (buildRes) {
+                        ImGui.textColored(secondaryColor, " | Saved " + sceneName + " | ");
+                        ImGui.sameLine();
+                        ImGui.textColored(successColor, "Build Successful");
+                    } else {
+                        ImGui.textColored(secondaryColor, " | Saved " + sceneName + " | ");
+                        ImGui.sameLine();
+                        ImGui.textColored(errorColor, "Build Failed");
+                    }
+                    currentTime = glfwGetTime();
+                    if (currentTime - clickTime >= waitSeconds) {
+                        buildClicked = false;
+                        buildRes = false;
+                    }
+                } else {
+                    ImGui.textColored(secondaryColor, " | Saved " + sceneName);
+                }
+                currentTime = glfwGetTime();
                 if (currentTime - clickTime >= waitSeconds) {
                     saveClicked = false;
                 }
             } else {
                 ImGui.textColored(editColor, "Edit Mode");
                 ImGui.sameLine();
-                ImGui.textColored(secondary, " | " + sceneName);
+                if (buildClicked) {
+                    if (buildRes) {
+                        ImGui.textColored(secondaryColor, " | " + sceneName + " | ");
+                        ImGui.sameLine();
+                        ImGui.textColored(successColor, "Build Successful");
+                    } else {
+                        ImGui.textColored(secondaryColor, " | " + sceneName + " | ");
+                        ImGui.sameLine();
+                        ImGui.textColored(errorColor, "Build Failed");
+                    }
+                    currentTime = glfwGetTime();
+                    if (currentTime - clickTime >= waitSeconds) {
+                        buildClicked = false;
+                        buildRes = false;
+                    }
+                } else {
+                    ImGui.textColored(secondaryColor, " | " + sceneName);
+                }
             }
         } else {
             ImGui.textColored(playColor, "Play Mode");
             ImGui.sameLine();
-            ImGui.textColored(secondary, " | " + sceneName + " | ");
+            ImGui.textColored(secondaryColor, " | " + sceneName + " | ");
             ImGui.sameLine();
             ImGui.textColored(0.5f, 0.5f, 0.5f, 1.0f, "Saving Disabled");
         }
@@ -1239,7 +1296,7 @@ public class EditorLayer {
 
         ImGui.sameLine();
         ImGui.setCursorPosX(windowWidth - ImGui.calcTextSize(fpsString).x - ImGui.calcTextSize(errIcons).x - ImGui.calcTextSize(errString).x + 3);
-        ImGui.textColored(secondary, fpsString);
+        ImGui.textColored(secondaryColor, fpsString);
 
         ImGui.sameLine();
         ImGui.setCursorPosX(windowWidth - ImGui.calcTextSize(errIcons).x - ImGui.calcTextSize(errString).x + 5);
@@ -1248,7 +1305,7 @@ public class EditorLayer {
         if (ScriptManager.getErrorCount() > 0) {
             ImGui.textColored(errorColor, errIcons);
         } else {
-            ImGui.textColored(0.7f, 0.7f, 0.7f, 1.0f, errIcons);
+            ImGui.textColored(primaryColor, errIcons);
         }
         ImGui.setWindowFontScale(1.0f);
 
@@ -1257,7 +1314,7 @@ public class EditorLayer {
         if (ScriptManager.getErrorCount() > 0) {
             ImGui.textColored(errorColor, errString);
         } else {
-            ImGui.textColored(0.7f, 0.7f, 0.7f, 1.0f, errString);
+            ImGui.textColored(primaryColor, errString);
         }
 
         ImGui.end();

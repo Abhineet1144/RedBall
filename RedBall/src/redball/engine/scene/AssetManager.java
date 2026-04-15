@@ -46,7 +46,7 @@ public class AssetManager {
     }
 
     public void setWorkingDirectory(String workingDirectory) {
-        workingDirectory = workingDirectory;
+        this.workingDirectory = workingDirectory;
     }
 
     public static void init(String workingDirectory) {
