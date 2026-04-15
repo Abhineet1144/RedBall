@@ -56,6 +56,7 @@ public class PakWriter {
                 offset += data.length;
             }
         }
+        files.clear();
     }
 
     public static byte[] getAsset(String file) {
