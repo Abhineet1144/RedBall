@@ -3,6 +3,7 @@ package redball.engine.entity;
 import org.apache.commons.lang3.SerializationUtils;
 import org.joml.Vector2f;
 import redball.engine.core.Engine;
+import redball.engine.editor.EditorAABB;
 import redball.engine.entity.components.Component;
 import redball.engine.entity.components.Rigidbody;
 import redball.engine.entity.components.SpriteRenderer;
@@ -209,5 +210,14 @@ public class GameObject implements Serializable {
 
     public void delete() {
         ECSWorld.removeGameObject(this);
+    }
+
+    public EditorAABB getBounds() {
+        Transform transform = this.getComponent(Transform.class);
+        if (transform != null) {
+            if (transform.scale.x < 1 || transform.scale.y < 1) return null;
+            return new EditorAABB(transform.position.x - (transform.scale.x / 2), transform.position.y - (transform.scale.y / 2), transform.scale.x, transform.scale.y);
+        }
+        return null;
     }
 }

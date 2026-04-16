@@ -19,6 +19,7 @@ import org.joml.Vector3f;
 import org.reflections.Reflections;
 import redball.engine.core.Engine;
 import redball.engine.core.PhysicsSystem;
+import redball.engine.input.MouseInput;
 import redball.engine.logger.LogCapture;
 import redball.engine.logger.LogLine;
 import redball.engine.entity.ECSWorld;
@@ -308,7 +309,6 @@ public class EditorLayer {
         selectedGameObject = ECSWorld.findGameObjectByName(selected);
         projectNameBuffer = new ImString(Engine.getProjectName(), 256);
 
-
         if (selectedGameObject != null) {
             if (!selected.equals(prevSelected)) {
                 nameBuffer = new ImString(selectedGameObject.getName(), 256);
@@ -572,8 +572,8 @@ public class EditorLayer {
         if (!Engine.isPlaying()) {
             ImVec2 screenPos = ImGui.getItemRectMin();
             float gridSize = 50f * cameraComponent.camera.getZoom();
-            int cols = (int)(renderWidth  / gridSize) + 2;
-            int rows = (int)(renderHeight / gridSize) + 2;
+            int cols = (int) (renderWidth / gridSize) + 2;
+            int rows = (int) (renderHeight / gridSize) + 2;
 
             int gridColor = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 0.4f);
 
@@ -595,6 +595,27 @@ public class EditorLayer {
             ImGui.resetMouseDragDelta(ImGuiMouseButton.Middle);
         }
 
+        float windowWidth  = RenderManager.getFrameBuffer().getWidth();
+        float windowHeight = RenderManager.getFrameBuffer().getHeight();
+
+        float worldWidth  = windowWidth  / cameraComponent.camera.zoom;
+        float worldHeight = windowHeight / cameraComponent.camera.zoom;
+
+        float mouseX = ((MouseInput.getX() - cursorPos.x) - renderWidth  / 2) * (worldWidth  / renderWidth)  + cameraComponent.camera.editorPosition.x;
+        float mouseY = ((MouseInput.getY() - cursorPos.y) - renderHeight / 2) * (worldHeight / renderHeight) - cameraComponent.camera.editorPosition.y;
+
+        if (!ImGuizmo.isUsing() && !ImGuizmo.isOver() && MouseInput.getX() - cursorPos.x > 0 && MouseInput.getX() - cursorPos.x < renderWidth && MouseInput.getY() - cursorPos.y > 0 && MouseInput.getY() - cursorPos.y < renderHeight) {
+            if (ImGui.getIO().getMouseClicked(0)) {
+                for (int i = ECSWorld.getGameObjects().size() - 1; i >= 0; i--) {
+                    GameObject go = ECSWorld.getGameObjects().get(i);
+                    if (go.getBounds().contains(mouseX, -mouseY)) {
+                        selected = go.getName();
+                        break;
+                    }
+                }
+            }
+        }
+
         if (ImGui.isItemHovered() && !Engine.isPlaying()) {
             float scroll = ImGui.getIO().getMouseWheel();
             if (scroll != 0) {
@@ -613,9 +634,7 @@ public class EditorLayer {
 
             Transform t = selectedGameObject.getComponent(Transform.class);
 
-            if (!ImGuizmo.isUsing()) {
-                t.getMatrix().get(objectMatrix);
-            }
+            t.getMatrix().get(objectMatrix);
 
             ImGuizmo.manipulate(viewMatrix, projectionMatrix, currOpr, localSpace ? Mode.LOCAL : Mode.WORLD, objectMatrix);
 
