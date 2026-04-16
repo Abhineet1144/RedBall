@@ -2,6 +2,7 @@ package redball.engine.entity.components;
 
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
+import redball.engine.core.Engine;
 import redball.engine.renderer.Camera;
 
 import java.io.Serial;
@@ -23,7 +24,9 @@ public class CameraComponent extends Component {
 
     @Override
     public void update(float dt) {
-        camera.setPosition(new Vector2f(gameObject.getComponent(Transform.class).position.x, gameObject.getComponent(Transform.class).position.y));
+        if (Engine.isPlaying()) {
+            camera.setPosition(new Vector2f(gameObject.getComponent(Transform.class).position.x, gameObject.getComponent(Transform.class).position.y));
+        }
     }
 
     public Matrix4f getViewMatrix() {

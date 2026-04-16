@@ -16,7 +16,7 @@ public class Test extends Component {
     public float minInterval = 0.5f;
     public float difficultyRate = 0.01f;
 
-    private static final float[] LANES = { -450, -150, 150, 450 };
+    private static final float[] LANES = { -450, -150, 150 };
 
     private float timer = 0f;
     private Random random = new Random();

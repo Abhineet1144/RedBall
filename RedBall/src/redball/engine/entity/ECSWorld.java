@@ -164,4 +164,8 @@ public class ECSWorld {
     public static Map<String, GameObject> getPool() {
         return pool;
     }
+
+    public static GameObject getCamera() {
+        return Objects.requireNonNull(findGameObjectByTag("Camera"));
+    }
 }

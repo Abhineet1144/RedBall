@@ -1,11 +1,13 @@
 package redball.engine.core;
 
+import redball.engine.entity.components.CameraComponent;
 import redball.engine.logger.LogCapture;
 import redball.engine.editor.EditorLayer;
 import redball.engine.entity.ECSWorld;
 import redball.engine.entity.GameObject;
 import redball.engine.entity.components.Rigidbody;
 import redball.engine.input.KeyboardInput;
+import redball.engine.input.MouseInput;
 import redball.engine.logger.LogLine;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.Shader;
@@ -61,7 +63,7 @@ public class Engine {
                 rb.createBody();
             }
         }
-        RenderManager.prepare(ECSWorld.findGameObjectByTag("Camera"));
+        RenderManager.prepare(ECSWorld.getCamera());
     }
 
     public static void start(String path, boolean build) throws Exception {
@@ -88,6 +90,8 @@ public class Engine {
         }
 
         KeyboardInput.init(windowManager.getWindow(), EditorLayer.getINSTANCE());
+        MouseInput.init(windowManager.getWindow(), EditorLayer.getINSTANCE());
+
         shader = new Shader(AssetPool.getVertexShaderSource(), AssetPool.getFragmentShaderSource());
         if (isBuild) {
             ScriptManager.compileAll("");

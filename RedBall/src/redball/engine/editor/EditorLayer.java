@@ -14,6 +14,7 @@ import imgui.flag.ImGuiCol;
 import javassist.util.proxy.ProxyObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.reflections.Reflections;
 import redball.engine.core.Engine;
@@ -78,7 +79,7 @@ public class EditorLayer {
     private float[] objectMatrix = new float[16];
     private float[] viewMatrix = new float[16];
     private float[] projectionMatrix = new float[16];
-
+    private float oldZoom;
 
     private static String[] componentList = null;
     private static Set<Class<? extends Component>> subclasses;
@@ -94,6 +95,8 @@ public class EditorLayer {
     private ImString searchBuffer = null;
     ImInt fixtureSelectedIndex = new ImInt(0);
     String[] bodyFixtures = Arrays.stream(BodyFixture.values()).map(Enum::name).toArray(String[]::new);
+
+    private GameObject camera;
 
     public static void init(Long window) {
         INSTANCE = new EditorLayer(window);
@@ -268,6 +271,8 @@ public class EditorLayer {
         ImGui.newFrame();
         ImGuizmo.beginFrame();
 
+        camera = ECSWorld.getCamera();
+
         // ShortCuts
         if (ImGui.getIO().getKeyCtrl() && ImGui.isKeyReleased(ImGuiKey.P)) {
             if (!Engine.isPlaying()) {
@@ -275,6 +280,8 @@ public class EditorLayer {
                 saveClicked = false;
             } else {
                 Engine.onStop();
+                camera = ECSWorld.getCamera();
+                camera.getComponent(CameraComponent.class).camera.setZoom(oldZoom);
                 saveClicked = false;
             }
         }
@@ -523,6 +530,8 @@ public class EditorLayer {
         ImGui.sameLine();
         if (!Engine.isPlaying()) {
             if (ImGui.button("Play")) {
+                oldZoom = camera.getComponent(CameraComponent.class).camera.resetZoom();
+
                 Engine.onPlay();
                 saveClicked = false;
             }
@@ -530,6 +539,9 @@ public class EditorLayer {
             if (ImGui.button("Stop")) {
                 Engine.onStop();
                 saveClicked = false;
+
+                camera = ECSWorld.getCamera();
+                camera.getComponent(CameraComponent.class).camera.setZoom(oldZoom);
             }
         }
 
@@ -557,9 +569,25 @@ public class EditorLayer {
             ImGui.setCursorPosX(ImGui.getCursorPosX() + offsetX);
         }
 
+        CameraComponent cameraComponent = camera.getComponent(CameraComponent.class);
+
         ImVec2 cursorPos = ImGui.getCursorScreenPos();
 
         ImGui.image(RenderManager.getFrameBuffer().getTextureId(), new ImVec2(renderWidth, renderHeight), new ImVec2(0, 1), new ImVec2(1, 0));
+
+        if (ImGui.isItemHovered() && ImGui.isMouseDragging(ImGuiMouseButton.Middle) && !Engine.isPlaying()) {
+            ImVec2 delta = new ImVec2();
+            ImGui.getIO().getMouseDelta(delta);
+            cameraComponent.getCamera().setEditorPosition(new Vector2f(cameraComponent.camera.editorPosition.x - delta.x, cameraComponent.camera.editorPosition.y + delta.y));
+            ImGui.resetMouseDragDelta(ImGuiMouseButton.Middle);
+        }
+
+        if (ImGui.isItemHovered() && !Engine.isPlaying()) {
+            float scroll = ImGui.getIO().getMouseWheel();
+            if (scroll != 0) {
+                cameraComponent.camera.setZoom(cameraComponent.camera.getZoom() * (float) Math.pow(0.9f, -scroll));
+            }
+        }
 
         if (selectedGameObject != null) {
             ImGuizmo.setOrthographic(true);
@@ -567,10 +595,8 @@ public class EditorLayer {
 
             ImGuizmo.setRect(cursorPos.x, cursorPos.y, renderWidth, renderHeight);
 
-            CameraComponent cam = ECSWorld.findGameObjectByTag("Camera").getComponent(CameraComponent.class);
-
-            cam.getViewMatrix().get(viewMatrix);
-            cam.getProjectionMatrix().get(projectionMatrix);
+            cameraComponent.getViewMatrix().get(viewMatrix);
+            cameraComponent.getProjectionMatrix().get(projectionMatrix);
 
             Transform t = selectedGameObject.getComponent(Transform.class);
 
@@ -1130,13 +1156,13 @@ public class EditorLayer {
         float padX = 8.0f;
 
         // Colors
-        final int COL_BG         = ImGui.colorConvertFloat4ToU32(0.13f, 0.13f, 0.14f, 1.0f);
+        final int COL_BG = ImGui.colorConvertFloat4ToU32(0.13f, 0.13f, 0.14f, 1.0f);
         final int COL_ACCENT_ERR = ImGui.colorConvertFloat4ToU32(0.96f, 0.28f, 0.28f, 1.0f);
         final int COL_ACCENT_INF = ImGui.colorConvertFloat4ToU32(0.31f, 0.75f, 1.00f, 1.0f);
-        final int COL_ICON_ERR   = ImGui.colorConvertFloat4ToU32(0.96f, 0.28f, 0.28f, 1.0f);
-        final int COL_ICON_INF   = ImGui.colorConvertFloat4ToU32(0.31f, 0.75f, 1.00f, 1.0f);
-        final int COL_TEXT       = 0xFFD4D4D4;
-        final int COL_TEXT_ERR   = 0xFF8771F4;
+        final int COL_ICON_ERR = ImGui.colorConvertFloat4ToU32(0.96f, 0.28f, 0.28f, 1.0f);
+        final int COL_ICON_INF = ImGui.colorConvertFloat4ToU32(0.31f, 0.75f, 1.00f, 1.0f);
+        final int COL_TEXT = 0xFFD4D4D4;
+        final int COL_TEXT_ERR = 0xFF8771F4;
 
         if (ImGui.button("Clear")) {
             if (ScriptManager.getErrorCount() == 0) {
@@ -1148,9 +1174,9 @@ public class EditorLayer {
             boolean isError = line.isError();
 
             int colAccent = isError ? COL_ACCENT_ERR : COL_ACCENT_INF;
-            int colIcon   = isError ? COL_ICON_ERR   : COL_ICON_INF;
-            int colText   = isError ? COL_TEXT_ERR   : COL_TEXT;
-            String icon   = isError ? getIcon("error") : getIcon("info");
+            int colIcon = isError ? COL_ICON_ERR : COL_ICON_INF;
+            int colText = isError ? COL_TEXT_ERR : COL_TEXT;
+            String icon = isError ? getIcon("error") : getIcon("info");
 
             ImVec2 cursor = ImGui.getCursorScreenPos();
 
@@ -1163,7 +1189,7 @@ public class EditorLayer {
             dl.addText(ImGui.getFont(), fontSize, iconX, iconY, colIcon, icon);
 
             float textX = iconX + fontSize + 25;
-            float textY = cursor.y + (rowH / 2f)- ((fontSize + 5) / 2f);
+            float textY = cursor.y + (rowH / 2f) - ((fontSize + 5) / 2f);
             dl.addText(ImGui.getFont(), fontSize + 5, textX, textY, colText, line.getMessage());
 
             ImGui.dummy(width, rowH);

@@ -10,6 +10,7 @@ import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
 import redball.engine.logger.LogCapture;
 import redball.engine.renderer.texture.Texture;
+import redball.engine.input.MouseInput;
 import redball.engine.scene.AssetManager;
 import redball.engine.scene.SceneManager;
 import redball.engine.utils.AbstractScene;
@@ -106,17 +107,18 @@ public class WindowManager {
                     PhysicsSystem.update((float) physicsStep);
                     accumulator -= physicsStep;
                 }
-                ECSWorld.update(Objects.requireNonNull(ECSWorld.findGameObjectByTag("Camera")), (float) deltaTime);
+                ECSWorld.update(ECSWorld.getCamera(), (float) deltaTime);
             } else {
                 accumulator = 0;
             }
 
-            RenderManager.render(Objects.requireNonNull(ECSWorld.findGameObjectByTag("Camera")));
+            RenderManager.render(ECSWorld.getCamera());
             if (!build) {
                 EditorLayer.getINSTANCE().renderDebug();
             }
 
             // SWAP
+            MouseInput.endFrame();
             glfwPollEvents();
             glfwSwapBuffers(window);
 
