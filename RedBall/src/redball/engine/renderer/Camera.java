@@ -27,7 +27,11 @@ public class Camera implements Serializable {
 
     public void adjustProjection(int width, int height) {
         projection.identity();
-        projection.ortho((float) -width / (2 * zoom), (float) width / (2 * zoom), (float) -height / (2 * zoom), (float) height / (2 * zoom), 0.1f, 100.0f);
+        if (!Engine.isPlaying()) {
+            projection.ortho((float) -width / (2 * zoom), (float) width / (2 * zoom), (float) -height / (2 * zoom), (float) height / (2 * zoom), 0.1f, 100.0f);
+        } else {
+            projection.ortho((float) -width / (2), (float) width / (2), (float) -height / (2), (float) height / (2), 0.1f, 100.0f);
+        }
     }
 
     public Matrix4f getViewMat() {

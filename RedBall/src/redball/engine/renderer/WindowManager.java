@@ -17,8 +17,6 @@ import redball.engine.utils.AbstractScene;
 import redball.engine.utils.FolderObserver;
 import redball.engine.utils.ScriptManager;
 
-import java.util.Objects;
-
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -70,8 +68,6 @@ public class WindowManager {
 
         glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
             glViewport(0, 0, w, h);
-            this.width = w;
-            this.height = h;
             FrameBuffer.getINSTANCE().resize(w, h);
         });
     }

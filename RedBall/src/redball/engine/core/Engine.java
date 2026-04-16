@@ -43,6 +43,7 @@ public class Engine {
         // start physics, call start() on all components
         ECSWorld.start();
         isPlaying = true;
+        ECSWorld.getCamera().getComponent(CameraComponent.class).camera.adjustProjection(Engine.getWindowManager().getWidth(), Engine.getWindowManager().getHeight());
     }
 
     public static void onStop() {

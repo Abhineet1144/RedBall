@@ -79,7 +79,6 @@ public class EditorLayer {
     private float[] objectMatrix = new float[16];
     private float[] viewMatrix = new float[16];
     private float[] projectionMatrix = new float[16];
-    private float oldZoom;
 
     private static String[] componentList = null;
     private static Set<Class<? extends Component>> subclasses;
@@ -281,7 +280,6 @@ public class EditorLayer {
             } else {
                 Engine.onStop();
                 camera = ECSWorld.getCamera();
-                camera.getComponent(CameraComponent.class).camera.setZoom(oldZoom);
                 saveClicked = false;
             }
         }
@@ -530,8 +528,6 @@ public class EditorLayer {
         ImGui.sameLine();
         if (!Engine.isPlaying()) {
             if (ImGui.button("Play")) {
-                oldZoom = camera.getComponent(CameraComponent.class).camera.resetZoom();
-
                 Engine.onPlay();
                 saveClicked = false;
             }
@@ -539,9 +535,6 @@ public class EditorLayer {
             if (ImGui.button("Stop")) {
                 Engine.onStop();
                 saveClicked = false;
-
-                camera = ECSWorld.getCamera();
-                camera.getComponent(CameraComponent.class).camera.setZoom(oldZoom);
             }
         }
 
@@ -574,6 +567,26 @@ public class EditorLayer {
         ImVec2 cursorPos = ImGui.getCursorScreenPos();
 
         ImGui.image(RenderManager.getFrameBuffer().getTextureId(), new ImVec2(renderWidth, renderHeight), new ImVec2(0, 1), new ImVec2(1, 0));
+        ImDrawList drawList = ImGui.getWindowDrawList();
+
+        if (!Engine.isPlaying()) {
+            ImVec2 screenPos = ImGui.getItemRectMin();
+            float gridSize = 50f * cameraComponent.camera.getZoom();
+            int cols = (int)(renderWidth  / gridSize) + 2;
+            int rows = (int)(renderHeight / gridSize) + 2;
+
+            int gridColor = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 0.4f);
+
+            for (int i = 0; i <= cols; i++) {
+                float x = screenPos.x + i * gridSize;
+                drawList.addLine(x, screenPos.y, x, screenPos.y + renderHeight, gridColor, 2f);
+            }
+
+            for (int i = 0; i <= rows; i++) {
+                float y = screenPos.y + i * gridSize;
+                drawList.addLine(screenPos.x, y, screenPos.x + renderWidth, y, gridColor, 2f);
+            }
+        }
 
         if (ImGui.isItemHovered() && ImGui.isMouseDragging(ImGuiMouseButton.Middle) && !Engine.isPlaying()) {
             ImVec2 delta = new ImVec2();
