@@ -8,6 +8,7 @@ import redball.engine.editor.EditorLayer;
 import redball.engine.core.Engine;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
+import redball.engine.entity.components.CameraComponent;
 import redball.engine.logger.LogCapture;
 import redball.engine.renderer.texture.Texture;
 import redball.engine.input.MouseInput;

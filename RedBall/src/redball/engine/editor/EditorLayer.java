@@ -595,11 +595,8 @@ public class EditorLayer {
             ImGui.resetMouseDragDelta(ImGuiMouseButton.Middle);
         }
 
-        float windowWidth  = RenderManager.getFrameBuffer().getWidth();
-        float windowHeight = RenderManager.getFrameBuffer().getHeight();
-
-        float worldWidth  = windowWidth  / cameraComponent.camera.zoom;
-        float worldHeight = windowHeight / cameraComponent.camera.zoom;
+        float worldWidth  = 2f / cameraComponent.camera.getProjectionMat().m00();
+        float worldHeight = 2f / Math.abs(cameraComponent.camera.getProjectionMat().m11());
 
         float mouseX = ((MouseInput.getX() - cursorPos.x) - renderWidth  / 2) * (worldWidth  / renderWidth)  + cameraComponent.camera.editorPosition.x;
         float mouseY = ((MouseInput.getY() - cursorPos.y) - renderHeight / 2) * (worldHeight / renderHeight) - cameraComponent.camera.editorPosition.y;
@@ -611,6 +608,8 @@ public class EditorLayer {
                     if (go.getBounds().contains(mouseX, -mouseY)) {
                         selected = go.getName();
                         break;
+                    } else {
+                        selected = null;
                     }
                 }
             }
