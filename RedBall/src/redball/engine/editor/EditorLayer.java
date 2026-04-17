@@ -605,7 +605,7 @@ public class EditorLayer {
             if (ImGui.getIO().getMouseClicked(0)) {
                 for (int i = ECSWorld.getGameObjects().size() - 1; i >= 0; i--) {
                     GameObject go = ECSWorld.getGameObjects().get(i);
-                    if (go.getBounds().contains(mouseX, -mouseY)) {
+                    if (go.getBounds().contains(mouseX, -mouseY, (float) Math.toDegrees(go.getComponent(Transform.class).rotation))) {
                         selected = go.getName();
                         break;
                     } else {

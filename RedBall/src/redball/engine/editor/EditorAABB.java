@@ -1,10 +1,10 @@
 package redball.engine.editor;
 
 public class EditorAABB {
-    public float x;
-    public float y;
-    public float width;
-    public float height;
+    private float x;
+    private float y;
+    private float width;
+    private float height;
 
     public EditorAABB(float x, float y, float width, float height) {
         this.x = x;
@@ -13,8 +13,21 @@ public class EditorAABB {
         this.height = height;
     }
 
-    public boolean contains(float x, float y) {
-        return x >= this.x && x <= this.x + width &&
-                y >= this.y && y <= this.y + height;
+    public boolean contains(float x, float y, float rotation) {
+        float cx = this.x + width / 2.0f;
+        float cy = this.y + height / 2.0f;
+
+        float dx = x - cx;
+        float dy = y - cy;
+
+        float rad = (float) Math.toRadians(-rotation);
+
+        float cos = (float) Math.cos(rad);
+        float sin = (float) Math.sin(rad);
+
+        float localX = dx * cos - dy * sin + cx;
+        float localY = dx * sin + dy * cos + cy;
+
+        return localX >= this.x && localX <= this.x + width && localY >= this.y && localY <= this.y + height;
     }
 }
