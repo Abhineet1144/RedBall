@@ -4,6 +4,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import redball.engine.core.Engine;
+import redball.engine.editor.EditorLayer;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -16,7 +17,6 @@ public class Camera implements Serializable {
     private Matrix4f projection, view;
     private Vector2f position;
     public Vector2f editorPosition;
-    public float zoom = 1;
 
     public Camera(Vector2f position) {
         this.position = position;
@@ -28,7 +28,7 @@ public class Camera implements Serializable {
     public void adjustProjection(int width, int height) {
         projection.identity();
         if (!Engine.isPlaying()) {
-            projection.ortho((float) -width / (2 * zoom), (float) width / (2 * zoom), (float) -height / (2 * zoom), (float) height / (2 * zoom), 0.1f, 100.0f);
+            projection.ortho((float) -width / (2 * EditorLayer.zoom), (float) width / (2 * EditorLayer.zoom), (float) -height / (2 * EditorLayer.zoom), (float) height / (2 * EditorLayer.zoom), 0.1f, 100.0f);
         } else {
             projection.ortho((float) -width / (2), (float) width / (2), (float) -height / (2), (float) height / (2), 0.1f, 100.0f);
         }
@@ -62,20 +62,5 @@ public class Camera implements Serializable {
 
     public void setEditorPosition(Vector2f editorPosition) {
         this.editorPosition = editorPosition;
-    }
-
-    public float getZoom() {
-        return zoom;
-    }
-
-    public void setZoom(float zoom) {
-        this.zoom = zoom;
-        adjustProjection(Engine.getWindowManager().getWidth(), Engine.getWindowManager().getHeight());
-    }
-
-    public float resetZoom() {
-        float old = zoom;
-        setZoom(1);
-        return old;
     }
 }

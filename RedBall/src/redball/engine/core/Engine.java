@@ -49,11 +49,7 @@ public class Engine {
     public static void onStop() {
         isPlaying = false;
 
-        for (LogLine log : LogCapture.getLogs()) {
-            if (!log.isError()) {
-                LogCapture.getLogs().remove(log);
-            }
-        }
+        LogCapture.getLogs().removeIf(log -> !log.isError());
         PhysicsSystem.clear();
         ECSWorld.removeAll();
         RenderManager.clear();
@@ -65,6 +61,7 @@ public class Engine {
             }
         }
         RenderManager.prepare(ECSWorld.getCamera());
+        ECSWorld.getCamera().getComponent(CameraComponent.class).camera.adjustProjection(Engine.getWindowManager().getWidth(), Engine.getWindowManager().getHeight());
     }
 
     public static void start(String path, boolean build) throws Exception {

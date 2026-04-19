@@ -75,6 +75,7 @@ public class EditorLayer {
     boolean buildClicked = false;
     boolean buildRes = false;
 
+    public static float zoom = 1;
     private int currOpr = Operation.TRANSLATE;
     private boolean localSpace = false;
     private float[] objectMatrix = new float[16];
@@ -97,6 +98,7 @@ public class EditorLayer {
     String[] bodyFixtures = Arrays.stream(BodyFixture.values()).map(Enum::name).toArray(String[]::new);
 
     private GameObject camera;
+    private boolean changed = false;
 
     public static void init(Long window) {
         INSTANCE = new EditorLayer(window);
@@ -310,6 +312,8 @@ public class EditorLayer {
         projectNameBuffer = new ImString(Engine.getProjectName(), 256);
 
         if (selectedGameObject != null) {
+            changed = false;
+
             if (!selected.equals(prevSelected)) {
                 nameBuffer = new ImString(selectedGameObject.getName(), 256);
                 prevSelected = selected;
@@ -571,9 +575,9 @@ public class EditorLayer {
 
         if (!Engine.isPlaying()) {
             ImVec2 screenPos = ImGui.getItemRectMin();
-            float gridSize = 50f * cameraComponent.camera.getZoom();
-            int cols = (int) (renderWidth / gridSize) + 2;
-            int rows = (int) (renderHeight / gridSize) + 2;
+            float gridSize = 50f * getZoom();
+            int cols = (int) (renderWidth / gridSize);
+            int rows = (int) (renderHeight / gridSize);
 
             int gridColor = ImGui.colorConvertFloat4ToU32(0.3f, 0.3f, 0.3f, 0.4f);
 
@@ -607,9 +611,12 @@ public class EditorLayer {
                     GameObject go = ECSWorld.getGameObjects().get(i);
                     if (go.getBounds().contains(mouseX, -mouseY, (float) Math.toDegrees(go.getComponent(Transform.class).rotation))) {
                         selected = go.getName();
+                        selectedGameObject = go;
+                        changed = true;
                         break;
                     } else {
                         selected = null;
+                        selectedGameObject = null;
                     }
                 }
             }
@@ -618,7 +625,7 @@ public class EditorLayer {
         if (ImGui.isItemHovered() && !Engine.isPlaying()) {
             float scroll = ImGui.getIO().getMouseWheel();
             if (scroll != 0) {
-                cameraComponent.camera.setZoom(cameraComponent.camera.getZoom() * (float) Math.pow(0.9f, -scroll));
+                setZoom(getZoom() * (float) Math.pow(0.9f, -scroll));
             }
         }
 
@@ -781,16 +788,16 @@ public class EditorLayer {
         if (ImGui.collapsingHeader("Transform", ImGuiTreeNodeFlags.DefaultOpen)) {
             Transform transform = go.getComponent(Transform.class);
             float[] pos = {transform.getXPosition(), transform.getYPosition()};
-            if (ImGui.dragFloat2("Position", pos)) {
+            if (ImGui.dragFloat2("Position", pos) && !changed) {
                 transform.setXPosition(pos[0]);
                 transform.setYPosition(pos[1]);
             }
             float[] rot = {(float) (Math.toDegrees(transform.getRotation()) / PhysicsSystem.PPM)};
-            if (ImGui.dragFloat("Rotation", rot)) {
+            if (ImGui.dragFloat("Rotation", rot) && !changed) {
                 transform.setRotation((float) Math.toRadians(rot[0] % 360));
             }
             float[] scale = {transform.getScaleX(), transform.getScaleY()};
-            if (ImGui.dragFloat2("Scale", scale)) {
+            if (ImGui.dragFloat2("Scale", scale) && !changed) {
                 transform.setXScale(scale[0]);
                 transform.setYScale(scale[1]);
             }
@@ -1412,5 +1419,18 @@ public class EditorLayer {
 
     public static void setFps(int fps) {
         EditorLayer.fps = fps;
+    }
+
+    public float getZoom() {
+        return zoom;
+    }
+
+    public void setZoom(float zoom) {
+        this.zoom = zoom;
+        ECSWorld.getCamera().getComponent(CameraComponent.class).camera.adjustProjection(Engine.getWindowManager().getWidth(), Engine.getWindowManager().getHeight());
+    }
+
+    public void resetZoom() {
+        setZoom(1);
     }
 }

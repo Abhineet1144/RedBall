@@ -69,6 +69,10 @@ public class WindowManager {
 
         glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
             glViewport(0, 0, w, h);
+            if (Engine.isBuild) {
+                width = w;
+                height = h;
+            }
             FrameBuffer.getINSTANCE().resize(w, h);
         });
     }
