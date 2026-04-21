@@ -48,6 +48,12 @@ import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
 
 public class EditorLayer {
     private static EditorLayer INSTANCE;
+
+    private ImBoolean showHierarchyPanel = new ImBoolean(true);
+    private ImBoolean showInspectorPanel = new ImBoolean(true);
+    private ImBoolean showAssetsPanel = new ImBoolean(true);
+    private ImBoolean showConsolePanel = new ImBoolean(true);
+
     private final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
     private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
     private String selected = null;
@@ -179,7 +185,7 @@ public class EditorLayer {
         style.setColor(ImGuiCol.HeaderActive, 0.95f, 0.58f, 0.20f, 1.00f); // your original
 
         // === Separators ===
-        style.setColor(ImGuiCol.Separator, 0.137f, 0.137f, 0.137f, 1.00f); // #232323
+        style.setColor(ImGuiCol.Separator, 0.25f, 0.25f, 0.25f, 1.00f);
         style.setColor(ImGuiCol.SeparatorHovered, 0.75f, 0.45f, 0.15f, 1.00f); // orange
         style.setColor(ImGuiCol.SeparatorActive, 0.95f, 0.58f, 0.20f, 1.00f); // orange
 
@@ -299,6 +305,10 @@ public class EditorLayer {
             build();
         }
 
+        if (ImGui.getIO().getKeyCtrl() && ImGui.getIO().getKeyShift() && ImGui.isKeyReleased(ImGuiKey.N)) {
+            createGameObject();
+        }
+
         renderStatusBar();
 
         createDockSpace();
@@ -306,65 +316,7 @@ public class EditorLayer {
         renderMenuBar();
         renderHierarchy();
         renderViewPort();
-
-        ImGui.begin("Inspector");
-        selectedGameObject = ECSWorld.findGameObjectByName(selected);
-        projectNameBuffer = new ImString(Engine.getProjectName(), 256);
-
-        if (selectedGameObject != null) {
-            changed = false;
-
-            if (!selected.equals(prevSelected)) {
-                nameBuffer = new ImString(selectedGameObject.getName(), 256);
-                prevSelected = selected;
-            }
-            ImGui.text("Name");
-            ImGui.sameLine();
-            if (ImGui.inputText("##Name", nameBuffer)) {
-                if (!nameBuffer.get().isEmpty()) {
-                    int count = ECSWorld.countDuplicates(nameBuffer.get());
-                    if (count < 1) {
-                        selectedGameObject.setName(nameBuffer.get());
-                        selected = nameBuffer.get();
-                        prevSelected = nameBuffer.get();
-                    } else {
-                        int suffix = count;
-                        while (ECSWorld.countDuplicates(nameBuffer.get() + " (" + suffix + ")") > 0) {
-                            suffix++;
-                        }
-                        selectedGameObject.setName(nameBuffer.get() + " (" + suffix + ")");
-                        prevSelected = selectedGameObject.getName();
-                        selected = selectedGameObject.getName();
-                    }
-                }
-            }
-            tagComponent(selectedGameObject);
-            transformComponent(selectedGameObject);
-            if (selectedGameObject.getComponent(CameraComponent.class) != null) {
-                cameraComponent(selectedGameObject);
-            }
-            rigidBodyComponent(selectedGameObject);
-            spriteRendererComponent(selectedGameObject);
-
-            Iterator<Component> componentIterator = selectedGameObject.getComponents().listIterator();
-            while (componentIterator.hasNext()) {
-                Component c = componentIterator.next();
-                if (!(c instanceof Rigidbody) && !(c instanceof Transform) && !(c instanceof Tag) && !(c instanceof SpriteRenderer) && c != null && !(c instanceof CameraComponent)) {
-                    customComponents(c, componentIterator);
-                }
-            }
-
-            addComponent(selectedGameObject);
-            if (ImGui.beginDragDropTarget()) {
-                Object payload = ImGui.acceptDragDropPayload("String");
-                if (payload instanceof String dropped) {
-                    Component component = selectedGameObject.addComponent(getComponent(dropped));
-                }
-                ImGui.endDragDropTarget();
-            }
-        }
-        ImGui.end();
-
+        renderInspector();
         assetBrowser();
         renderConsole();
         renderSceneManager();
@@ -375,120 +327,172 @@ public class EditorLayer {
 
     }
 
-    private void renderHierarchy() throws InvocationTargetException, InstantiationException, IllegalAccessException {
-        ImGui.begin("Hierarchy");
+    private void renderInspector() throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (showInspectorPanel.get()) {
+            ImGui.begin("Inspector");
+            selectedGameObject = ECSWorld.findGameObjectByName(selected);
+            projectNameBuffer = new ImString(Engine.getProjectName(), 256);
 
-        ImGui.pushStyleColor(ImGuiCol.FrameBg, 0.12f, 0.12f, 0.18f, 1.0f);
-        ImGui.setNextItemWidth(ImGui.getContentRegionAvailX());
-        if (searchBuffer == null) searchBuffer = new ImString(256);
-        ImGui.inputTextWithHint("##Search", "Search...", searchBuffer);
-        ImGui.popStyleColor();
-        ImGui.spacing();
+            if (selectedGameObject != null) {
+                changed = false;
 
-        if (ImGui.isMouseClicked(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
-            ImGui.openPopup("HierarchyEdit");
-        }
-
-        if (ImGui.beginPopup("HierarchyEdit")) {
-            if (ImGui.menuItem("Create GameObject")) {
-                int count = ECSWorld.countDuplicates("GameObject");
-                String name;
-                if (count < 1) {
-                    name = "GameObject";
-                } else {
-                    int suffix = count;
-                    while (ECSWorld.countDuplicates("GameObject" + " (" + suffix + ")") > 0) {
-                        suffix++;
-                    }
-                    name = "GameObject" + " (" + suffix + ")";
+                if (!selected.equals(prevSelected)) {
+                    nameBuffer = new ImString(selectedGameObject.getName(), 256);
+                    prevSelected = selected;
                 }
-                GameObject g = ECSWorld.createGameObject(name);
-                g.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
-            }
-            ImGui.endMenu();
-        }
-
-        Iterator<GameObject> gameObjectIterator = ECSWorld.getGameObjects().listIterator();
-        while (gameObjectIterator.hasNext()) {
-            String search = searchBuffer.get().toLowerCase();
-            GameObject go = gameObjectIterator.next();
-            if (!search.isEmpty() && !go.getName().toLowerCase().contains(search)) continue;
-
-            float itemHeight = 14;
-            float x = ImGui.getCursorScreenPosX();
-            float y = ImGui.getCursorScreenPosY();
-
-            boolean isSelected = selected != null && selected.equals(go.getName());
-            if (ImGui.selectable("##" + go.getName(), isSelected, ImGuiSelectableFlags.None, 0, itemHeight)) {
-                selected = go.getName();
-            }
-
-            float textY = y + (itemHeight - ImGui.getTextLineHeight()) / 2;
-            ImGui.getWindowDrawList().addText(x + 8, textY, ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1.0f), go.getName());
-
-            if (ImGui.isItemClicked(ImGuiMouseButton.Right)) {
-                selected = go.getName();
-                ImGui.openPopup("GameObjectContext##" + go.getName());
-            }
-            if (ImGui.beginPopup("GameObjectContext##" + go.getName())) {
-                if (ImGui.menuItem("Delete")) {
-                    gameObjectIterator.remove();
-                    if (selected != null && selected.equals(go.getName())) {
-                        selected = null;
-                        prevSelected = null;
-                    }
-                    RenderManager.rebuild();
-                }
-                if (ImGui.menuItem("Create Prefab")) {
-                    try (BufferedOutputStream sceneOut = new BufferedOutputStream(new FileOutputStream(AssetManager.getINSTANCE().getPrefabDirectory() + go.getName() + ".prefab"))) {
-                        ArrayList<GameObject> list = new ArrayList<>();
-                        list.add(go);
-                        IOUtils.write(new SaveObject(list).toByteArray(), sceneOut);
-                    } catch (IOException e) {
-                        System.out.println("ERROR:" + e);
-                    }
-                }
-                ImGui.endPopup();
-            }
-            if (ImGui.beginDragDropSource()) {
-                ImGui.setDragDropPayload("GAME_OBJECT", go);
-                ImGui.text(go.getName());
-                ImGui.endDragDropSource();
-            }
-            if (ImGui.beginDragDropTarget()) {
-                Object payload = ImGui.acceptDragDropPayload("String");
-                if (payload instanceof String dropped) {
-                    go.addComponent(getComponent(dropped));
-                }
-                ImGui.endDragDropTarget();
-            }
-        }
-
-        float availX = ImGui.getContentRegionAvailX();
-        float availY = ImGui.getContentRegionAvailY();
-        ImGui.dummy(availX == 0 ? 1.0f : availX, availY == 0 ? 1.0f : availY);
-
-        if (ImGui.beginDragDropTarget()) {
-            Object stringPayload = ImGui.acceptDragDropPayload("String");
-            if (stringPayload instanceof String dropped) {
-                if (dropped.endsWith(".prefab") && !Engine.isPlaying()) {
-                    if (prefabPool.containsKey(dropped)) {
-                        ECSWorld.addPrefab(prefabPool.get(dropped).getGameObjects().getFirst());
-                    } else {
-                        try (BufferedInputStream prefab = new BufferedInputStream(new FileInputStream(dropped))) {
-                            SaveObject saveObject = SaveObject.parseFrom(IOUtils.toByteArray(prefab));
-                            prefabPool.put(dropped, saveObject);
-                            ECSWorld.addPrefab(saveObject.getGameObjects().getFirst());
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                ImGui.text("Name");
+                ImGui.sameLine();
+                if (ImGui.inputText("##Name", nameBuffer)) {
+                    if (!nameBuffer.get().isEmpty()) {
+                        int count = ECSWorld.countDuplicates(nameBuffer.get());
+                        if (count < 1) {
+                            selectedGameObject.setName(nameBuffer.get());
+                            selected = nameBuffer.get();
+                            prevSelected = nameBuffer.get();
+                        } else {
+                            int suffix = count;
+                            while (ECSWorld.countDuplicates(nameBuffer.get() + " (" + suffix + ")") > 0) {
+                                suffix++;
+                            }
+                            selectedGameObject.setName(nameBuffer.get() + " (" + suffix + ")");
+                            prevSelected = selectedGameObject.getName();
+                            selected = selectedGameObject.getName();
                         }
                     }
                 }
-            }
-            ImGui.endDragDropTarget();
-        }
+                tagComponent(selectedGameObject);
+                transformComponent(selectedGameObject);
+                if (selectedGameObject.getComponent(CameraComponent.class) != null) {
+                    cameraComponent(selectedGameObject);
+                }
+                rigidBodyComponent(selectedGameObject);
+                spriteRendererComponent(selectedGameObject);
 
-        ImGui.end();
+                Iterator<Component> componentIterator = selectedGameObject.getComponents().listIterator();
+                while (componentIterator.hasNext()) {
+                    Component c = componentIterator.next();
+                    if (!(c instanceof Rigidbody) && !(c instanceof Transform) && !(c instanceof Tag) && !(c instanceof SpriteRenderer) && c != null && !(c instanceof CameraComponent)) {
+                        customComponents(c, componentIterator);
+                    }
+                }
+
+                addComponent(selectedGameObject);
+                if (ImGui.beginDragDropTarget()) {
+                    Object payload = ImGui.acceptDragDropPayload("String");
+                    if (payload instanceof String dropped) {
+                        Component component = selectedGameObject.addComponent(getComponent(dropped));
+                    }
+                    ImGui.endDragDropTarget();
+                }
+            }
+            ImGui.end();
+        }
+    }
+
+    private void renderHierarchy() throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (showHierarchyPanel.get()) {
+            ImGui.begin("Hierarchy");
+
+            ImGui.pushStyleColor(ImGuiCol.FrameBg, 0.12f, 0.12f, 0.18f, 1.0f);
+            ImGui.setNextItemWidth(ImGui.getContentRegionAvailX());
+            if (searchBuffer == null) searchBuffer = new ImString(256);
+            ImGui.inputTextWithHint("##Search", "Search...", searchBuffer);
+            ImGui.popStyleColor();
+            ImGui.spacing();
+
+            if (ImGui.isMouseClicked(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
+                ImGui.openPopup("HierarchyEdit");
+            }
+
+            if (ImGui.beginPopup("HierarchyEdit")) {
+                if (ImGui.menuItem("Create GameObject")) {
+                    createGameObject();
+                }
+                ImGui.endMenu();
+            }
+
+            Iterator<GameObject> gameObjectIterator = ECSWorld.getGameObjects().listIterator();
+            while (gameObjectIterator.hasNext()) {
+                String search = searchBuffer.get().toLowerCase();
+                GameObject go = gameObjectIterator.next();
+                if (!search.isEmpty() && !go.getName().toLowerCase().contains(search)) continue;
+
+                float itemHeight = 14;
+                float x = ImGui.getCursorScreenPosX();
+                float y = ImGui.getCursorScreenPosY();
+
+                boolean isSelected = selected != null && selected.equals(go.getName());
+                if (ImGui.selectable("##" + go.getName(), isSelected, ImGuiSelectableFlags.None, 0, itemHeight)) {
+                    selected = go.getName();
+                }
+
+                float textY = y + (itemHeight - ImGui.getTextLineHeight()) / 2;
+                ImGui.getWindowDrawList().addText(x + 8, textY, ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1.0f), go.getName());
+
+                if (ImGui.isItemClicked(ImGuiMouseButton.Right)) {
+                    selected = go.getName();
+                    ImGui.openPopup("GameObjectContext##" + go.getName());
+                }
+                if (ImGui.beginPopup("GameObjectContext##" + go.getName())) {
+                    if (ImGui.menuItem("Delete")) {
+                        gameObjectIterator.remove();
+                        if (selected != null && selected.equals(go.getName())) {
+                            selected = null;
+                            prevSelected = null;
+                        }
+                        RenderManager.rebuild();
+                    }
+                    if (ImGui.menuItem("Create Prefab")) {
+                        try (BufferedOutputStream sceneOut = new BufferedOutputStream(new FileOutputStream(AssetManager.getINSTANCE().getPrefabDirectory() + go.getName() + ".prefab"))) {
+                            ArrayList<GameObject> list = new ArrayList<>();
+                            list.add(go);
+                            IOUtils.write(new SaveObject(list).toByteArray(), sceneOut);
+                        } catch (IOException e) {
+                            System.out.println("ERROR:" + e);
+                        }
+                    }
+                    ImGui.endPopup();
+                }
+                if (ImGui.beginDragDropSource()) {
+                    ImGui.setDragDropPayload("GAME_OBJECT", go);
+                    ImGui.text(go.getName());
+                    ImGui.endDragDropSource();
+                }
+                if (ImGui.beginDragDropTarget()) {
+                    Object payload = ImGui.acceptDragDropPayload("String");
+                    if (payload instanceof String dropped) {
+                        go.addComponent(getComponent(dropped));
+                    }
+                    ImGui.endDragDropTarget();
+                }
+            }
+
+            float availX = ImGui.getContentRegionAvailX();
+            float availY = ImGui.getContentRegionAvailY();
+            ImGui.dummy(availX == 0 ? 1.0f : availX, availY == 0 ? 1.0f : availY);
+
+            if (ImGui.beginDragDropTarget()) {
+                Object stringPayload = ImGui.acceptDragDropPayload("String");
+                if (stringPayload instanceof String dropped) {
+                    if (dropped.endsWith(".prefab") && !Engine.isPlaying()) {
+                        if (prefabPool.containsKey(dropped)) {
+                            ECSWorld.addPrefab(prefabPool.get(dropped).getGameObjects().getFirst());
+                        } else {
+                            try (BufferedInputStream prefab = new BufferedInputStream(new FileInputStream(dropped))) {
+                                SaveObject saveObject = SaveObject.parseFrom(IOUtils.toByteArray(prefab));
+                                prefabPool.put(dropped, saveObject);
+                                ECSWorld.addPrefab(saveObject.getGameObjects().getFirst());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                }
+                ImGui.endDragDropTarget();
+            }
+
+            ImGui.end();
+        }
     }
 
     void renderViewPort() {
@@ -600,10 +604,10 @@ public class EditorLayer {
             ImGui.resetMouseDragDelta(ImGuiMouseButton.Middle);
         }
 
-        float worldWidth  = 2f / cameraComponent.camera.getProjectionMat().m00();
+        float worldWidth = 2f / cameraComponent.camera.getProjectionMat().m00();
         float worldHeight = 2f / Math.abs(cameraComponent.camera.getProjectionMat().m11());
 
-        float mouseX = ((MouseInput.getX() - cursorPos.x) - renderWidth  / 2) * (worldWidth  / renderWidth)  + cameraComponent.camera.editorPosition.x;
+        float mouseX = ((MouseInput.getX() - cursorPos.x) - renderWidth / 2) * (worldWidth / renderWidth) + cameraComponent.camera.editorPosition.x;
         float mouseY = ((MouseInput.getY() - cursorPos.y) - renderHeight / 2) * (worldHeight / renderHeight) - cameraComponent.camera.editorPosition.y;
 
         if (!ImGuizmo.isUsing() && !ImGuizmo.isOver() && MouseInput.getX() - cursorPos.x > 0 && MouseInput.getX() - cursorPos.x < renderWidth && MouseInput.getY() - cursorPos.y > 0 && MouseInput.getY() - cursorPos.y < renderHeight) {
@@ -667,39 +671,87 @@ public class EditorLayer {
 
     private void renderMenuBar() throws Exception {
         if (ImGui.beginMainMenuBar()) {
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.91f, 0.38f, 0.17f, 1f);
+            ImGui.text(" RB ");
+            ImGui.popStyleColor();
+            ImGui.separator();
+
             if (ImGui.beginMenu("File")) {
-                if (ImGui.menuItem("New Scene")) {
+                if (ImGui.menuItem("  New Scene", "Ctrl+N")) {
                     showNewScenePopup = true;
                     sceneName.set("");
                 }
-                if (ImGui.menuItem("Save", "Ctrl + S")) {
+                ImGui.separator();
+                if (ImGui.menuItem("  Save", "Ctrl+S")) {
                     if (!Engine.isPlaying()) {
                         SaveManager.save();
                     }
                     clickTime = glfwGetTime();
                     saveClicked = !saveClicked;
                 }
-                if (ImGui.menuItem("Build", "Ctrl + B")) {
+                if (ImGui.menuItem("  Build", "Ctrl+B")) {
                     build();
                 }
                 ImGui.separator();
-                if (ImGui.menuItem("Exit")) {
+                if (ImGui.menuItem("  Exit", "Alt+F4")) {
                     glfwSetWindowShouldClose(window, true);
                 }
                 ImGui.endMenu();
             }
+
             if (ImGui.beginMenu("Edit")) {
-                if (ImGui.menuItem("Scene Manager")) {
+                if (ImGui.menuItem("  Scene Manager")) {
                     showSceneManager.set(true);
                 }
-                if (ImGui.menuItem("Project Settings")) {
+                if (ImGui.menuItem("  Project Settings")) {
                     showProjectSettings.set(true);
                 }
-                if (ImGui.menuItem("Add Component")) {
+                ImGui.separator();
+                if (ImGui.menuItem("  Add Component")) {
                     System.out.println("Add clicked!!");
                 }
                 ImGui.endMenu();
             }
+
+            if (ImGui.beginMenu("View")) {
+                if (ImGui.menuItem("  Hierarchy", "", showHierarchyPanel.get()))
+                    showHierarchyPanel.set(!showHierarchyPanel.get());
+
+                if (ImGui.menuItem("  Inspector", "", showInspectorPanel.get()))
+                    showInspectorPanel.set(!showInspectorPanel.get());
+
+                if (ImGui.menuItem("  Assets", "", showAssetsPanel.get())) showAssetsPanel.set(!showAssetsPanel.get());
+
+                if (ImGui.menuItem("  Console", "", showConsolePanel.get()))
+                    showConsolePanel.set(!showConsolePanel.get());
+
+                ImGui.endMenu();
+            }
+
+            if (ImGui.beginMenu("GameObject")) {
+
+                if (ImGui.menuItem("  Empty Object", "Ctrl+Shift+N")) {
+                    createGameObject();
+                }
+                ImGui.separator();
+
+                if (ImGui.beginMenu("  2D Object")) {
+                    if (ImGui.menuItem("  Sprite")) { /* TODO */ }
+                    ImGui.endMenu();
+                }
+
+                if (ImGui.beginMenu("  Physics")) {
+                    if (ImGui.menuItem("  Rigidbody 2D")) { /* TODO */ }
+                    ImGui.endMenu();
+                }
+
+                ImGui.separator();
+                if (ImGui.menuItem("  Camera")) { /* TODO */ }
+                if (ImGui.menuItem("  Audio Source")) { /* TODO */ }
+
+                ImGui.endMenu();
+            }
+
             ImGui.endMainMenuBar();
         }
     }
@@ -1001,239 +1053,244 @@ public class EditorLayer {
     }
 
     private void assetBrowser() throws IOException {
-        ImGui.begin("AssetBrowser");
-        float thumbnailSize = 64;
-        float padding = 8;
-        float cellSize = thumbnailSize + padding;
+        if (showAssetsPanel.get()) {
 
-        float panelWidth = ImGui.getContentRegionAvailX();
-        int columnCount = Math.max(1, (int) (panelWidth / cellSize));
-        currentFolder = AssetManager.getINSTANCE().getFile().getPath();
-        breadCrumbs = currentFolder.split("/");
+            ImGui.begin("AssetBrowser");
+            float thumbnailSize = 64;
+            float padding = 8;
+            float cellSize = thumbnailSize + padding;
 
-        for (int i = 0; i < breadCrumbs.length; i++) {
-            if (i != 0) {
-                ImGui.sameLine();
-                ImGui.setWindowFontScale(0.3f);
-                float posX = ImGui.getCursorPosX();
-                float posY = ImGui.getCursorPosY();
-                ImGui.setCursorPos(posX, posY + 7);
-                ImGui.text(getIcon("chevron"));
-                ImGui.setWindowFontScale(1.0f);
-                ImGui.sameLine();
-            }
+            float panelWidth = ImGui.getContentRegionAvailX();
+            int columnCount = Math.max(1, (int) (panelWidth / cellSize));
+            currentFolder = AssetManager.getINSTANCE().getFile().getPath();
+            breadCrumbs = currentFolder.split("/");
 
-            if (ImGui.button(breadCrumbs[i])) {
-                String[] sub = Arrays.copyOfRange(breadCrumbs, 0, i + 1);
-                currentFolder = String.join("/", sub);
-                AssetManager.getINSTANCE().setFile(new File(currentFolder));
-            }
-        }
-
-        assets = AssetManager.getINSTANCE().getFile().listFiles();
-
-        ImGui.columns(columnCount, "assetGrid", false);
-        // Allow only in asset browser tab
-        if (ImGui.isMouseClicked(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
-            ImGui.openPopup("FileEditPopup");
-        }
-
-        if (ImGui.beginPopup("FileEditPopup")) {
-            if (ImGui.beginMenu("Create")) {
-                if (ImGui.menuItem("Folder")) {
-                    System.out.println("Clicked folder");
+            for (int i = 0; i < breadCrumbs.length; i++) {
+                if (i != 0) {
+                    ImGui.sameLine();
+                    ImGui.setWindowFontScale(0.3f);
+                    float posX = ImGui.getCursorPosX();
+                    float posY = ImGui.getCursorPosY();
+                    ImGui.setCursorPos(posX, posY + 7);
+                    ImGui.text(getIcon("chevron"));
+                    ImGui.setWindowFontScale(1.0f);
+                    ImGui.sameLine();
                 }
-                if (currentFolder.contains("scripts")) {
-                    if (ImGui.menuItem("Script")) {
-                        System.out.println("Clicked script");
-                        showNewScriptPopup = true;
-                        scriptName.set("");
-                    }
-                }
-                if (ImGui.menuItem("Scene")) {
-                    showNewScenePopup = true;
-                    sceneName.set("");
-                }
-                ImGui.endMenu();
-            }
-            ImGui.endPopup();
-        }
 
-        if (showNewScenePopup) {
-            ImGui.openPopup("New Scene");
-        }
-
-        if (showNewScriptPopup) {
-            ImGui.openPopup("New Script");
-        }
-
-        if (ImGui.beginPopupModal("New Scene")) {
-            ImGui.inputTextWithHint("##sceneName", "Enter scene name...", sceneName);
-
-            if (ImGui.button("Create")) {
-                SaveManager.newScene(sceneName.get() + ".scene");
-                showNewScenePopup = false;
-                SceneManager.init();
-                ImGui.closeCurrentPopup();
-            }
-            ImGui.sameLine();
-            if (ImGui.button("Cancel")) {
-                showNewScenePopup = false;
-                ImGui.closeCurrentPopup();
-            }
-            ImGui.endPopup();
-        }
-
-        if (ImGui.beginPopupModal("New Script")) {
-            ImGui.inputTextWithHint("##Script Name", "Enter script name...", scriptName);
-
-            if (ImGui.button("Create")) {
-                SaveManager.newScript(scriptName.get());
-                initComponentList();
-                showNewScriptPopup = false;
-                SceneManager.init();
-                ImGui.closeCurrentPopup();
-            }
-            ImGui.sameLine();
-            if (ImGui.button("Cancel")) {
-                showNewScriptPopup = false;
-                ImGui.closeCurrentPopup();
-            }
-            ImGui.endPopup();
-        }
-
-        for (File asset : assets) {
-            String name = asset.getName();
-            String fileType = asset.isDirectory() ? "FOLDER" : asset.getName().substring(asset.getName().lastIndexOf("."));
-
-            ImGui.pushID(asset.getName());
-
-            float posX = ImGui.getCursorPosX();
-            float posY = ImGui.getCursorPosY();
-
-            ImGui.selectable("##" + name, false, 0, thumbnailSize, thumbnailSize + 10);
-
-            boolean clicked = ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0);
-            boolean rightClicked = ImGui.isItemHovered() && ImGui.isMouseClicked(1);
-
-            if (ImGui.beginDragDropSource()) {
-                if (fileType.equals(".java")) {
-                    ImGui.setDragDropPayload("String", name.substring(0, asset.getName().lastIndexOf(".")));
-                } else {
-                    ImGui.setDragDropPayload("String", asset.getPath());
-                }
-                ImGui.setWindowFontScale(0.3f);
-                ImGui.text(asset.isDirectory() ? getIcon("folder") : getIcon("file6+98"));
-                ImGui.setWindowFontScale(1.0f);
-                ImGui.text(asset.getName());
-                ImGui.endDragDropSource();
-            }
-
-            ImGui.setCursorPos(posX + (thumbnailSize / 2) - thumbnailSize / 4, posY + thumbnailSize / 2);
-            ImGui.setWindowFontScale(1.0f);
-
-            ImGui.text(asset.isDirectory() ? getIcon("folder") : getIcon("file"));
-            float textWidth = Math.min(ImGui.calcTextSize(name).x, thumbnailSize);
-            ImGui.setCursorPos(posX + (thumbnailSize / 2) - (textWidth / 2), posY + thumbnailSize - 10);
-
-            if (renamingFile != null && renamingFile.equals(asset)) {
-                ImGui.setKeyboardFocusHere();
-                if (ImGui.inputText("##rename", renameBuffer, ImGuiInputTextFlags.EnterReturnsTrue)) {
-                    asset.renameTo(new File(asset.getParent() + "/" + renameBuffer.get()));
-                    renamingFile = null;
-                }
-                if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
-                    renamingFile = null;
-                }
-            } else {
-                ImGui.textWrapped(name);
-            }
-
-            if (clicked) {
-                if (asset.isDirectory()) {
-                    currentFolder += "/" + name;
+                if (ImGui.button(breadCrumbs[i])) {
+                    String[] sub = Arrays.copyOfRange(breadCrumbs, 0, i + 1);
+                    currentFolder = String.join("/", sub);
                     AssetManager.getINSTANCE().setFile(new File(currentFolder));
                 }
             }
 
-            if (clicked) {
-                if (fileType.equals(".scene") && !Engine.isPlaying()) {
-                    SaveManager.loadScene(asset.getPath());
-                    selected = null;
+            assets = AssetManager.getINSTANCE().getFile().listFiles();
+
+            ImGui.columns(columnCount, "assetGrid", false);
+            // Allow only in asset browser tab
+            if (ImGui.isMouseClicked(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
+                ImGui.openPopup("FileEditPopup");
+            }
+
+            if (ImGui.beginPopup("FileEditPopup")) {
+                if (ImGui.beginMenu("Create")) {
+                    if (ImGui.menuItem("Folder")) {
+                        System.out.println("Clicked folder");
+                    }
+                    if (currentFolder.contains("scripts")) {
+                        if (ImGui.menuItem("Script")) {
+                            System.out.println("Clicked script");
+                            showNewScriptPopup = true;
+                            scriptName.set("");
+                        }
+                    }
+                    if (ImGui.menuItem("Scene")) {
+                        showNewScenePopup = true;
+                        sceneName.set("");
+                    }
+                    ImGui.endMenu();
                 }
+                ImGui.endPopup();
             }
 
-            if (rightClicked) {
-                ImGui.openPopup("FileSelectPopup");
+            if (showNewScenePopup) {
+                ImGui.openPopup("New Scene");
             }
 
-            if (ImGui.beginPopup("FileSelectPopup")) {
-                if (ImGui.menuItem("Rename")) {
-                    renamingFile = asset;
-                    renameBuffer.set(name);
+            if (showNewScriptPopup) {
+                ImGui.openPopup("New Script");
+            }
+
+            if (ImGui.beginPopupModal("New Scene")) {
+                ImGui.inputTextWithHint("##sceneName", "Enter scene name...", sceneName);
+
+                if (ImGui.button("Create")) {
+                    SaveManager.newScene(sceneName.get() + ".scene");
+                    showNewScenePopup = false;
+                    SceneManager.init();
                     ImGui.closeCurrentPopup();
                 }
-                ImGui.endMenu();
+                ImGui.sameLine();
+                if (ImGui.button("Cancel")) {
+                    showNewScenePopup = false;
+                    ImGui.closeCurrentPopup();
+                }
+                ImGui.endPopup();
             }
 
-            ImGui.popID();
-            ImGui.nextColumn();
-        }
+            if (ImGui.beginPopupModal("New Script")) {
+                ImGui.inputTextWithHint("##Script Name", "Enter script name...", scriptName);
 
-        ImGui.columns(1);
-        ImGui.end();
+                if (ImGui.button("Create")) {
+                    SaveManager.newScript(scriptName.get());
+                    initComponentList();
+                    showNewScriptPopup = false;
+                    SceneManager.init();
+                    ImGui.closeCurrentPopup();
+                }
+                ImGui.sameLine();
+                if (ImGui.button("Cancel")) {
+                    showNewScriptPopup = false;
+                    ImGui.closeCurrentPopup();
+                }
+                ImGui.endPopup();
+            }
+
+            for (File asset : assets) {
+                String name = asset.getName();
+                String fileType = asset.isDirectory() ? "FOLDER" : asset.getName().substring(asset.getName().lastIndexOf("."));
+
+                ImGui.pushID(asset.getName());
+
+                float posX = ImGui.getCursorPosX();
+                float posY = ImGui.getCursorPosY();
+
+                ImGui.selectable("##" + name, false, 0, thumbnailSize, thumbnailSize + 10);
+
+                boolean clicked = ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0);
+                boolean rightClicked = ImGui.isItemHovered() && ImGui.isMouseClicked(1);
+
+                if (ImGui.beginDragDropSource()) {
+                    if (fileType.equals(".java")) {
+                        ImGui.setDragDropPayload("String", name.substring(0, asset.getName().lastIndexOf(".")));
+                    } else {
+                        ImGui.setDragDropPayload("String", asset.getPath());
+                    }
+                    ImGui.setWindowFontScale(0.3f);
+                    ImGui.text(asset.isDirectory() ? getIcon("folder") : getIcon("file6+98"));
+                    ImGui.setWindowFontScale(1.0f);
+                    ImGui.text(asset.getName());
+                    ImGui.endDragDropSource();
+                }
+
+                ImGui.setCursorPos(posX + (thumbnailSize / 2) - thumbnailSize / 4, posY + thumbnailSize / 2);
+                ImGui.setWindowFontScale(1.0f);
+
+                ImGui.text(asset.isDirectory() ? getIcon("folder") : getIcon("file"));
+                float textWidth = Math.min(ImGui.calcTextSize(name).x, thumbnailSize);
+                ImGui.setCursorPos(posX + (thumbnailSize / 2) - (textWidth / 2), posY + thumbnailSize - 10);
+
+                if (renamingFile != null && renamingFile.equals(asset)) {
+                    ImGui.setKeyboardFocusHere();
+                    if (ImGui.inputText("##rename", renameBuffer, ImGuiInputTextFlags.EnterReturnsTrue)) {
+                        asset.renameTo(new File(asset.getParent() + "/" + renameBuffer.get()));
+                        renamingFile = null;
+                    }
+                    if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
+                        renamingFile = null;
+                    }
+                } else {
+                    ImGui.textWrapped(name);
+                }
+
+                if (clicked) {
+                    if (asset.isDirectory()) {
+                        currentFolder += "/" + name;
+                        AssetManager.getINSTANCE().setFile(new File(currentFolder));
+                    }
+                }
+
+                if (clicked) {
+                    if (fileType.equals(".scene") && !Engine.isPlaying()) {
+                        SaveManager.loadScene(asset.getPath());
+                        selected = null;
+                    }
+                }
+
+                if (rightClicked) {
+                    ImGui.openPopup("FileSelectPopup");
+                }
+
+                if (ImGui.beginPopup("FileSelectPopup")) {
+                    if (ImGui.menuItem("Rename")) {
+                        renamingFile = asset;
+                        renameBuffer.set(name);
+                        ImGui.closeCurrentPopup();
+                    }
+                    ImGui.endMenu();
+                }
+
+                ImGui.popID();
+                ImGui.nextColumn();
+            }
+
+            ImGui.columns(1);
+            ImGui.end();
+        }
     }
 
     private void renderConsole() {
-        ImGui.begin("Console");
-        ArrayDeque<LogLine> lines = LogCapture.getLogs();
+        if (showConsolePanel.get()) {
+            ImGui.begin("Console");
+            ArrayDeque<LogLine> lines = LogCapture.getLogs();
 
-        float width = ImGui.getContentRegionAvailX();
-        var dl = ImGui.getWindowDrawList();
-        float rowH = 40.0f;
-        float accentW = 3.0f;
-        float padX = 8.0f;
+            float width = ImGui.getContentRegionAvailX();
+            var dl = ImGui.getWindowDrawList();
+            float rowH = 40.0f;
+            float accentW = 3.0f;
+            float padX = 8.0f;
 
-        // Colors
-        final int COL_BG = ImGui.colorConvertFloat4ToU32(0.13f, 0.13f, 0.14f, 1.0f);
-        final int COL_ACCENT_ERR = ImGui.colorConvertFloat4ToU32(0.96f, 0.28f, 0.28f, 1.0f);
-        final int COL_ACCENT_INF = ImGui.colorConvertFloat4ToU32(0.31f, 0.75f, 1.00f, 1.0f);
-        final int COL_ICON_ERR = ImGui.colorConvertFloat4ToU32(0.96f, 0.28f, 0.28f, 1.0f);
-        final int COL_ICON_INF = ImGui.colorConvertFloat4ToU32(0.31f, 0.75f, 1.00f, 1.0f);
-        final int COL_TEXT = 0xFFD4D4D4;
-        final int COL_TEXT_ERR = 0xFF8771F4;
+            // Colors
+            final int COL_BG = ImGui.colorConvertFloat4ToU32(0.13f, 0.13f, 0.14f, 1.0f);
+            final int COL_ACCENT_ERR = ImGui.colorConvertFloat4ToU32(0.96f, 0.28f, 0.28f, 1.0f);
+            final int COL_ACCENT_INF = ImGui.colorConvertFloat4ToU32(0.31f, 0.75f, 1.00f, 1.0f);
+            final int COL_ICON_ERR = ImGui.colorConvertFloat4ToU32(0.96f, 0.28f, 0.28f, 1.0f);
+            final int COL_ICON_INF = ImGui.colorConvertFloat4ToU32(0.31f, 0.75f, 1.00f, 1.0f);
+            final int COL_TEXT = 0xFFD4D4D4;
+            final int COL_TEXT_ERR = 0xFF8771F4;
 
-        if (ImGui.button("Clear")) {
-            if (ScriptManager.getErrorCount() == 0) {
-                LogCapture.clear();
+            if (ImGui.button("Clear")) {
+                if (ScriptManager.getErrorCount() == 0) {
+                    LogCapture.clear();
+                }
             }
+
+            for (LogLine line : lines) {
+                boolean isError = line.isError();
+
+                int colAccent = isError ? COL_ACCENT_ERR : COL_ACCENT_INF;
+                int colIcon = isError ? COL_ICON_ERR : COL_ICON_INF;
+                int colText = isError ? COL_TEXT_ERR : COL_TEXT;
+                String icon = isError ? getIcon("error") : getIcon("info");
+
+                ImVec2 cursor = ImGui.getCursorScreenPos();
+
+                dl.addRectFilled(cursor.x, cursor.y, cursor.x + width, cursor.y + rowH, COL_BG);
+                dl.addRectFilled(cursor.x, cursor.y, cursor.x + accentW, cursor.y + rowH, colAccent);
+
+                int fontSize = 10;
+                float iconX = cursor.x + accentW + padX;
+                float iconY = cursor.y + (rowH / 2f) - ((fontSize - padX) / 2f);
+                dl.addText(ImGui.getFont(), fontSize, iconX, iconY, colIcon, icon);
+
+                float textX = iconX + fontSize + 25;
+                float textY = cursor.y + (rowH / 2f) - ((fontSize + 5) / 2f);
+                dl.addText(ImGui.getFont(), fontSize + 5, textX, textY, colText, line.getMessage());
+
+                ImGui.dummy(width, rowH);
+            }
+            ImGui.end();
         }
-
-        for (LogLine line : lines) {
-            boolean isError = line.isError();
-
-            int colAccent = isError ? COL_ACCENT_ERR : COL_ACCENT_INF;
-            int colIcon = isError ? COL_ICON_ERR : COL_ICON_INF;
-            int colText = isError ? COL_TEXT_ERR : COL_TEXT;
-            String icon = isError ? getIcon("error") : getIcon("info");
-
-            ImVec2 cursor = ImGui.getCursorScreenPos();
-
-            dl.addRectFilled(cursor.x, cursor.y, cursor.x + width, cursor.y + rowH, COL_BG);
-            dl.addRectFilled(cursor.x, cursor.y, cursor.x + accentW, cursor.y + rowH, colAccent);
-
-            int fontSize = 10;
-            float iconX = cursor.x + accentW + padX;
-            float iconY = cursor.y + (rowH / 2f) - ((fontSize - padX) / 2f);
-            dl.addText(ImGui.getFont(), fontSize, iconX, iconY, colIcon, icon);
-
-            float textX = iconX + fontSize + 25;
-            float textY = cursor.y + (rowH / 2f) - ((fontSize + 5) / 2f);
-            dl.addText(ImGui.getFont(), fontSize + 5, textX, textY, colText, line.getMessage());
-
-            ImGui.dummy(width, rowH);
-        }
-        ImGui.end();
     }
 
     private void renderSceneManager() {
@@ -1421,5 +1478,21 @@ public class EditorLayer {
 
     public void resetZoom() {
         setZoom(1);
+    }
+
+    private void createGameObject() {
+        int count = ECSWorld.countDuplicates("GameObject");
+        String name;
+        if (count < 1) {
+            name = "GameObject";
+        } else {
+            int suffix = count;
+            while (ECSWorld.countDuplicates("GameObject" + " (" + suffix + ")") > 0) {
+                suffix++;
+            }
+            name = "GameObject" + " (" + suffix + ")";
+        }
+        GameObject g = ECSWorld.createGameObject(name);
+        g.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
     }
 }
