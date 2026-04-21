@@ -107,6 +107,7 @@ public class EditorLayer {
     private boolean changed = false;
 
     public static void init(Long window) {
+        ImGui.loadIniSettingsFromDisk("editor.ini");
         INSTANCE = new EditorLayer(window);
     }
 
@@ -140,6 +141,7 @@ public class EditorLayer {
 
 
         ImGuiStyle style = ImGui.getStyle();
+        style.setWindowMenuButtonPosition(ImGuiDir.None);
 
         // === Backgrounds — push darker ===
         style.setColor(ImGuiCol.WindowBg, 0.110f, 0.110f, 0.110f, 1.00f); // #1C1C1C — main panels
@@ -303,6 +305,11 @@ public class EditorLayer {
 
         if (ImGui.getIO().getKeyCtrl() && ImGui.isKeyReleased(ImGuiKey.B)) {
             build();
+        }
+
+        if (ImGui.getIO().getKeyCtrl() && ImGui.isKeyReleased(ImGuiKey.N)) {
+            showNewScenePopup = true;
+            sceneName.set("");
         }
 
         if (ImGui.getIO().getKeyCtrl() && ImGui.getIO().getKeyShift() && ImGui.isKeyReleased(ImGuiKey.N)) {
@@ -670,6 +677,9 @@ public class EditorLayer {
     }
 
     private void renderMenuBar() throws Exception {
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing,  10f, 6f);
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding,  6f, 5f);
+
         if (ImGui.beginMainMenuBar()) {
             ImGui.pushStyleColor(ImGuiCol.Text, 0.91f, 0.38f, 0.17f, 1f);
             ImGui.text(" RB ");
@@ -706,24 +716,31 @@ public class EditorLayer {
                 if (ImGui.menuItem("  Project Settings")) {
                     showProjectSettings.set(true);
                 }
-                ImGui.separator();
-                if (ImGui.menuItem("  Add Component")) {
-                    System.out.println("Add clicked!!");
-                }
                 ImGui.endMenu();
             }
 
             if (ImGui.beginMenu("View")) {
-                if (ImGui.menuItem("  Hierarchy", "", showHierarchyPanel.get()))
+                if (ImGui.menuItem("  Hierarchy", "", showHierarchyPanel.get())) {
                     showHierarchyPanel.set(!showHierarchyPanel.get());
+                }
 
-                if (ImGui.menuItem("  Inspector", "", showInspectorPanel.get()))
+                if (ImGui.menuItem("  Inspector", "", showInspectorPanel.get())) {
                     showInspectorPanel.set(!showInspectorPanel.get());
+                }
 
-                if (ImGui.menuItem("  Assets", "", showAssetsPanel.get())) showAssetsPanel.set(!showAssetsPanel.get());
+                if (ImGui.menuItem("  Assets", "", showAssetsPanel.get())) {
+                    showAssetsPanel.set(!showAssetsPanel.get());
+                }
 
-                if (ImGui.menuItem("  Console", "", showConsolePanel.get()))
+                if (ImGui.menuItem("  Console", "", showConsolePanel.get())) {
                     showConsolePanel.set(!showConsolePanel.get());
+                }
+
+                ImGui.separator();
+
+                if (ImGui.menuItem(" Save Layout")) {
+                    ImGui.saveIniSettingsToDisk(AssetManager.getINSTANCE().getCompileDirectory() + File.separator + "editor.ini");
+                }
 
                 ImGui.endMenu();
             }
@@ -733,27 +750,32 @@ public class EditorLayer {
                 if (ImGui.menuItem("  Empty Object", "Ctrl+Shift+N")) {
                     createGameObject();
                 }
+                if (ImGui.menuItem("  Add Tag")) {
+                    if (selectedGameObject != null) {
+                        selectedGameObject.addComponent(new Tag(""));
+                    }                }
                 ImGui.separator();
 
-                if (ImGui.beginMenu("  2D Object")) {
-                    if (ImGui.menuItem("  Sprite")) { /* TODO */ }
+                if (ImGui.beginMenu("  Components")) {
+                    if (ImGui.menuItem("  Sprite")) {
+                        if (selectedGameObject != null) {
+                            selectedGameObject.addComponent(new SpriteRenderer(null));
+                        }
+                    }
+                    if (ImGui.menuItem("  Rigidbody 2D")) {
+                        if (selectedGameObject != null) {
+                            selectedGameObject.addComponent(new Rigidbody());
+                        }
+                    }
+
                     ImGui.endMenu();
                 }
-
-                if (ImGui.beginMenu("  Physics")) {
-                    if (ImGui.menuItem("  Rigidbody 2D")) { /* TODO */ }
-                    ImGui.endMenu();
-                }
-
-                ImGui.separator();
-                if (ImGui.menuItem("  Camera")) { /* TODO */ }
-                if (ImGui.menuItem("  Audio Source")) { /* TODO */ }
-
                 ImGui.endMenu();
             }
 
             ImGui.endMainMenuBar();
         }
+        ImGui.popStyleVar(2);
     }
 
     private void build() {
