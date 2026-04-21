@@ -43,55 +43,23 @@ public class Texture implements Serializable {
 
     public Texture(String filePath) {
         this.filePath = filePath;
-        texId = GL11.glGenTextures();
-        usedTexSlot = usedTexSlots;
-        texSlot = texSlots[usedTexSlots - 1];
-        usedTexSlots++;
-        GL13.glActiveTexture(texSlot);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texId);
-
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        allocateSlot();
 
         IntBuffer width = BufferUtils.createIntBuffer(1);
         IntBuffer height = BufferUtils.createIntBuffer(1);
         IntBuffer channels = BufferUtils.createIntBuffer(1);
         STBImage.stbi_set_flip_vertically_on_load(true);
-        ByteBuffer textureImg;
 
-        textureImg = STBImage.stbi_load(filePath, width, height, channels, 0);
-
-        if (textureImg != null) {
-            this.width = width.get(0);
-            this.height = height.get(0);
-            int format = channels.get(0) == 4 ? GL11.GL_RGBA : GL11.GL_RGB;
-            GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
-            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, format, this.width, this.height, 0, format, GL11.GL_UNSIGNED_BYTE, textureImg);
-            STBImage.stbi_image_free(textureImg);
-        } else {
-            System.err.println("Failed to loadScene texture: " + filePath);
-            System.err.println(STBImage.stbi_failure_reason());
-        }
+        ByteBuffer textureImg = STBImage.stbi_load(filePath, width, height, channels, 0);
+        uploadImage(textureImg, width, height, channels, filePath);
     }
 
     public Texture(String name, byte[] data) {
         this.filePath = name;
-        texId = GL11.glGenTextures();
-        usedTexSlot = usedTexSlots;
-        texSlot = texSlots[usedTexSlots - 1];
-        usedTexSlots++;
-        GL13.glActiveTexture(texSlot);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texId);
+        allocateSlot();
 
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-
-        IntBuffer width    = BufferUtils.createIntBuffer(1);
-        IntBuffer height   = BufferUtils.createIntBuffer(1);
+        IntBuffer width = BufferUtils.createIntBuffer(1);
+        IntBuffer height = BufferUtils.createIntBuffer(1);
         IntBuffer channels = BufferUtils.createIntBuffer(1);
         STBImage.stbi_set_flip_vertically_on_load(true);
 
@@ -100,11 +68,28 @@ public class Texture implements Serializable {
         imageBuffer.flip();
 
         ByteBuffer textureImg = STBImage.stbi_load_from_memory(imageBuffer, width, height, channels, 0);
+        uploadImage(textureImg, width, height, channels, name);
+    }
 
+    private void allocateSlot() {
+        texId = GL11.glGenTextures();
+        usedTexSlot = usedTexSlots;
+        texSlot = texSlots[usedTexSlots - 1];
+        usedTexSlots++;
+        GL13.glActiveTexture(texSlot);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texId);
+
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+    }
+
+    private void uploadImage(ByteBuffer textureImg, IntBuffer width, IntBuffer height, IntBuffer channels, String name) {
         if (textureImg != null) {
-            this.width  = width.get(0);
+            this.width = width.get(0);
             this.height = height.get(0);
-            int format  = channels.get(0) == 4 ? GL11.GL_RGBA : GL11.GL_RGB;
+            int format = channels.get(0) == 4 ? GL11.GL_RGBA : GL11.GL_RGB;
             GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
             GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, format, this.width, this.height, 0, format, GL11.GL_UNSIGNED_BYTE, textureImg);
             STBImage.stbi_image_free(textureImg);

@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
@@ -64,7 +63,7 @@ public class PakWriter {
             return cache.get(file);
         } else {
             Long offset = index.get(file);
-            try (RandomAccessFile raf = new RandomAccessFile("/home/tejas/Projects/RedBall/samples/src/car/build/assets.pak", "r")) {
+            try (RandomAccessFile raf = new RandomAccessFile("assets.pak", "r")) {
                 raf.seek(offset);
                 int datalen = raf.readInt();
                 byte[] data = new byte[datalen];
@@ -78,7 +77,7 @@ public class PakWriter {
     }
 
     public static void buildIndex() {
-        try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream("/home/tejas/Projects/RedBall/samples/src/car/build/assets.pak")))) {
+        try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream("assets.pak")))) {
             int projectNameLen = in.readInt();
             byte[] projectNameBytes = new byte[projectNameLen];
             in.readFully(projectNameBytes);

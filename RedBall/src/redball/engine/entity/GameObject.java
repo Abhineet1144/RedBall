@@ -2,14 +2,12 @@ package redball.engine.entity;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.joml.Vector2f;
-import redball.engine.core.Engine;
 import redball.engine.editor.EditorAABB;
 import redball.engine.entity.components.Component;
 import redball.engine.entity.components.Rigidbody;
 import redball.engine.entity.components.SpriteRenderer;
 import redball.engine.entity.components.Transform;
 import redball.engine.renderer.texture.TextureManager;
-import redball.engine.utils.PakWriter;
 import redball.engine.utils.ScriptManager;
 
 import java.io.*;
@@ -137,55 +135,30 @@ public class GameObject implements Serializable {
     }
 
     public static void instantiate(GameObject prefab) {
-        GameObject instance;
-        if (ECSWorld.getPool().containsKey(prefab.getName())) {
-            instance = ECSWorld.getPool().get(prefab.getName());
-            instance.getComponent(Rigidbody.class).createBody();
-        } else {
-            instance = prefab.deepCopy();
-            SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
-            Rigidbody rb = instance.getComponent(Rigidbody.class);
-            if (rb != null) {
-                rb.createBody();
-            }
-
-            if (sr != null && sr.getFilePath() != null) {
-                if (Engine.isBuild) {
-                    sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
-                } else {
-                    sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
-                }
-            }
-        }
-        ECSWorld.getPendingAdd().add(instance);
+        ECSWorld.getPendingAdd().add(instantiateInternal(prefab));
     }
 
     public static void instantiate(GameObject prefab, Vector2f position) {
-        GameObject instance;
-        if (ECSWorld.getPool().containsKey(prefab.getName())) {
-            instance = ECSWorld.getPool().get(prefab.getName());
-            instance.getComponent(Rigidbody.class).createBody();
-            ECSWorld.getPool().remove(prefab.getName());
-        } else {
-            instance = prefab.deepCopy();
-
-            SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
-            Rigidbody rb = instance.getComponent(Rigidbody.class);
-            if (rb != null) {
-                rb.createBody();
-            }
-
-            if (sr != null && sr.getFilePath() != null) {
-                if (Engine.isBuild) {
-                    sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
-                } else {
-                    sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
-                }
-            }
-        }
+        GameObject instance = instantiateInternal(prefab);
         instance.getComponent(Transform.class).setXPosition(position.x);
         instance.getComponent(Transform.class).setYPosition(position.y);
         ECSWorld.getPendingAdd().add(instance);
+    }
+
+    private static GameObject instantiateInternal(GameObject prefab) {
+        if (ECSWorld.getPool().containsKey(prefab.getName())) {
+            GameObject instance = ECSWorld.getPool().remove(prefab.getName());
+            instance.getComponent(Rigidbody.class).createBody();
+            return instance;
+        }
+
+        GameObject instance = prefab.deepCopy();
+        Rigidbody rb = instance.getComponent(Rigidbody.class);
+        if (rb != null) {
+            rb.createBody();
+        }
+        TextureManager.loadTextureForSprite(instance.getComponent(SpriteRenderer.class));
+        return instance;
     }
 
     private GameObject deepCopy() {

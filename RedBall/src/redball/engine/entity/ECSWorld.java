@@ -1,13 +1,11 @@
 package redball.engine.entity;
 
-import redball.engine.core.Engine;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.editor.EditorLayer;
 import redball.engine.entity.components.*;
 import redball.engine.renderer.RenderManager;
 import redball.engine.renderer.texture.TextureManager;
 import redball.engine.save.SaveObject;
-import redball.engine.utils.PakWriter;
 
 import java.util.*;
 
@@ -74,10 +72,6 @@ public class ECSWorld {
         pendingRemove.add(gameObject);
     }
 
-    public static void clearGameObjects() {
-        gameObjects = new ArrayList<>();
-    }
-
     public static void removeAll() {
         gameObjects = new ArrayList<>();
     }
@@ -93,12 +87,12 @@ public class ECSWorld {
         }
         if (!pendingAdd.isEmpty()) {
             for (GameObject gameObject : pendingAdd) {
-                int count = EditorLayer.countDuplicates(gameObject.getName());
+                int count = ECSWorld.countDuplicates(gameObject.getName());
                 if (count > 0) {
                     int suffix = count;
                     while (count > 0) {
                         suffix++;
-                        count = EditorLayer.countDuplicates(gameObject.getName() + " (" + suffix + ")");
+                        count = ECSWorld.countDuplicates(gameObject.getName() + " (" + suffix + ")");
                     }
                     gameObject.setName(gameObject.getName() + " (" + suffix + ")");
                 }
@@ -131,30 +125,35 @@ public class ECSWorld {
 
     public static void addPrefab(GameObject prefab) {
         GameObject instance = SaveObject.parseFrom(new SaveObject(new ArrayList<>(List.of(prefab))).toByteArray()).getGameObjects().getFirst();
-        int count = EditorLayer.countDuplicates(prefab.getName());
+        int count = countDuplicates(prefab.getName());
         if (count > 0) {
             int suffix = count;
             while (count > 0) {
                 suffix++;
-                count = EditorLayer.countDuplicates(instance.getName() + " (" + suffix + ")");
+                count = countDuplicates(instance.getName() + " (" + suffix + ")");
             }
             instance.setName(instance.getName() + " (" + suffix + ")");
         }
-        SpriteRenderer sr = instance.getComponent(SpriteRenderer.class);
         Rigidbody rb = instance.getComponent(Rigidbody.class);
         if (rb != null) {
             rb.createBody();
         }
 
-        if (sr != null && sr.getFilePath() != null) {
-            if (Engine.isBuild) {
-                sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
-            } else {
-                sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
-            }
-        }
+        TextureManager.loadTextureForSprite(instance.getComponent(SpriteRenderer.class));
         gameObjects.add(instance);
         RenderManager.rebuild();
+    }
+
+    public static int countDuplicates(String name) {
+        int count = 0;
+        for (GameObject go : ECSWorld.getGameObjects()) {
+            int index = go.getName().lastIndexOf("(");
+            String stripped = (index == -1 ? go.getName() : go.getName().substring(0, index - 1));
+            if (go.getName().equals(name) || stripped.equals(name)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public static List<GameObject> getPendingAdd() {

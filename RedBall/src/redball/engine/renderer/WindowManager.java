@@ -8,13 +8,11 @@ import redball.engine.editor.EditorLayer;
 import redball.engine.core.Engine;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
-import redball.engine.entity.components.CameraComponent;
 import redball.engine.logger.LogCapture;
 import redball.engine.renderer.texture.Texture;
 import redball.engine.input.MouseInput;
 import redball.engine.scene.AssetManager;
 import redball.engine.scene.SceneManager;
-import redball.engine.utils.AbstractScene;
 import redball.engine.utils.FolderObserver;
 import redball.engine.utils.ScriptManager;
 
@@ -26,7 +24,6 @@ public class WindowManager {
     private int width = 1920;
     private int height = 1080;
     private int fpsCap = Integer.MAX_VALUE;
-    private AbstractScene scene;
 
     public void init() {
         if (window != 0L) {

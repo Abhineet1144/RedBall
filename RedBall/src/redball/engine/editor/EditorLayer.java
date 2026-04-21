@@ -322,14 +322,14 @@ public class EditorLayer {
             ImGui.sameLine();
             if (ImGui.inputText("##Name", nameBuffer)) {
                 if (!nameBuffer.get().isEmpty()) {
-                    int count = countDuplicates(nameBuffer.get());
+                    int count = ECSWorld.countDuplicates(nameBuffer.get());
                     if (count < 1) {
                         selectedGameObject.setName(nameBuffer.get());
                         selected = nameBuffer.get();
                         prevSelected = nameBuffer.get();
                     } else {
                         int suffix = count;
-                        while (countDuplicates(nameBuffer.get() + " (" + suffix + ")") > 0) {
+                        while (ECSWorld.countDuplicates(nameBuffer.get() + " (" + suffix + ")") > 0) {
                             suffix++;
                         }
                         selectedGameObject.setName(nameBuffer.get() + " (" + suffix + ")");
@@ -391,13 +391,13 @@ public class EditorLayer {
 
         if (ImGui.beginPopup("HierarchyEdit")) {
             if (ImGui.menuItem("Create GameObject")) {
-                int count = countDuplicates("GameObject");
+                int count = ECSWorld.countDuplicates("GameObject");
                 String name;
                 if (count < 1) {
                     name = "GameObject";
                 } else {
                     int suffix = count;
-                    while (countDuplicates("GameObject" + " (" + suffix + ")") > 0) {
+                    while (ECSWorld.countDuplicates("GameObject" + " (" + suffix + ")") > 0) {
                         suffix++;
                     }
                     name = "GameObject" + " (" + suffix + ")";
@@ -440,7 +440,7 @@ public class EditorLayer {
                     RenderManager.rebuild();
                 }
                 if (ImGui.menuItem("Create Prefab")) {
-                    try (BufferedOutputStream sceneOut = new BufferedOutputStream(new FileOutputStream(AssetManager.getINSTANCE().prefabDirectory + go.getName() + ".prefab"))) {
+                    try (BufferedOutputStream sceneOut = new BufferedOutputStream(new FileOutputStream(AssetManager.getINSTANCE().getPrefabDirectory() + go.getName() + ".prefab"))) {
                         ArrayList<GameObject> list = new ArrayList<>();
                         list.add(go);
                         IOUtils.write(new SaveObject(list).toByteArray(), sceneOut);
@@ -894,7 +894,7 @@ public class EditorLayer {
                 fixtureSelectedIndex.set(rb.getBodyFixture().ordinal());
                 if (ImGui.combo("Collision Shape", fixtureSelectedIndex, bodyFixtures)) {
                     rb.setFixture(BodyFixture.values()[fixtureSelectedIndex.get()]);
-                    rb.physiosSystemSetBodyFixture(BodyFixture.values()[fixtureSelectedIndex.get()]);
+                    rb.physicsSystemSetBodyFixture(BodyFixture.values()[fixtureSelectedIndex.get()]);
                 }
 
                 int[] mass = {rb.getMass()};
@@ -1403,18 +1403,6 @@ public class EditorLayer {
 
     public ImGuiImplGlfw getImGuiGlfw() {
         return imGuiGlfw;
-    }
-
-    public static int countDuplicates(String name) {
-        int count = 0;
-        for (GameObject go : ECSWorld.getGameObjects()) {
-            int index = go.getName().lastIndexOf("(");
-            String stripped = (index == -1 ? go.getName() : go.getName().substring(0, index - 1));
-            if (go.getName().equals(name) || stripped.equals(name)) {
-                count++;
-            }
-        }
-        return count;
     }
 
     public static void setFps(int fps) {

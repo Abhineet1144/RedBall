@@ -4,7 +4,6 @@ import org.apache.commons.io.IOUtils;
 import org.joml.Vector3f;
 import redball.engine.core.Engine;
 import redball.engine.entity.components.*;
-import redball.engine.renderer.FrameBuffer;
 import redball.engine.scene.AssetManager;
 import redball.engine.core.PhysicsSystem;
 import redball.engine.entity.ECSWorld;
@@ -16,8 +15,6 @@ import redball.engine.utils.ScriptManager;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.IllegalFormatCodePointException;
-import java.util.Objects;
 
 public class SaveManager {
     public static void save() {
@@ -50,19 +47,12 @@ public class SaveManager {
 
         // reload all textures from file paths
         for (GameObject go : ECSWorld.getGameObjects()) {
-            SpriteRenderer sr = go.getComponent(SpriteRenderer.class);
             Rigidbody rb = go.getComponent(Rigidbody.class);
             if (rb != null) {
                 rb.createBody();
             }
 
-            if (sr != null && sr.getFilePath() != null) {
-                if (Engine.isBuild) {
-                    sr.setTexture(TextureManager.getTexture(sr.getFilePath(), PakWriter.getAsset(sr.getFilePath())));
-                } else {
-                    sr.setTexture(TextureManager.getTexture(sr.getFilePath()));
-                }
-            }
+            TextureManager.loadTextureForSprite(go.getComponent(SpriteRenderer.class));
         }
 
         RenderManager.prepare(ECSWorld.getCamera());

@@ -15,6 +15,8 @@ public class Transform extends Component {
     public float rotation;
     public Vector3f scale;
     private Matrix4f matrix;
+    private transient Rigidbody cachedRb;
+    private transient boolean rbLookedUp = false;
 
     public Transform(Vector3f position, float rotation, Vector3f scale) {
         this.position = position;
@@ -24,8 +26,21 @@ public class Transform extends Component {
         super.markAsDirty();
     }
 
+    private Rigidbody getRigidbody() {
+        if (!rbLookedUp) {
+            cachedRb = this.gameObject.getComponent(Rigidbody.class);
+            rbLookedUp = true;
+        }
+        return cachedRb;
+    }
+
+    public void invalidateRigidbodyCache() {
+        rbLookedUp = false;
+        cachedRb = null;
+    }
+
     public void setXPosition(float xPos) {
-        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = getRigidbody();
         if (rb != null && rb.getBody() != null) {
             rb.getBody().getTransform().setTranslationX(xPos / PPM);
         }
@@ -34,7 +49,7 @@ public class Transform extends Component {
     }
 
     public void setYPosition(float yPos) {
-        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = getRigidbody();
         if (rb != null && rb.getBody() != null) {
             rb.getBody().getTransform().setTranslationY(yPos / PPM);
         }
@@ -43,7 +58,7 @@ public class Transform extends Component {
     }
 
     public void setRotation(float rotation) {
-        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = getRigidbody();
         if (rb != null && rb.getBody() != null) {
             rb.getBody().getTransform().setRotation(rotation);
         }
@@ -52,22 +67,22 @@ public class Transform extends Component {
     }
 
     public void setXScale(float xPos) {
-        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = getRigidbody();
         if (rb != null && rb.getBody() != null) {
             BodyFixture bodyFixture = rb.getBodyFixture();
             rb.getBody().removeAllFixtures();
-            rb.physiosSystemSetBodyFixture(bodyFixture);
+            rb.physicsSystemSetBodyFixture(bodyFixture);
         }
         this.scale.x = xPos;
         super.markAsDirty();
     }
 
     public void setYScale(float yPos) {
-        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = getRigidbody();
         if (rb != null && rb.getBody() != null) {
             BodyFixture bodyFixture = rb.getBodyFixture();
             rb.getBody().removeAllFixtures();
-            rb.physiosSystemSetBodyFixture(bodyFixture);
+            rb.physicsSystemSetBodyFixture(bodyFixture);
         }
         this.scale.y = yPos;
         super.markAsDirty();
@@ -79,7 +94,7 @@ public class Transform extends Component {
     }
 
     public float getXPosition() {
-        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = getRigidbody();
         if (rb != null && rb.getBody() != null) {
             return (float) rb.getBody().getTransform().getTranslationX() * PPM;
         }
@@ -87,7 +102,7 @@ public class Transform extends Component {
     }
 
     public float getYPosition() {
-        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = getRigidbody();
         if (rb != null && rb.getBody() != null) {
             return (float) rb.getBody().getTransform().getTranslationY() * PPM;
         }
@@ -95,7 +110,7 @@ public class Transform extends Component {
     }
 
     public float getRotation() {
-        Rigidbody rb = this.gameObject.getComponent(Rigidbody.class);
+        Rigidbody rb = getRigidbody();
         if (rb != null && rb.getBody() != null) {
             return (float) rb.getBody().getTransform().getRotationAngle() * PPM;
         }

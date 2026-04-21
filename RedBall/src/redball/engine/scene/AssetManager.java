@@ -7,11 +7,11 @@ import java.io.*;
 public class AssetManager {
     private static AssetManager INSTANCE;
     private String workingDirectory;
-    public String scenesDirectory;
-    public String scriptDirectory;
-    public String compileDirectory;
-    public String buildDirectory;
-    public String prefabDirectory;
+    private String scenesDirectory;
+    private String scriptDirectory;
+    private String compileDirectory;
+    private String buildDirectory;
+    private String prefabDirectory;
     private File file;
     public String currentWorkingScene = "";
 
@@ -43,6 +43,10 @@ public class AssetManager {
 
     public String getBuildDirectory() {
         return buildDirectory;
+    }
+
+    public String getPrefabDirectory() {
+        return prefabDirectory;
     }
 
     public void setWorkingDirectory(String workingDirectory) {
