@@ -16,9 +16,8 @@ public class CameraComponent extends Component {
     public boolean isMain;
     private float[] cameraColor = new float[]{0.196f, 0.254f, 0.431f};;
 
-    public CameraComponent(int width, int height) {
+    public CameraComponent() {
         this.camera = new Camera(new Vector2f(0, 0));
-        this.camera.adjustProjection(width, height);
         this.isMain = true;
     }
 

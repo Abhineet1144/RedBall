@@ -533,6 +533,7 @@ public class EditorLayer {
         if (!Engine.isPlaying()) {
             if (ImGui.button("Play")) {
                 Engine.onPlay();
+                ECSWorld.getCamera().getComponent(CameraComponent.class).camera.adjustProjection(Engine.getWindowManager().getWidth(), Engine.getWindowManager().getHeight());
                 saveClicked = false;
             }
         } else {

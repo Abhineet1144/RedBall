@@ -30,7 +30,7 @@ public class Camera implements Serializable {
         if (!Engine.isPlaying()) {
             projection.ortho((float) -width / (2 * EditorLayer.zoom), (float) width / (2 * EditorLayer.zoom), (float) -height / (2 * EditorLayer.zoom), (float) height / (2 * EditorLayer.zoom), 0.1f, 100.0f);
         } else {
-            projection.ortho((float) -width / (2), (float) width / (2), (float) -height / (2), (float) height / (2), 0.1f, 100.0f);
+            projection.ortho((float) -width / 2, (float) width / 2, (float) -height / 2, (float) height / 2, 0.1f, 100.0f);
         }
     }
 
