@@ -617,7 +617,7 @@ public class EditorLayer {
         float mouseX = ((MouseInput.getX() - cursorPos.x) - renderWidth / 2) * (worldWidth / renderWidth) + cameraComponent.camera.editorPosition.x;
         float mouseY = ((MouseInput.getY() - cursorPos.y) - renderHeight / 2) * (worldHeight / renderHeight) - cameraComponent.camera.editorPosition.y;
 
-        if (!ImGuizmo.isUsing() && !ImGuizmo.isOver() && MouseInput.getX() - cursorPos.x > 0 && MouseInput.getX() - cursorPos.x < renderWidth && MouseInput.getY() - cursorPos.y > 0 && MouseInput.getY() - cursorPos.y < renderHeight) {
+        if (!ImGuizmo.isUsing() && !ImGuizmo.isOver() && ImGui.isWindowHovered() && MouseInput.getX() - cursorPos.x > 0 && MouseInput.getX() - cursorPos.x < renderWidth && MouseInput.getY() - cursorPos.y > 0 && MouseInput.getY() - cursorPos.y < renderHeight) {
             if (ImGui.getIO().getMouseClicked(0)) {
                 for (int i = ECSWorld.getGameObjects().size() - 1; i >= 0; i--) {
                     GameObject go = ECSWorld.getGameObjects().get(i);
