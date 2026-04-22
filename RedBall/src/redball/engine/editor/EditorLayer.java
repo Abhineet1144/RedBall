@@ -265,6 +265,10 @@ public class EditorLayer {
         ImGui.pushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0.0f, 0.0f);
 
+        float menuBarHeight = 5;
+        ImGui.setNextWindowPos(0, menuBarHeight);
+        ImGui.setNextWindowSize(ImGui.getIO().getDisplaySizeX(), ImGui.getIO().getDisplaySizeY());
+
         ImGui.begin("DockSpace", new ImBoolean(true), windowFlags);
         ImGui.popStyleVar(3);
 
@@ -317,9 +321,7 @@ public class EditorLayer {
         }
 
         renderStatusBar();
-
         createDockSpace();
-
         renderMenuBar();
         renderHierarchy();
         renderViewPort();
@@ -554,8 +556,6 @@ public class EditorLayer {
             }
         }
 
-        ImGui.separator();
-
         ImVec2 size = ImGui.getContentRegionAvail();
         float frameBufferWidth = RenderManager.getFrameBuffer().getWidth();
         float frameBufferHeight = RenderManager.getFrameBuffer().getHeight();
@@ -677,8 +677,8 @@ public class EditorLayer {
     }
 
     private void renderMenuBar() throws Exception {
-        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing,  10f, 6f);
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding,  6f, 5f);
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 10f, 6f);
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 6f, 5f);
 
         if (ImGui.beginMainMenuBar()) {
             ImGui.pushStyleColor(ImGuiCol.Text, 0.91f, 0.38f, 0.17f, 1f);
@@ -753,7 +753,8 @@ public class EditorLayer {
                 if (ImGui.menuItem("  Add Tag")) {
                     if (selectedGameObject != null) {
                         selectedGameObject.addComponent(new Tag(""));
-                    }                }
+                    }
+                }
                 ImGui.separator();
 
                 if (ImGui.beginMenu("  Components")) {

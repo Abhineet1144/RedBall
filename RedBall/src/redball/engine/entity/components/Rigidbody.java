@@ -45,10 +45,7 @@ public class Rigidbody extends Component {
         getBody().setMass(type.getMassType());
         Transform t = gameObject.getComponent(Transform.class);
         if (t != null) {
-            body.getTransform().setTranslation(
-                    t.position.x / PPM,
-                    t.position.y / PPM
-            );
+            body.getTransform().setTranslation(t.position.x / PPM, t.position.y / PPM);
         }
     }
 
@@ -85,7 +82,7 @@ public class Rigidbody extends Component {
     }
 
     public void setFixture(BodyFixture bodyFixture) {
-        this.bodyFixture =  bodyFixture;
+        this.bodyFixture = bodyFixture;
     }
 
     public BodyFixture getBodyFixture() {

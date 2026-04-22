@@ -29,7 +29,9 @@ public class Transform extends Component {
     private Rigidbody getRigidbody() {
         if (!rbLookedUp) {
             cachedRb = this.gameObject.getComponent(Rigidbody.class);
-            rbLookedUp = true;
+            if (cachedRb != null) {
+                rbLookedUp = true;
+            }
         }
         return cachedRb;
     }

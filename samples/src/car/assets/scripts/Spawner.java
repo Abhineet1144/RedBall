@@ -7,7 +7,7 @@ import redball.engine.entity.components.Component;
 import java.io.Serial;
 import java.util.Random;
 
-public class Test extends Component {
+public class Spawner extends Component {
     @Serial
     private static final long serialVersionUID = 1L;
 
