@@ -11,9 +11,7 @@ import imgui.type.ImBoolean;
 import imgui.type.ImInt;
 import imgui.type.ImString;
 import imgui.flag.ImGuiCol;
-import javassist.util.proxy.ProxyObject;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.SerializationUtils;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.reflections.Reflections;
@@ -107,7 +105,6 @@ public class EditorLayer {
     private boolean changed = false;
 
     public static void init(Long window) {
-        ImGui.loadIniSettingsFromDisk("editor.ini");
         INSTANCE = new EditorLayer(window);
     }
 
@@ -116,7 +113,9 @@ public class EditorLayer {
         ImGui.createContext();
         imGuiGlfw.init(window, true);
         imGuiGl3.init("#version 150");
+
         io = ImGui.getIO();
+        io.setIniFilename("editor.ini");
         io.addConfigFlags(ImGuiConfigFlags.DpiEnableScaleFonts);
         io.getFonts().setFreeTypeRenderer(true);
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable);
@@ -134,11 +133,10 @@ public class EditorLayer {
         iconConfig.setPixelSnapH(false);
         iconConfig.setOversampleH(2);
         iconConfig.setOversampleV(2);
-        short[] iconRanges = {(short) 0xF000, (short) 0xF8FF, 0};
+        short[] iconRanges = {(short) 0xe000, (short) 0xF8FF, 0};
         io.getFonts().addFontFromFileTTF("resources/Font Awesome 7 Free-Solid-900.otf", 30.0f, iconConfig, iconRanges);
 
         io.getFonts().build();
-
 
         ImGuiStyle style = ImGui.getStyle();
         style.setWindowMenuButtonPosition(ImGuiDir.None);
@@ -150,12 +148,12 @@ public class EditorLayer {
 
         // === Borders ===
         style.setColor(ImGuiCol.Border, 0.137f, 0.137f, 0.137f, 1.00f); // #232323
-        style.setColor(ImGuiCol.BorderShadow, 0.000f, 0.000f, 0.000f, 0.00f); // transparent
+        style.setColor(ImGuiCol.BorderShadow, 0.000f, 0.000f, 0.000f, 0.05f);
 
         // === Frames (inputs, search bar) ===
-        style.setColor(ImGuiCol.FrameBg, 0.098f, 0.098f, 0.098f, 1.00f); // #191919
-        style.setColor(ImGuiCol.FrameBgHovered, 0.157f, 0.157f, 0.157f, 1.00f); // #282828
-        style.setColor(ImGuiCol.FrameBgActive, 0.188f, 0.188f, 0.188f, 1.00f); // #303030
+        style.setColor(ImGuiCol.FrameBg, 0.16f, 0.16f, 0.16f, 1.00f);
+        style.setColor(ImGuiCol.FrameBgHovered, 0.19f, 0.19f, 0.19f, 1.00f);
+        style.setColor(ImGuiCol.FrameBgActive, 0.16f, 0.16f, 0.16f, 1.00f);
 
         // === Title bars — your orange accent ===
         style.setColor(ImGuiCol.TitleBg, 0.55f, 0.32f, 0.10f, 1.00f); // your original
@@ -177,9 +175,9 @@ public class EditorLayer {
         style.setColor(ImGuiCol.SliderGrabActive, 0.95f, 0.58f, 0.20f, 1.00f); // orange accent bright
 
         // === Buttons — your original + hover states ===
-        style.setColor(ImGuiCol.Button, 0.20f, 0.20f, 0.30f, 1.00f); // your original
-        style.setColor(ImGuiCol.ButtonHovered, 0.55f, 0.32f, 0.10f, 1.00f); // orange on hover
-        style.setColor(ImGuiCol.ButtonActive, 0.95f, 0.58f, 0.20f, 1.00f); // bright orange on click
+        style.setColor(ImGuiCol.Button, 0.15f, 0.15f, 0.15f, 1.00f);
+        style.setColor(ImGuiCol.ButtonHovered, 0.55f, 0.32f, 0.10f, 1.00f);
+        style.setColor(ImGuiCol.ButtonActive, 0.95f, 0.58f, 0.20f, 1.00f);
 
         // === Headers (collapsing headers, hierarchy rows) — your orange accent ===
         style.setColor(ImGuiCol.Header, 0.55f, 0.32f, 0.10f, 1.00f); // your original
@@ -213,8 +211,9 @@ public class EditorLayer {
         style.setColor(ImGuiCol.TextSelectedBg, 0.55f, 0.32f, 0.10f, 0.55f); // orange selection
 
         // === Metrics — unchanged from your original ===
+        style.setFrameRounding(3.0f);
+        style.setFrameBorderSize(1.0f);
         style.setWindowRounding(2.0f);
-        style.setFrameRounding(2.0f);
         style.setScrollbarRounding(2.0f);
         style.setGrabRounding(2.0f);
         style.setTabRounding(2.0f);
@@ -311,7 +310,7 @@ public class EditorLayer {
             build();
         }
 
-        if (ImGui.getIO().getKeyCtrl() && ImGui.isKeyReleased(ImGuiKey.N)) {
+        if (ImGui.getIO().getKeyCtrl() && ImGui.isKeyReleased(ImGuiKey.N) && !ImGui.getIO().getKeyShift()) {
             showNewScenePopup = true;
             sceneName.set("");
         }
@@ -402,11 +401,13 @@ public class EditorLayer {
         if (showHierarchyPanel.get()) {
             ImGui.begin("Hierarchy");
 
-            ImGui.pushStyleColor(ImGuiCol.FrameBg, 0.12f, 0.12f, 0.18f, 1.0f);
+            ImGui.pushStyleVar(ImGuiStyleVar.FrameBorderSize, 1.0f); // or higher for thicker border
+            ImGui.pushStyleColor(ImGuiCol.Border, 0.60f, 0.45f, 0.20f, 0.2f);
             ImGui.setNextItemWidth(ImGui.getContentRegionAvailX());
             if (searchBuffer == null) searchBuffer = new ImString(256);
             ImGui.inputTextWithHint("##Search", "Search...", searchBuffer);
             ImGui.popStyleColor();
+            ImGui.popStyleVar();
             ImGui.spacing();
 
             if (ImGui.isMouseClicked(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
@@ -426,7 +427,7 @@ public class EditorLayer {
                 GameObject go = gameObjectIterator.next();
                 if (!search.isEmpty() && !go.getName().toLowerCase().contains(search)) continue;
 
-                float itemHeight = 14;
+                float itemHeight = 18;
                 float x = ImGui.getCursorScreenPosX();
                 float y = ImGui.getCursorScreenPosY();
 
@@ -436,7 +437,11 @@ public class EditorLayer {
                 }
 
                 float textY = y + (itemHeight - ImGui.getTextLineHeight()) / 2;
-                ImGui.getWindowDrawList().addText(x + 8, textY, ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1.0f), go.getName());
+                ImGui.setWindowFontScale(0.5f);
+                String icon = getIcon("gameobject");
+                ImGui.getWindowDrawList().addText(x + 5, textY + ImGui.calcTextSizeY(icon), ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1.0f), icon);
+                ImGui.setWindowFontScale(1.0f);
+                ImGui.getWindowDrawList().addText(x + ImGui.calcTextSizeX(icon), textY, ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1.0f), go.getName());
 
                 if (ImGui.isItemClicked(ImGuiMouseButton.Right)) {
                     selected = go.getName();
@@ -512,6 +517,7 @@ public class EditorLayer {
         int numButtons = 2;
         float totalWidth = numButtons * buttonWidth + (numButtons - 1) * spacing;
 
+        ImGui.pushStyleColor(ImGuiCol.Border, 0.25f, 0.25f, 0.25f, 1.00f);
         if (ImGui.radioButton("Translate", currOpr == Operation.TRANSLATE)) {
             currOpr = Operation.TRANSLATE;
         }
@@ -530,7 +536,6 @@ public class EditorLayer {
         if (ImGui.checkbox("Space", localSpace)) {
             localSpace = !localSpace;
         }
-
         ImGui.sameLine();
         ImGui.setCursorPosX((ImGui.getWindowSize().x - totalWidth) / 2);
 
@@ -555,6 +560,7 @@ public class EditorLayer {
                 saveClicked = false;
             }
         }
+        ImGui.popStyleColor();
 
         ImVec2 size = ImGui.getContentRegionAvail();
         float frameBufferWidth = RenderManager.getFrameBuffer().getWidth();
@@ -736,12 +742,6 @@ public class EditorLayer {
                     showConsolePanel.set(!showConsolePanel.get());
                 }
 
-                ImGui.separator();
-
-                if (ImGui.menuItem(" Save Layout")) {
-                    ImGui.saveIniSettingsToDisk(AssetManager.getINSTANCE().getCompileDirectory() + File.separator + "editor.ini");
-                }
-
                 ImGui.endMenu();
             }
 
@@ -824,9 +824,11 @@ public class EditorLayer {
     private void addComponent(GameObject go) throws InvocationTargetException, InstantiationException, IllegalAccessException {
         ImString searchBuffer = new ImString(256);
 
+        ImGui.pushStyleColor(ImGuiCol.Border, 0.25f, 0.25f, 0.25f, 1.00f);
         if (ImGui.button("Add Component")) {
             ImGui.openPopup("##addComponent");
         }
+        ImGui.popStyleColor();
 
         if (ImGui.beginPopup("##addComponent")) {
             ImGui.inputTextWithHint("##search", "Search...", searchBuffer);
@@ -1100,14 +1102,17 @@ public class EditorLayer {
                     ImGui.sameLine();
                 }
 
+                ImGui.pushStyleColor(ImGuiCol.Border, 0.25f, 0.25f, 0.25f, 1.00f);
                 if (ImGui.button(breadCrumbs[i])) {
                     String[] sub = Arrays.copyOfRange(breadCrumbs, 0, i + 1);
                     currentFolder = String.join("/", sub);
                     AssetManager.getINSTANCE().setFile(new File(currentFolder));
                 }
+                ImGui.popStyleColor();
             }
 
             assets = AssetManager.getINSTANCE().getFile().listFiles();
+            if (assets != null) Arrays.sort(assets);
 
             ImGui.columns(columnCount, "assetGrid", false);
             // Allow only in asset browser tab
@@ -1147,6 +1152,7 @@ public class EditorLayer {
             if (ImGui.beginPopupModal("New Scene")) {
                 ImGui.inputTextWithHint("##sceneName", "Enter scene name...", sceneName);
 
+                ImGui.pushStyleColor(ImGuiCol.Border, 0.25f, 0.25f, 0.25f, 1.00f);
                 if (ImGui.button("Create")) {
                     SaveManager.newScene(sceneName.get() + ".scene");
                     showNewScenePopup = false;
@@ -1154,16 +1160,19 @@ public class EditorLayer {
                     ImGui.closeCurrentPopup();
                 }
                 ImGui.sameLine();
+
                 if (ImGui.button("Cancel")) {
                     showNewScenePopup = false;
                     ImGui.closeCurrentPopup();
                 }
+                ImGui.popStyleColor();
                 ImGui.endPopup();
             }
 
             if (ImGui.beginPopupModal("New Script")) {
                 ImGui.inputTextWithHint("##Script Name", "Enter script name...", scriptName);
 
+                ImGui.pushStyleColor(ImGuiCol.Border, 0.25f, 0.25f, 0.25f, 1.00f);
                 if (ImGui.button("Create")) {
                     SaveManager.newScript(scriptName.get());
                     initComponentList();
@@ -1176,6 +1185,7 @@ public class EditorLayer {
                     showNewScriptPopup = false;
                     ImGui.closeCurrentPopup();
                 }
+                ImGui.popStyleColor();
                 ImGui.endPopup();
             }
 
@@ -1200,7 +1210,7 @@ public class EditorLayer {
                         ImGui.setDragDropPayload("String", asset.getPath());
                     }
                     ImGui.setWindowFontScale(0.3f);
-                    ImGui.text(asset.isDirectory() ? getIcon("folder") : getIcon("file6+98"));
+                    ImGui.text(asset.isDirectory() ? getIcon("folder") : getIcon("file"));
                     ImGui.setWindowFontScale(1.0f);
                     ImGui.text(asset.getName());
                     ImGui.endDragDropSource();
@@ -1209,7 +1219,17 @@ public class EditorLayer {
                 ImGui.setCursorPos(posX + (thumbnailSize / 2) - thumbnailSize / 4, posY + thumbnailSize / 2);
                 ImGui.setWindowFontScale(1.0f);
 
-                ImGui.text(asset.isDirectory() ? getIcon("folder") : getIcon("file"));
+                if (asset.isDirectory()) {
+                    ImGui.text(getIcon("folder"));
+                } else if (asset.getName().endsWith(".prefab")) {
+                    ImGui.text(getIcon("gameobject"));
+                } else if (asset.getName().endsWith(".scene")) {
+                    ImGui.text(getIcon("scene"));
+                } else if (asset.getName().endsWith(".png") || asset.getName().endsWith(".jpeg") || asset.getName().endsWith(".jpg")) {
+                    ImGui.text(getIcon("fileImg"));
+                } else {
+                    ImGui.text(getIcon("file"));
+                }
                 float textWidth = Math.min(ImGui.calcTextSize(name).x, thumbnailSize);
                 ImGui.setCursorPos(posX + (thumbnailSize / 2) - (textWidth / 2), posY + thumbnailSize - 10);
 
@@ -1282,11 +1302,13 @@ public class EditorLayer {
             final int COL_TEXT = 0xFFD4D4D4;
             final int COL_TEXT_ERR = 0xFF8771F4;
 
+            ImGui.pushStyleColor(ImGuiCol.Border, 0.25f, 0.25f, 0.25f, 1.00f);
             if (ImGui.button("Clear")) {
                 if (ScriptManager.getErrorCount() == 0) {
                     LogCapture.clear();
                 }
             }
+            ImGui.popStyleColor();
 
             for (LogLine line : lines) {
                 boolean isError = line.isError();
@@ -1473,6 +1495,9 @@ public class EditorLayer {
             case "chevron" -> "\uF054";
             case "error" -> "\uf057";
             case "info" -> "\uf05a";
+            case "gameobject" -> "\uf1b2";
+            case "scene" -> "\ue209";
+            case "fileImg" -> "\uf1c5";
             default -> "?";
         };
     }
