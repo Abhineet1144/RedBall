@@ -10,7 +10,7 @@ import java.io.Serial;
 
 public class End extends Component {
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statddic final long serialVersionUID = 1L;
 
     @Override
     public void start() {

@@ -45,11 +45,11 @@
 RedBall/
 ├── Redball/            # Engine source code (Java)
 ├── samples/            # Example game scenes demonstrating engine usage
-├── src/
-│   └── car/            # Example game project
-│        ├── assets     # Game assets (images, sounds, fonts)
-│        ├── build/     # Compiled game builds
-│        └── out/       # Compiled scripts/classes
+│   └── src/
+│       └── car/        # Example game project
+│           ├── assets/ # Game assets (images, sounds, fonts)
+│           ├── build/  # Compiled game builds
+│           └── out/    # Compiled scripts/classes
 ├── shaders/            # GLSL vertex and fragment shaders
 ├── resources/          # Fonts, textures, and other assets
 └── lib/                # External dependencies (e.g., LWJGL)
@@ -148,6 +148,5 @@ byte[] data = reader.getAsset("assets/player.png");
 ---
 
 > **Note:** This engine is a learning/passion project. It's not production-ready and the API will change as I figure things out. Contributions and feedback are welcome though!
-
 
 *— [@Abhineet1144](https://github.com/Abhineet1144) & [@tejzs](https://github.com/Tejzs)*
