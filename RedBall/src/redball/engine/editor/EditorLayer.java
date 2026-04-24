@@ -17,6 +17,7 @@ import org.joml.Vector3f;
 import org.reflections.Reflections;
 import redball.engine.core.Engine;
 import redball.engine.core.PhysicsSystem;
+import redball.engine.editor.commands.*;
 import redball.engine.input.MouseInput;
 import redball.engine.logger.LogCapture;
 import redball.engine.logger.LogLine;
@@ -67,7 +68,6 @@ public class EditorLayer {
     private final ImString renameBuffer = new ImString(256);
     private File renamingFile = null;
     private String spriteName = "";
-    private boolean showNewScenePopup = false;
     private boolean showNewScriptPopup = false;
     private ImString sceneName = new ImString(256);
     private ImString scriptName = new ImString(256);
@@ -107,6 +107,19 @@ public class EditorLayer {
     private boolean changed = false;
 
     private GameObject copyInstance = null;
+    private TransformCommand transformCommand;
+
+    Iterator<GameObject> gameObjectIterator;
+    private GameObject createdGameObjectInstance;
+    private CreateGameObjectCommand createGameObjectCommand;
+
+    private DeleteGameObjectCommand deleteGameObjectCommand;
+
+    private AddComponentCommand addComponentCommand;
+
+    private RemoveComponentCommand removeComponentCommand;
+
+    private FieldChangeCommand fieldChangeCommand;
 
     public static void init(Long window) {
         INSTANCE = new EditorLayer(window);
@@ -291,6 +304,13 @@ public class EditorLayer {
         camera = ECSWorld.getCamera();
 
         // ShortCuts
+        if (io.getKeyCtrl() && !io.getKeyShift() && ImGui.isKeyReleased(ImGuiKey.Z)) {
+            CommandManager.undo();
+        }
+        if (io.getKeyCtrl() && io.getKeyShift() && ImGui.isKeyReleased(ImGuiKey.Z)) {
+            CommandManager.redo();
+        }
+
         if (ImGui.getIO().getKeyCtrl() && ImGui.isKeyReleased(ImGuiKey.P)) {
             if (!Engine.isPlaying()) {
                 Engine.onPlay();
@@ -315,8 +335,6 @@ public class EditorLayer {
         }
 
         if (ImGui.getIO().getKeyCtrl() && ImGui.isKeyReleased(ImGuiKey.N) && !ImGui.getIO().getKeyShift()) {
-            showNewScenePopup = true;
-            sceneName.set("");
         }
 
         if (ImGui.getIO().getKeyCtrl() && ImGui.getIO().getKeyShift() && ImGui.isKeyReleased(ImGuiKey.N)) {
@@ -448,15 +466,23 @@ public class EditorLayer {
             ImGui.pushStyleColor(ImGuiCol.PopupBg, 0.13f, 0.13f, 0.13f, 1.0f);
             ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0.55f, 0.32f, 0.10f, 0.5f);
 
-            Iterator<GameObject> gameObjectIterator = ECSWorld.getGameObjects().listIterator();
+            gameObjectIterator = ECSWorld.getGameObjects().listIterator();
 
             if (ImGui.beginPopup("HierarchyEdit")) {
+                if (ImGui.menuItem("Copy", false, false)) {
+                }
                 if (ImGui.menuItem("Paste", false, copyInstance != null)) {
                     ECSWorld.addPrefab(copyInstance);
                     gameObjectIterator = ECSWorld.getGameObjects().listIterator();
                 }
-                if (ImGui.menuItem("Create GameObject")) {
-                    createGameObject();
+                if (ImGui.menuItem("Delete", false, false)) {
+                }
+                if (ImGui.menuItem("Create Prefab", false, false)) {
+                }
+                if (ImGui.menuItem("Create Empty")) {
+                    createdGameObjectInstance = createGameObject();
+                    createGameObjectCommand = new CreateGameObjectCommand(createdGameObjectInstance);
+                    CommandManager.pushToUndoStack(createGameObjectCommand);
                 }
                 ImGui.endPopup();
             }
@@ -508,14 +534,16 @@ public class EditorLayer {
                     if (ImGui.menuItem("Copy")) {
                         copyInstance = selectedGameObject.deepCopy();
                     }
-                    if (ImGui.menuItem("Paste")) {
-                        if (copyInstance != null) {
-                            ECSWorld.addPrefab(copyInstance);
-                            gameObjectIterator = ECSWorld.getGameObjects().listIterator();
-                        }
+                    if (ImGui.menuItem("Paste", false, copyInstance != null)) {
+                        ECSWorld.addPrefab(copyInstance);
+                        gameObjectIterator = ECSWorld.getGameObjects().listIterator();
                     }
                     if (ImGui.menuItem("Delete")) {
                         gameObjectIterator.remove();
+
+                        deleteGameObjectCommand = new DeleteGameObjectCommand(go);
+                        CommandManager.pushToUndoStack(deleteGameObjectCommand);
+
                         if (selected != null && selected.equals(go.getName())) {
                             selected = null;
                             prevSelected = null;
@@ -531,9 +559,13 @@ public class EditorLayer {
                             System.out.println("ERROR:" + e);
                         }
                     }
-                    if (ImGui.menuItem("Create GameObject")) {
-                        createGameObject();
+
+                    if (ImGui.menuItem("Create Empty")) {
+                        createdGameObjectInstance = createGameObject();
+                        createGameObjectCommand = new CreateGameObjectCommand(createdGameObjectInstance);
+                        CommandManager.pushToUndoStack(createGameObjectCommand);
                     }
+
                     ImGui.endPopup();
                 }
                 ImGui.popStyleColor(2);
@@ -767,52 +799,64 @@ public class EditorLayer {
             ImGui.separator();
 
             if (ImGui.beginMenu("File")) {
-                if (ImGui.menuItem("  New Scene", "Ctrl+N")) {
-                    showNewScenePopup = true;
-                    sceneName.set("");
+                if (ImGui.menuItem("New Scene", "Ctrl+N")) {
                 }
                 ImGui.separator();
-                if (ImGui.menuItem("  Save", "Ctrl+S")) {
+                if (ImGui.menuItem("Save", "Ctrl+S")) {
                     if (!Engine.isPlaying()) {
                         SaveManager.save();
                     }
                     clickTime = glfwGetTime();
                     saveClicked = !saveClicked;
                 }
-                if (ImGui.menuItem("  Build", "Ctrl+B")) {
+                if (ImGui.menuItem("Build", "Ctrl+B")) {
                     build();
                 }
                 ImGui.separator();
-                if (ImGui.menuItem("  Exit", "Alt+F4")) {
+                if (ImGui.menuItem("Exit", "Alt+F4")) {
                     glfwSetWindowShouldClose(window, true);
                 }
                 ImGui.endMenu();
             }
 
             if (ImGui.beginMenu("Edit")) {
-                if (ImGui.menuItem("  Scene Manager")) {
+                if (ImGui.menuItem("Undo", "Ctrl+Z")) {
+                    CommandManager.undo();
+                }
+                if (ImGui.menuItem("Redo", "Ctrl+Shift+Z")) {
+                    CommandManager.redo();
+                }
+
+                ImGui.separator();
+
+                if (ImGui.menuItem("Copy", "Ctrl+C")) {} // TODO
+                if (ImGui.menuItem("Paste", "Ctrl+V")) {} // TODO
+
+                ImGui.separator();
+
+                if (ImGui.menuItem("Scene Manager")) {
                     showSceneManager.set(true);
                 }
-                if (ImGui.menuItem("  Project Settings")) {
+                if (ImGui.menuItem("Project Settings")) {
                     showProjectSettings.set(true);
                 }
                 ImGui.endMenu();
             }
 
             if (ImGui.beginMenu("View")) {
-                if (ImGui.menuItem("  Hierarchy", "", showHierarchyPanel.get())) {
+                if (ImGui.menuItem("Hierarchy", "", showHierarchyPanel.get())) {
                     showHierarchyPanel.set(!showHierarchyPanel.get());
                 }
 
-                if (ImGui.menuItem("  Inspector", "", showInspectorPanel.get())) {
+                if (ImGui.menuItem("Inspector", "", showInspectorPanel.get())) {
                     showInspectorPanel.set(!showInspectorPanel.get());
                 }
 
-                if (ImGui.menuItem("  Assets", "", showAssetsPanel.get())) {
+                if (ImGui.menuItem("Assets", "", showAssetsPanel.get())) {
                     showAssetsPanel.set(!showAssetsPanel.get());
                 }
 
-                if (ImGui.menuItem("  Console", "", showConsolePanel.get())) {
+                if (ImGui.menuItem("Console", "", showConsolePanel.get())) {
                     showConsolePanel.set(!showConsolePanel.get());
                 }
 
@@ -820,24 +864,25 @@ public class EditorLayer {
             }
 
             if (ImGui.beginMenu("GameObject")) {
-
-                if (ImGui.menuItem("  Empty Object", "Ctrl+Shift+N")) {
-                    createGameObject();
+                if (ImGui.menuItem("Create Empty", "Ctrl+Shift+N")) {
+                    createdGameObjectInstance = createGameObject();
+                    createGameObjectCommand = new CreateGameObjectCommand(createdGameObjectInstance);
+                    CommandManager.pushToUndoStack(createGameObjectCommand);
                 }
-                if (ImGui.menuItem("  Add Tag")) {
+                if (ImGui.menuItem("Add Tag")) {
                     if (selectedGameObject != null) {
                         selectedGameObject.addComponent(new Tag(""));
                     }
                 }
                 ImGui.separator();
 
-                if (ImGui.beginMenu("  Components")) {
+                if (ImGui.beginMenu("Components")) {
                     if (ImGui.menuItem("  Sprite")) {
                         if (selectedGameObject != null) {
                             selectedGameObject.addComponent(new SpriteRenderer(null));
                         }
                     }
-                    if (ImGui.menuItem("  Rigidbody 2D")) {
+                    if (ImGui.menuItem("  Rigidbody")) {
                         if (selectedGameObject != null) {
                             selectedGameObject.addComponent(new Rigidbody());
                         }
@@ -953,12 +998,15 @@ public class EditorLayer {
                 // Item
                 ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0.55f, 0.32f, 0.10f, 0.4f);
                 ImGui.pushStyleColor(ImGuiCol.Header, 0.55f, 0.32f, 0.10f, 0.6f);
-                if (ImGui.selectable(componentList[n], is_selected, ImGuiSelectableFlags.AllowDoubleClick)) {
+                if (ImGui.selectable(componentList[n], is_selected, ImGuiSelectableFlags.AllowDoubleClick | ImGuiSelectableFlags.DontClosePopups)) {
                     if (ImGui.isMouseDoubleClicked(0)) {
                         selectedIndex = n;
                         Component c = go.addComponent(getComponent(n));
+                        addComponentCommand = new AddComponentCommand(go, c);
+                        CommandManager.pushToUndoStack(addComponentCommand);
                         if (c instanceof SpriteRenderer) RenderManager.rebuild();
                         if (c instanceof Rigidbody) ((Rigidbody) c).createBody();
+                        ImGui.closeCurrentPopup();
                     }
                 }
                 ImGui.popStyleColor(2);
@@ -995,9 +1043,23 @@ public class EditorLayer {
             ImGui.popStyleColor();
             ImGui.sameLine(labelWidth);
             ImGui.setNextItemWidth(fieldWidth);
+
+
             if (ImGui.dragFloat2("##Position", pos) && !changed) {
                 transform.setXPosition(pos[0]);
                 transform.setYPosition(pos[1]);
+            }
+            if (ImGui.isItemActivated()) {
+                transformCommand = new TransformCommand(transform);
+                transformCommand.oldPos = new Vector3f(transform.position);
+                transformCommand.oldRot = transform.rotation;
+                transformCommand.oldScale = new Vector3f(transform.scale);
+            }
+            if (ImGui.isItemDeactivatedAfterEdit()) {
+                transformCommand.newPos = new Vector3f(transform.position);
+                transformCommand.newRot = transform.rotation;
+                transformCommand.newScale = new Vector3f(transform.scale);
+                CommandManager.pushToUndoStack(transformCommand);
             }
 
             // Rotation
@@ -1008,8 +1070,21 @@ public class EditorLayer {
             ImGui.popStyleColor();
             ImGui.sameLine(labelWidth);
             ImGui.setNextItemWidth(fieldWidth);
+
             if (ImGui.dragFloat("##Rotation", rot) && !changed) {
                 transform.setRotation((float) Math.toRadians(rot[0] % 360));
+            }
+            if (ImGui.isItemActivated()) {
+                transformCommand = new TransformCommand(transform);
+                transformCommand.oldPos = new Vector3f(transform.position);
+                transformCommand.oldRot = transform.rotation;
+                transformCommand.oldScale = new Vector3f(transform.scale);
+            }
+            if (ImGui.isItemDeactivatedAfterEdit()) {
+                transformCommand.newPos = new Vector3f(transform.position);
+                transformCommand.newRot = transform.rotation;
+                transformCommand.newScale = new Vector3f(transform.scale);
+                CommandManager.pushToUndoStack(transformCommand);
             }
 
             // Scale
@@ -1020,9 +1095,22 @@ public class EditorLayer {
             ImGui.popStyleColor();
             ImGui.sameLine(labelWidth);
             ImGui.setNextItemWidth(fieldWidth);
+
             if (ImGui.dragFloat2("##Scale", scale) && !changed) {
                 transform.setXScale(scale[0]);
                 transform.setYScale(scale[1]);
+            }
+            if (ImGui.isItemActivated()) {
+                transformCommand = new TransformCommand(transform);
+                transformCommand.oldPos = new Vector3f(transform.position);
+                transformCommand.oldRot = transform.rotation;
+                transformCommand.oldScale = new Vector3f(transform.scale);
+            }
+            if (ImGui.isItemDeactivatedAfterEdit()) {
+                transformCommand.newPos = new Vector3f(transform.position);
+                transformCommand.newRot = transform.rotation;
+                transformCommand.newScale = new Vector3f(transform.scale);
+                CommandManager.pushToUndoStack(transformCommand);
             }
 
             ImGui.spacing();
@@ -1102,6 +1190,8 @@ public class EditorLayer {
                 ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0.55f, 0.32f, 0.10f, 0.5f);
                 if (ImGui.beginPopup("RemoveSpriteRendererPopup")) {
                     if (ImGui.menuItem("Remove Component")) {
+                        removeComponentCommand = new RemoveComponentCommand(go, go.getComponent(SpriteRenderer.class));
+                        CommandManager.pushToUndoStack(removeComponentCommand);
                         go.removeComponent(SpriteRenderer.class);
                         RenderManager.rebuild();
                         ImGui.closeCurrentPopup();
@@ -1160,6 +1250,8 @@ public class EditorLayer {
                 ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0.55f, 0.32f, 0.10f, 0.5f);
                 if (ImGui.beginPopup("RemoveRigidBodyPopup")) {
                     if (ImGui.menuItem("Remove Component")) {
+                        removeComponentCommand = new RemoveComponentCommand(go, go.getComponent(rb.getClass()));
+                        CommandManager.pushToUndoStack(removeComponentCommand);
                         go.removeComponent(rb.getClass());
                         RenderManager.rebuild();
                         ImGui.closeCurrentPopup();
@@ -1251,6 +1343,8 @@ public class EditorLayer {
             ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0.55f, 0.32f, 0.10f, 0.5f);
             if (ImGui.beginPopup("Remove" + clazz.getSimpleName() + "Popup")) {
                 if (ImGui.menuItem("Remove Component")) {
+                    removeComponentCommand = new RemoveComponentCommand(component.gameObject, component.gameObject.getComponent(component.getClass()));
+                    CommandManager.pushToUndoStack(removeComponentCommand);
                     iterator.remove();
                     ImGui.closeCurrentPopup();
                 }
@@ -1277,15 +1371,42 @@ public class EditorLayer {
                     if (field.getType() == float.class) {
                         float[] val = {(float) value};
                         if (ImGui.dragFloat("##" + name, val)) field.set(component, val[0]);
+                        if (ImGui.isItemActivated()) {
+                            fieldChangeCommand = new FieldChangeCommand(component, field, value);
+                        }
+                        if (ImGui.isItemDeactivatedAfterEdit()) {
+                            fieldChangeCommand.newValue = field.get(component);
+                            CommandManager.pushToUndoStack(fieldChangeCommand);
+                        }
                     } else if (field.getType() == int.class) {
                         int[] val = {(int) value};
                         if (ImGui.dragInt("##" + name, val)) field.set(component, val[0]);
+                        if (ImGui.isItemActivated()) {
+                            fieldChangeCommand = new FieldChangeCommand(component, field, value);
+                        }
+                        if (ImGui.isItemDeactivatedAfterEdit()) {
+                            fieldChangeCommand.newValue = field.get(component);
+                            CommandManager.pushToUndoStack(fieldChangeCommand);
+                        }
                     } else if (field.getType() == boolean.class) {
                         boolean val = (boolean) value;
-                        if (ImGui.checkbox("##" + name, val)) field.set(component, val);
+                        if (ImGui.checkbox("##" + name, val)) {
+                            field.set(component, val);
+                            // boolean is instant — no drag, create and push immediately
+                            FieldChangeCommand cmd = new FieldChangeCommand(component, field, !val);
+                            cmd.newValue = val;
+                            CommandManager.pushToUndoStack(cmd);
+                        }
                     } else if (field.getType() == String.class) {
                         ImString val = new ImString(value.toString());
                         if (ImGui.inputText("##" + name, val)) field.set(component, val.get());
+                        if (ImGui.isItemActivated()) {
+                            fieldChangeCommand = new FieldChangeCommand(component, field, value);
+                        }
+                        if (ImGui.isItemDeactivatedAfterEdit()) {
+                            fieldChangeCommand.newValue = field.get(component);
+                            CommandManager.pushToUndoStack(fieldChangeCommand);
+                        }
                     } else if (Component.class.isAssignableFrom(field.getType())) {
                         Component ref = (Component) value;
                         String label = (ref != null) ? ref.gameObject.getName() + " (" + field.getType().getSimpleName() + ")" : "None (" + field.getType().getSimpleName() + ")";
@@ -1294,7 +1415,12 @@ public class EditorLayer {
                             Object payload = ImGui.acceptDragDropPayload("GAME_OBJECT");
                             if (payload instanceof GameObject dropped) {
                                 Component comp = dropped.getComponent((Class<? extends Component>) field.getType());
-                                if (comp != null) field.set(component, comp);
+                                if (comp != null) {
+                                    FieldChangeCommand cmd = new FieldChangeCommand(component, field, value);
+                                    cmd.newValue = comp;
+                                    CommandManager.pushToUndoStack(cmd);
+                                    field.set(component, comp);
+                                }
                             }
                             ImGui.endDragDropTarget();
                         }
@@ -1304,12 +1430,21 @@ public class EditorLayer {
                         ImGui.inputText("##" + name, new ImString(label), ImGuiInputTextFlags.ReadOnly);
                         if (ImGui.beginDragDropTarget()) {
                             Object payload = ImGui.acceptDragDropPayload("GAME_OBJECT");
-                            if (payload instanceof GameObject dropped) field.set(component, dropped);
+                            if (payload instanceof GameObject dropped) {
+                                FieldChangeCommand cmd = new FieldChangeCommand(component, field, value);
+                                cmd.newValue = dropped;
+                                CommandManager.pushToUndoStack(cmd);
+                                field.set(component, dropped);
+                            }
                             Object stringPayload = ImGui.acceptDragDropPayload("String");
                             if (stringPayload instanceof String dropped) {
                                 try (BufferedInputStream prefab = new BufferedInputStream(new FileInputStream(dropped))) {
                                     SaveObject saveObject = SaveObject.parseFrom(IOUtils.toByteArray(prefab));
-                                    field.set(component, saveObject.getGameObjects().getFirst());
+                                    GameObject go = saveObject.getGameObjects().getFirst();
+                                    FieldChangeCommand cmd = new FieldChangeCommand(component, field, value);
+                                    cmd.newValue = go;
+                                    CommandManager.pushToUndoStack(cmd);
+                                    field.set(component, go);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }
@@ -1861,7 +1996,7 @@ public class EditorLayer {
         setZoom(1);
     }
 
-    private void createGameObject() {
+    private GameObject createGameObject() {
         int count = ECSWorld.countDuplicates("GameObject");
         String name;
         if (count < 1) {
@@ -1874,6 +2009,8 @@ public class EditorLayer {
             name = "GameObject" + " (" + suffix + ")";
         }
         GameObject g = ECSWorld.createGameObject(name);
+        gameObjectIterator = ECSWorld.getGameObjects().listIterator();
         g.addComponent(new Transform(new Vector3f(0.0f, 0.0f, 0.0f), 0.0f, new Vector3f(250.0f)));
+        return g;
     }
 }
