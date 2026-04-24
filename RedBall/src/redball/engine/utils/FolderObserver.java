@@ -4,6 +4,7 @@ import org.apache.commons.io.monitor.*;
 import redball.engine.editor.EditorLayer;
 import redball.engine.logger.LogCapture;
 import redball.engine.scene.AssetManager;
+import redball.engine.scene.SceneManager;
 
 import java.io.File;
 

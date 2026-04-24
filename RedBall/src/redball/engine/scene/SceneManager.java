@@ -9,9 +9,10 @@ import java.io.IOException;
 import java.util.HashMap;
 
 public class SceneManager {
-    private static HashMap<Integer, String> sceneList = new HashMap<>();
+    private static HashMap<Integer, String> sceneList;
 
     public static void init() {
+        sceneList = new HashMap<>();
         int index = 0;
         if (Engine.isBuild) {
             for (String key : PakWriter.getIndex().keySet()) {

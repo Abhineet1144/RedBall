@@ -38,6 +38,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -877,16 +880,28 @@ public class EditorLayer {
         ImString searchBuffer = new ImString(256);
 
         float btnWidth = 140f;
+        float popupWidth = 220f;
+
+        float contentX = ImGui.getContentRegionMaxX();
+        float cursorX = (contentX - btnWidth) / 2;
+
         ImGui.setCursorPosX((ImGui.getContentRegionMaxX() - btnWidth) / 2);
         if (ImGui.button("Add Component", btnWidth, 0)) {
             ImGui.openPopup("##addComponent");
         }
 
-        ImGui.setNextWindowSize(220, 280);
+        float windowX = ImGui.getWindowPosX();
+        float buttonScreenX = windowX + cursorX;
+        float centeredPopupX = buttonScreenX + (btnWidth - popupWidth) / 2;
+        float popupY = ImGui.getCursorScreenPosY();
+
+        ImGui.setNextWindowPos(centeredPopupX, popupY);
+        ImGui.setNextWindowSize(popupWidth, 280);
+
         ImGui.pushStyleColor(ImGuiCol.PopupBg, 0.12f, 0.12f, 0.12f, 1.0f);
         ImGui.pushStyleColor(ImGuiCol.Border, 0.25f, 0.25f, 0.25f, 1.00f);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 8f, 8f);
-        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 4f, 6f); // more vertical spacing between items
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 4f, 6f);
 
         if (ImGui.beginPopup("##addComponent")) {
 
@@ -1351,7 +1366,11 @@ public class EditorLayer {
             if (ImGui.beginPopup("FileEditPopup")) {
                 if (ImGui.beginMenu("Create")) {
                     if (ImGui.menuItem("Folder")) {
-                        System.out.println("Clicked folder");
+                        Files.createDirectories(Paths.get(currentFolder + "/folder"));
+                        File asset = new File(currentFolder + "/folder");
+                        renamingFile = asset;
+                        renameBuffer.set(asset.getName());
+                        ImGui.closeCurrentPopup();
                     }
                     if (currentFolder.contains("scripts")) {
                         if (ImGui.menuItem("Script")) {
@@ -1361,8 +1380,11 @@ public class EditorLayer {
                         }
                     }
                     if (ImGui.menuItem("Scene")) {
-                        showNewScenePopup = true;
-                        sceneName.set("");
+                        SaveManager.newScene("NewScene.scene");
+                        File asset = new File(currentFolder + "/NewScene.scene");
+                        renamingFile = asset;
+                        renameBuffer.set(asset.getName());
+                        ImGui.closeCurrentPopup();
                     }
                     ImGui.endMenu();
                 }
@@ -1370,35 +1392,20 @@ public class EditorLayer {
             }
             ImGui.popStyleColor(2);
 
-            if (showNewScenePopup) ImGui.openPopup("New Scene");
-            if (showNewScriptPopup) ImGui.openPopup("New Script");
+            if (showNewScriptPopup) {
+                ImVec2 center = ImGui.getMainViewport().getCenter();
+                ImGui.setNextWindowPos(center, ImGuiCond.Appearing, new ImVec2(0.5f, 0.5f));
+                ImGui.setNextWindowSize(new ImVec2(300, 130), ImGuiCond.Always);
+                ImGui.openPopup("New Script");
+            }
 
             ImGui.pushStyleColor(ImGuiCol.PopupBg, 0.13f, 0.13f, 0.13f, 1.0f);
             ImGui.pushStyleColor(ImGuiCol.Border, 0.25f, 0.25f, 0.25f, 1.0f);
-            if (ImGui.beginPopupModal("New Scene")) {
-                ImGui.spacing();
-                ImGui.setNextItemWidth(-1);
-                ImGui.inputTextWithHint("##sceneName", "Enter scene name...", sceneName);
-                ImGui.spacing();
-                if (ImGui.button("Create")) {
-                    SaveManager.newScene(sceneName.get() + ".scene");
-                    showNewScenePopup = false;
-                    SceneManager.init();
-                    ImGui.closeCurrentPopup();
-                }
-                ImGui.sameLine();
-                if (ImGui.button("Cancel")) {
-                    showNewScenePopup = false;
-                    ImGui.closeCurrentPopup();
-                }
-                ImGui.spacing();
-                ImGui.endPopup();
-            }
 
-            if (ImGui.beginPopupModal("New Script")) {
+            if (ImGui.beginPopupModal("New Script", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove)) {
                 ImGui.spacing();
                 ImGui.setNextItemWidth(-1);
-                ImGui.inputTextWithHint("##Script Name", "Enter script name...", scriptName);
+                ImGui.inputTextWithHint("##Script Name", "Enter script name", scriptName);
                 ImGui.spacing();
                 if (ImGui.button("Create")) {
                     SaveManager.newScript(scriptName.get());
@@ -1487,6 +1494,7 @@ public class EditorLayer {
                     ImGui.setKeyboardFocusHere();
                     if (ImGui.inputText("##rename", renameBuffer, ImGuiInputTextFlags.EnterReturnsTrue)) {
                         asset.renameTo(new File(asset.getParent() + "/" + renameBuffer.get()));
+                        if (renameBuffer.get().endsWith(".scene")) SceneManager.init();
                         renamingFile = null;
                     }
                     if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
@@ -1519,6 +1527,7 @@ public class EditorLayer {
                 if (ImGui.beginPopup("FileSelectPopup")) {
                     if (ImGui.menuItem("Delete")) {
                         asset.delete();
+                        if (asset.getName().endsWith(".scene")) SceneManager.init();
                         ImGui.closeCurrentPopup();
                     }
                     if (ImGui.menuItem("Rename")) {
