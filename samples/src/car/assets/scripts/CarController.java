@@ -38,7 +38,7 @@ public class CarController extends Component {
             if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_RIGHT)) {
                 transform.setXPosition(transform.getXPosition() + speed * dt);
             }
-        }s
+        }
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_A)) {
             transform.setXPosition(transform.getXPosition() + speed * dt);
         }
@@ -46,7 +46,7 @@ public class CarController extends Component {
         if (rigidbody.isCollided()) {
             ECSWorld.removeGameObject(gameObject);
             try {
-                SceneManager.switchScenes(1);
+                SceneManager.switchScenes(0);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

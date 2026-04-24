@@ -10,7 +10,7 @@ import java.io.Serial;
 
 public class End extends Component {
     @Serial
-    private statddic final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @Override
     public void start() {
@@ -20,14 +20,14 @@ public class End extends Component {
     public void update(float dt) {
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_SPACE)) {
             try {
-                SceneManager.switchScenes(2);
+                SceneManager.switchScenes(1);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_BACKSPACE)) {
             try {
-                SceneManager.switchScenes(0);
+                SceneManager.switchScenes(2);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

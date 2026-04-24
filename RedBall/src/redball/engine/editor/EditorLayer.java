@@ -39,7 +39,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
@@ -106,6 +105,8 @@ public class EditorLayer {
 
     private GameObject camera;
     private boolean changed = false;
+
+    private GameObject copyInstance = null;
 
     public static void init(Long window) {
         INSTANCE = new EditorLayer(window);
@@ -446,7 +447,14 @@ public class EditorLayer {
 
             ImGui.pushStyleColor(ImGuiCol.PopupBg, 0.13f, 0.13f, 0.13f, 1.0f);
             ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0.55f, 0.32f, 0.10f, 0.5f);
+
+            Iterator<GameObject> gameObjectIterator = ECSWorld.getGameObjects().listIterator();
+
             if (ImGui.beginPopup("HierarchyEdit")) {
+                if (ImGui.menuItem("Paste", false, copyInstance != null)) {
+                    ECSWorld.addPrefab(copyInstance);
+                    gameObjectIterator = ECSWorld.getGameObjects().listIterator();
+                }
                 if (ImGui.menuItem("Create GameObject")) {
                     createGameObject();
                 }
@@ -454,7 +462,6 @@ public class EditorLayer {
             }
             ImGui.popStyleColor(2);
 
-            Iterator<GameObject> gameObjectIterator = ECSWorld.getGameObjects().listIterator();
             while (gameObjectIterator.hasNext()) {
                 String search = searchBuffer.get().toLowerCase();
                 GameObject go = gameObjectIterator.next();
@@ -498,6 +505,15 @@ public class EditorLayer {
                 ImGui.pushStyleColor(ImGuiCol.PopupBg, 0.13f, 0.13f, 0.13f, 1.0f);
                 ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0.55f, 0.32f, 0.10f, 0.5f);
                 if (ImGui.beginPopup("GameObjectContext##" + go.getName())) {
+                    if (ImGui.menuItem("Copy")) {
+                        copyInstance = selectedGameObject.deepCopy();
+                    }
+                    if (ImGui.menuItem("Paste")) {
+                        if (copyInstance != null) {
+                            ECSWorld.addPrefab(copyInstance);
+                            gameObjectIterator = ECSWorld.getGameObjects().listIterator();
+                        }
+                    }
                     if (ImGui.menuItem("Delete")) {
                         gameObjectIterator.remove();
                         if (selected != null && selected.equals(go.getName())) {
@@ -514,6 +530,9 @@ public class EditorLayer {
                         } catch (IOException e) {
                             System.out.println("ERROR:" + e);
                         }
+                    }
+                    if (ImGui.menuItem("Create GameObject")) {
+                        createGameObject();
                     }
                     ImGui.endPopup();
                 }
@@ -1616,37 +1635,75 @@ public class EditorLayer {
     private void renderSceneManager() {
         if (showSceneManager.get()) {
             ImGui.setNextWindowSize(280, 350, ImGuiCond.FirstUseEver);
+            ImGui.pushStyleColor(ImGuiCol.TitleBgActive, 0.55f, 0.32f, 0.10f, 1.0f);
+
             if (ImGui.begin("Scene Manager", showSceneManager)) {
                 ImGui.beginChild("##scene_list", 0, 0, false);
 
+                int i = 0;
                 for (Entry<Integer, String> entry : SceneManager.getSceneList().entrySet()) {
                     int sceneIndex = entry.getKey();
                     String scenePath = entry.getValue();
-                    ImGui.text(scenePath.substring(scenePath.lastIndexOf("/") + 1));
-                    ImGui.sameLine();
+                    String sceneName = scenePath.substring(scenePath.lastIndexOf("/") + 1);
 
-                    float itemWidth = ImGui.calcTextSize(String.valueOf(sceneIndex)).x;
-                    ImGui.setCursorPosX(ImGui.getContentRegionAvail().x - itemWidth + ImGui.getCursorPosX());
-                    ImGui.text(String.valueOf(sceneIndex));
+                    ImVec2 rowMin = ImGui.getCursorScreenPos();
+                    float rowWidth = ImGui.getContentRegionAvailX();
+                    float rowH = ImGui.getFrameHeightWithSpacing();
+                    int rowBg = (i % 2 == 0) ? ImGui.colorConvertFloat4ToU32(0.11f, 0.11f, 0.11f, 1.0f) : ImGui.colorConvertFloat4ToU32(0.13f, 0.13f, 0.13f, 1.0f);
+                    ImGui.getWindowDrawList().addRectFilled(rowMin.x, rowMin.y, rowMin.x + rowWidth, rowMin.y + rowH, rowBg);
+
+                    int iconSize = 7;
+                    ImGui.getWindowDrawList().addText(ImGui.getFont(), iconSize, rowMin.x + 4, rowMin.y + 2 + (rowH - iconSize) / 2f, ImGui.colorConvertFloat4ToU32(0.50f, 0.85f, 0.55f, 1.0f), getIcon("scene"));
+                    ImGui.dummy(iconSize + 8f, rowH);
+                    ImGui.sameLine(0, 0);
+
+                    ImGui.alignTextToFramePadding();
+                    ImGui.pushStyleColor(ImGuiCol.Text, 0.82f, 0.82f, 0.82f, 1.0f);
+                    ImGui.setCursorPosX(25);
+                    ImGui.text(sceneName);
+                    ImGui.popStyleColor();
+
+                    String indexStr = String.valueOf(sceneIndex);
+                    float indexWidth = ImGui.calcTextSize(indexStr).x + 8f;
+                    ImGui.sameLine();
+                    ImGui.setCursorPosX(ImGui.getContentRegionAvailX() - indexWidth + ImGui.getCursorPosX());
+                    ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 0.32f, 0.10f, 1.0f);
+                    ImGui.text(indexStr);
+                    ImGui.popStyleColor();
+
+                    i++;
                 }
 
                 ImGui.endChild();
             }
             ImGui.end();
+            ImGui.popStyleColor();
         }
     }
 
     private void renderProjectSettings() {
         if (showProjectSettings.get()) {
             ImGui.setNextWindowSize(280, 350, ImGuiCond.FirstUseEver);
+            ImGui.pushStyleColor(ImGuiCol.TitleBgActive, 0.55f, 0.32f, 0.10f, 1.0f);
+
             if (ImGui.begin("Project Settings", showProjectSettings)) {
+                ImGui.spacing();
+
+                float labelWidth = 100f;
+                ImGui.alignTextToFramePadding();
+                ImGui.pushStyleColor(ImGuiCol.Text, 0.60f, 0.60f, 0.60f, 1.0f);
                 ImGui.text("Project Name");
-                ImGui.sameLine();
+                ImGui.popStyleColor();
+                ImGui.sameLine(labelWidth);
+                ImGui.setNextItemWidth(-1);
                 if (ImGui.inputText("##Project Name", projectNameBuffer)) {
                     Engine.setProjectName(projectNameBuffer.get());
                 }
+
+                ImGui.spacing();
             }
             ImGui.end();
+            ImGui.popStyleColor();
         }
     }
 
@@ -1773,6 +1830,7 @@ public class EditorLayer {
             case "gameobject" -> "\uf1b2";
             case "scene" -> "\ue209";
             case "fileImg" -> "\uf1c5";
+            case "hierarchy" -> "\uf802";
             default -> "?";
         };
     }

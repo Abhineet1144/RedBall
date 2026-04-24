@@ -39,7 +39,7 @@ public class Camera implements Serializable {
         Vector3f eye = null;
         Vector3f target = null;
 
-        if (!Engine.isPlaying()) {
+        if (!Engine.isPlaying() && !Engine.isBuild) {
             eye = new Vector3f(editorPosition.x, editorPosition.y, 20.0f);
             target = new Vector3f(editorPosition.x, editorPosition.y, 0.0f);
         } else {

@@ -161,7 +161,7 @@ public class GameObject implements Serializable {
         return instance;
     }
 
-    private GameObject deepCopy() {
+    public GameObject deepCopy() {
         byte[] bytes = SerializationUtils.serialize(this);
 
         try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes)) {
