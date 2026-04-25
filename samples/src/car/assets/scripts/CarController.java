@@ -46,7 +46,7 @@ public class CarController extends Component {
         if (rigidbody.isCollided()) {
             ECSWorld.removeGameObject(gameObject);
             try {
-                SceneManager.switchScenes(0);
+                SceneManager.switchScenes(1);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

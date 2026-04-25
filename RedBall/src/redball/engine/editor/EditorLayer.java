@@ -69,7 +69,6 @@ public class EditorLayer {
     private File renamingFile = null;
     private String spriteName = "";
     private boolean showNewScriptPopup = false;
-    private ImString sceneName = new ImString(256);
     private ImString scriptName = new ImString(256);
     private ImBoolean showSceneManager = new ImBoolean(false);
     private ImBoolean showProjectSettings = new ImBoolean(false);
@@ -106,7 +105,8 @@ public class EditorLayer {
     private GameObject camera;
     private boolean changed = false;
 
-    private GameObject copyInstance = null;
+    private boolean wasUsingGizmo = false;
+
     private TransformCommand transformCommand;
 
     Iterator<GameObject> gameObjectIterator;
@@ -164,7 +164,7 @@ public class EditorLayer {
         style.setColor(ImGuiCol.PopupBg, 0.122f, 0.122f, 0.122f, 1.00f); // #1F1F1F — popups/dropdowns
 
         // === Borders ===
-        style.setColor(ImGuiCol.Border, 0.137f, 0.137f, 0.137f, 1.00f); // #232323
+        ImGui.pushStyleColor(ImGuiCol.Border, 0.25f, 0.25f, 0.25f, 0.30f);
         style.setColor(ImGuiCol.BorderShadow, 0.000f, 0.000f, 0.000f, 0.05f);
 
         // === Frames (inputs, search bar) ===
@@ -471,8 +471,8 @@ public class EditorLayer {
             if (ImGui.beginPopup("HierarchyEdit")) {
                 if (ImGui.menuItem("Copy", false, false)) {
                 }
-                if (ImGui.menuItem("Paste", false, copyInstance != null)) {
-                    ECSWorld.addPrefab(copyInstance);
+                if (ImGui.menuItem("Paste", false, CommandManager.getCopyInstance() != null)) {
+                    CommandManager.paste();
                     gameObjectIterator = ECSWorld.getGameObjects().listIterator();
                 }
                 if (ImGui.menuItem("Delete", false, false)) {
@@ -532,10 +532,10 @@ public class EditorLayer {
                 ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0.55f, 0.32f, 0.10f, 0.5f);
                 if (ImGui.beginPopup("GameObjectContext##" + go.getName())) {
                     if (ImGui.menuItem("Copy")) {
-                        copyInstance = selectedGameObject.deepCopy();
+                        CommandManager.copy(selectedGameObject.deepCopy());
                     }
-                    if (ImGui.menuItem("Paste", false, copyInstance != null)) {
-                        ECSWorld.addPrefab(copyInstance);
+                    if (ImGui.menuItem("Paste", false, CommandManager.getCopyInstance() != null)) {
+                        CommandManager.paste();
                         gameObjectIterator = ECSWorld.getGameObjects().listIterator();
                     }
                     if (ImGui.menuItem("Delete")) {
@@ -771,6 +771,14 @@ public class EditorLayer {
             ImGuizmo.manipulate(viewMatrix, projectionMatrix, currOpr, localSpace ? Mode.LOCAL : Mode.WORLD, objectMatrix);
 
             if (ImGuizmo.isUsing()) {
+                if (!wasUsingGizmo) {
+                    transformCommand = new TransformCommand(t);
+                    transformCommand.oldPos = new Vector3f(t.position);
+                    transformCommand.oldRot = t.rotation;
+                    transformCommand.oldScale = new Vector3f(t.scale);
+                }
+                wasUsingGizmo = true;
+
                 float[] translation = new float[3];
                 float[] rotation = new float[3];
                 float[] scaleArr = new float[3];
@@ -782,6 +790,12 @@ public class EditorLayer {
                 t.setRotation((float) Math.toRadians(rotation[2]));
                 t.setXScale(scaleArr[0]);
                 t.setYScale(scaleArr[1]);
+            } else if (wasUsingGizmo) {
+                transformCommand.newPos = new Vector3f(t.position);
+                transformCommand.newRot = t.rotation;
+                transformCommand.newScale = new Vector3f(t.scale);
+                CommandManager.pushToUndoStack(transformCommand);
+                wasUsingGizmo = false;
             }
         }
 
@@ -829,8 +843,10 @@ public class EditorLayer {
 
                 ImGui.separator();
 
-                if (ImGui.menuItem("Copy", "Ctrl+C")) {} // TODO
-                if (ImGui.menuItem("Paste", "Ctrl+V")) {} // TODO
+                if (ImGui.menuItem("Copy", "Ctrl+C")) {
+                } // TODO
+                if (ImGui.menuItem("Paste", "Ctrl+V")) {
+                } // TODO
 
                 ImGui.separator();
 

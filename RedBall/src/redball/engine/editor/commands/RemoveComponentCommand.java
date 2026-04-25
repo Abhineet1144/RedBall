@@ -18,6 +18,9 @@ public class RemoveComponentCommand implements Command{
     @Override
     public void execute() {
         gameObject.removeComponent(component.getClass());
+        if (component instanceof SpriteRenderer) {
+            RenderManager.rebuild();
+        }
     }
 
     @Override
