@@ -1481,7 +1481,6 @@ public class EditorLayer {
 
     private void assetBrowser() throws IOException {
         if (showAssetsPanel.get()) {
-
             ImGui.begin("AssetBrowser");
             float thumbnailSize = 64;
             float padding = 8;
@@ -1490,7 +1489,7 @@ public class EditorLayer {
             float panelWidth = ImGui.getContentRegionAvailX();
             int columnCount = Math.max(1, (int) (panelWidth / cellSize));
             currentFolder = AssetManager.getINSTANCE().getFile().getPath();
-            breadCrumbs = currentFolder.split("/");
+            breadCrumbs = currentFolder.substring(currentFolder.indexOf("assets")).split("/");
 
             ImGui.pushStyleColor(ImGuiCol.Border, 0.25f, 0.25f, 0.25f, 1.00f);
             for (int i = 0; i < breadCrumbs.length; i++) {
@@ -1511,7 +1510,7 @@ public class EditorLayer {
                 if (isLast) ImGui.pushStyleColor(ImGuiCol.Text, 0.75f, 0.40f, 0.10f, 1.0f);
                 if (ImGui.button(breadCrumbs[i])) {
                     String[] sub = Arrays.copyOfRange(breadCrumbs, 0, i + 1);
-                    currentFolder = String.join("/", sub);
+                    currentFolder = currentFolder.substring(0, currentFolder.indexOf("assets")) + "/" + String.join("/", sub);
                     AssetManager.getINSTANCE().setFile(new File(currentFolder));
                 }
                 if (isLast) ImGui.popStyleColor();
