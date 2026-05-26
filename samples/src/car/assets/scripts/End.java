@@ -20,7 +20,7 @@ public class End extends Component {
     public void update(float dt) {
         if (KeyboardInput.isKeyDown(GLFW.GLFW_KEY_SPACE)) {
             try {
-                SceneManager.switchScenes(2);
+                SceneManager.switchScenes(1);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

@@ -70,6 +70,7 @@ public class WindowManager {
             if (Engine.isBuild) {
                 width = w;
                 height = h;
+                ECSWorld.getCamera().getComponent(CameraComponent.class).getCamera().adjustProjection(w, h);
             }
             FrameBuffer.getINSTANCE().resize(w, h);
         });

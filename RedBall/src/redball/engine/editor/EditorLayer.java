@@ -1511,6 +1511,7 @@ public class EditorLayer {
                 if (ImGui.button(breadCrumbs[i])) {
                     String[] sub = Arrays.copyOfRange(breadCrumbs, 0, i + 1);
                     currentFolder = currentFolder.substring(0, currentFolder.indexOf("assets")) + "/" + String.join("/", sub);
+                    currentFolder = currentFolder.substring(0, currentFolder.indexOf("assets")) + "/" + String.join("/", sub);
                     AssetManager.getINSTANCE().setFile(new File(currentFolder));
                 }
                 if (isLast) ImGui.popStyleColor();

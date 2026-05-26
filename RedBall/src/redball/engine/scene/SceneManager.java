@@ -6,6 +6,9 @@ import redball.engine.utils.PakWriter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class SceneManager {
@@ -15,19 +18,23 @@ public class SceneManager {
         sceneList = new HashMap<>();
         int index = 0;
         if (Engine.isBuild) {
+            ArrayList<String> scenes = new ArrayList<>();
             for (String key : PakWriter.getIndex().keySet()) {
                 if (key.endsWith(".scene")) {
-                    sceneList.put(index, key);
-                    index++;
+                    scenes.add(key);
                 }
+            }
+            Collections.sort(scenes);
+            for (String scene : scenes) {
+                sceneList.put(index++, scene);
             }
         } else {
             File[] scenes = new File(AssetManager.getINSTANCE().getScenesDirectory()).listFiles();
 
             if (scenes != null) {
+                Arrays.sort(scenes);
                 for (File scene : scenes) {
-                    sceneList.put(index, scene.getPath());
-                    index++;
+                    sceneList.put(index++, scene.getPath());
                 }
             }
         }
